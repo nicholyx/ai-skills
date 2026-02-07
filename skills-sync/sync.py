@@ -50,41 +50,44 @@ def create_symlink(source: Path, target: Path) -> bool:
         return False
 
 def sync_directory(source_dir: Path, target_dir: Path, source_name: str, target_name: str) -> dict:
-    """同步整个目录"""
+    """同步整个目录（包括文件和目录）"""
     stats = {"created": 0, "skipped": 0, "deleted": 0, "failed": 0}
 
     if not source_dir.exists():
         print(f"✗ 源目录不存在: {source_dir}")
         return stats
 
-    # 遍历源目录中的所有项目
+    # 遍历源目录中的所有项目（文件和目录）
     for item in source_dir.iterdir():
-        if item.is_dir():
-            source_path = item
-            target_path = target_dir / item.name
+        # 跳过隐藏文件（如 .DS_Store）
+        if item.name.startswith('.'):
+            continue
 
-            if not target_path.exists():
-                # 创建软链接
+        source_path = item
+        target_path = target_dir / item.name
+
+        if not target_path.exists():
+            # 创建软链接
+            if create_symlink(source_path, target_path):
+                stats["created"] += 1
+            else:
+                stats["failed"] += 1
+        elif target_path.is_symlink():
+            # 检查现有软链接是否有效
+            if is_symlink_valid(target_path):
+                print(f"✓ 跳过（已存在有效链接）: {target_path}")
+                stats["skipped"] += 1
+            else:
+                # 删除无效链接并重新创建
+                print(f"✗ 删除无效链接: {target_path}")
+                target_path.unlink()
                 if create_symlink(source_path, target_path):
                     stats["created"] += 1
                 else:
                     stats["failed"] += 1
-            elif target_path.is_symlink():
-                # 检查现有软链接是否有效
-                if is_symlink_valid(target_path):
-                    print(f"✓ 跳过（已存在有效链接）: {target_path}")
-                    stats["skipped"] += 1
-                else:
-                    # 删除无效链接并重新创建
-                    print(f"✗ 删除无效链接: {target_path}")
-                    target_path.unlink()
-                    if create_symlink(source_path, target_path):
-                        stats["created"] += 1
-                    else:
-                        stats["failed"] += 1
-            else:
-                print(f"⚠ 跳过（目标已存在且不是软链接）: {target_path}")
-                stats["skipped"] += 1
+        else:
+            print(f"⚠ 跳过（目标已存在且不是软链接）: {target_path}")
+            stats["skipped"] += 1
 
     # 检查目标目录中的无效软链接
     if target_dir.exists():
