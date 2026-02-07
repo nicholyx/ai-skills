@@ -1,0 +1,9 @@
+[project]
+name = "skills-sync"
+version = "0.1.0"
+description = "Sync commands and skills via symlinks to AI tools"
+requires-python = ">=3.8"
+dependencies = []
+
+[tool.uv]
+dev-dependencies = []
