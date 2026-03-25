@@ -1,0 +1,99 @@
+{
+  "skill_name": "git-smart-update",
+  "evals": [
+    {
+      "id": 1,
+      "name": "有本地修改但无冲突",
+      "prompt": "更新代码",
+      "expected_output": "检测到本地有调试代码（注释的 OSS 上传功能），自动 stash，拉取远程更新，自动还原修改，无冲突，成功完成更新",
+      "files": [],
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "检测到本地修改"
+        },
+        {
+          "type": "contains",
+          "value": "已暂存修改"
+        },
+        {
+          "type": "contains",
+          "value": "已拉取更新"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "有本地commit需要选择策略",
+      "prompt": "拉取最新代码并保留我的本地修改",
+      "expected_output": "检测到本地有未推送的 commit，询问用户使用 rebase 还是 merge，根据用户选择执行相应操作，智能处理本地修改",
+      "files": [],
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "检测到.*个本地提交"
+        },
+        {
+          "type": "contains",
+          "value": "rebase"
+        },
+        {
+          "type": "contains",
+          "value": "merge"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "更新当前分支",
+      "prompt": "更新当前分支",
+      "expected_output": "只更新当前所在的分支，不涉及其他分支，完整执行 stash-pull-pop 流程",
+      "files": [],
+      "assertions": [
+        {
+          "type": "not_contains",
+          "value": "所有分支"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "更新所有分支",
+      "prompt": "更新所有分支",
+      "expected_output": "遍历所有有 upstream 的分支，逐个更新，处理可能的冲突，最后回到原分支",
+      "files": [],
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "所有分支"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "工作区干净无修改",
+      "prompt": "我的工作区是干净的，帮我拉取最新代码",
+      "expected_output": "检测到没有本地修改，直接 git pull，不需要 stash 操作，显示更新成功",
+      "files": [],
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "未检测到本地修改"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "有冲突需要自动解决",
+      "prompt": "更新代码，我的 app.py 有本地调试修改",
+      "expected_output": "检测到本地修改，stash，pull，pop 时出现冲突，自动解决冲突（保留远程配置改进，保留本地注释代码），显示解决的冲突详情",
+      "files": [],
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "自动解决.*个冲突"
+        }
+      ]
+    }
+  ]
+}

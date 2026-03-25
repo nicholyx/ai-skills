@@ -1,0 +1,23 @@
+{
+  "skill_name": "repo-analyzer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "深入研究一下当前的 ai-ocr 项目",
+      "expected_output": "生成详细的分析报告到 docs/ 目录，包含项目结构、启动流程、核心模块分析等",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "帮我分析 github.com/fastapi/fastapi 这个代码仓库",
+      "expected_output": "克隆仓库并生成分析报告，包含 FastAPI 框架的核心架构分析",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "我想了解这个项目的架构，帮我深入分析一下",
+      "expected_output": "分析当前项目并生成完整的架构分析报告",
+      "files": []
+    }
+  ]
+}

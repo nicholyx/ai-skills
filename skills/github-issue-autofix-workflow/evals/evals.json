@@ -1,0 +1,23 @@
+{
+  "skill_name": "superpowers-github-issue-fix",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我到 GitHub 上找一个未处理的 issue，修复它，注意不要提交代码，做完之后我需要检查一下才行",
+      "expected_output": "使用 brainstorming 理解需求，查找 issue，分析问题，编写测试，修复代码，验证通过，展示结果给用户检查",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "帮我在 higress-group/hiclaw 仓库找一个 bug 来修复，需要先写测试再修复，最后做 code review",
+      "expected_output": "使用 brainstorming，确认在 hiclaw 仓库找 bug，先编写测试，修复后验证，代码审查，展示结果",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "去 github 找一个简单的 enhancement issue，帮我 fork 仓库，改好代码后不提交",
+      "expected_output": "使用 brainstorming，理解需求，fork 仓库，设置 remote，查找 enhancement issue，编写测试，修复，验证，展示结果",
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "id": "ep-2025-03-21-001",
+  "timestamp": "2025-03-21T14:30:00Z",
+  "skill": "code-reviewer",
+  "project": "ai-know",
+  "situation": "用户请求对新建的 AI 对话知识管理系统进行全面代码审查，包括架构、API 规范、代码目录结构、重复代码抽象等",
+  "tasks_completed": [
+    "审查项目架构和代码规范",
+    "提取后端硬编码字符串为枚举常量 (app/constants/)",
+    "提取前端硬编码字符串为 TypeScript 常量 (src/constants/)",
+    "创建统一的 Pydantic 响应模型 (app/schemas/)",
+    "创建通用 UI 组件 (EmptyState, LoadingState)",
+    "创建工具函数 (formatDate, downloadBlob)",
+    "创建 useFilters 通用 hook",
+    "更新 CLAUDE.md 为中文版"
+  ],
+  "patterns_discovered": [
+    {
+      "pattern": "集中式常量模式",
+      "context": "后端使用 Python Enum，前端使用 'as const' 对象",
+      "lesson": "前后端常量需要保持同步，使用相同的值"
+    },
+    {
+      "pattern": "中文文档规范",
+      "context": "CLAUDE.md 需要明确语言要求",
+      "lesson": "在文档开头显式声明语言要求，避免 AI 默认使用英文"
+    },
+    {
+      "pattern": "搜索-替换工作流",
+      "context": "重构硬编码值时系统化处理",
+      "lesson": "先用 Grep 搜索所有出现位置，再按逻辑顺序更新文件"
+    }
+  ],
+  "files_modified": [
+    "backend/app/constants/__init__.py (新建)",
+    "backend/app/providers/registry.py",
+    "backend/app/providers/opencode.py",
+    "backend/app/services/sync_service.py",
+    "backend/app/services/flow_parser.py",
+    "backend/app/services/note_service.py",
+    "backend/app/api/notes.py",
+    "backend/app/api/settings.py",
+    "frontend/src/constants/index.ts (新建)",
+    "frontend/src/utils/date.ts (新建)",
+    "frontend/src/utils/download.ts (新建)",
+    "frontend/src/hooks/useFilters.ts (新建)",
+    "frontend/src/components/common/EmptyState.tsx (新建)",
+    "CLAUDE.md (更新为中文)"
+  ],
+  "what_went_well": [
+    "系统性地搜索所有硬编码字符串",
+    "同时更新前后端保持一致性",
+    "创建了可复用的常量模块和工具函数",
+    "前端构建通过，后端导入正常"
+  ],
+  "what_went_wrong": [
+    "初始时 TypeScript class 语法与 erasableSyntaxOnly 冲突",
+    "有重复定义 API 常量的问题",
+    "部分导入冲突需要重命名"
+  ],
+  "root_cause": "前端 TypeScript 配置使用 erasableSyntaxOnly，不支持私有构造函数的类语法",
+  "solutions_applied": [
+    "将 class-based 常量改为 Record 类型",
+    "移除重复的 API 定义",
+    "使用函数替代类方法"
+  ],
+  "related_patterns": [
+    "pat-2025-03-21-001",
+    "pat-2025-03-21-002",
+    "pat-2025-03-21-003"
+  ],
+  "user_feedback": {
+    "rating": 8,
+    "comments": "完成了常量提取和中文文档更新"
+  }
+}

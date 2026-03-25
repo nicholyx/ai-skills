@@ -1,0 +1,315 @@
+{
+  "version": 3,
+  "skills": {
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "3013fdeb8a11b10b1eb795ec3ae8bfca38f7c26d",
+      "installedAt": "2026-02-01T16:21:37.992Z",
+      "updatedAt": "2026-03-17T06:29:27.277Z"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "skillFolderHash": "75e1acaafe8b08e59d4b86fc253ac7873aff6bba",
+      "installedAt": "2026-02-05T05:41:47.719Z",
+      "updatedAt": "2026-03-17T06:40:39.158Z"
+    },
+    "humanizer-zh": {
+      "source": "op7418/humanizer-zh",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/op7418/humanizer-zh.git",
+      "skillPath": "SKILL.md",
+      "skillFolderHash": "91f3d394db8419c20d67ebe22a96cf8fee0a404b",
+      "installedAt": "2026-02-05T06:35:28.371Z",
+      "updatedAt": "2026-02-05T06:35:28.371Z"
+    },
+    "plugin-creator": {
+      "source": "kdoronin/claude_code_skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/kdoronin/claude_code_skills.git",
+      "skillPath": "plugin-creator/SKILL.md",
+      "skillFolderHash": "1a75ef45844878283ed5b945581dc5b4eae2076a",
+      "installedAt": "2026-02-05T13:15:58.419Z",
+      "updatedAt": "2026-02-05T13:15:58.419Z"
+    },
+    "text-to-sql": {
+      "source": "kdoronin/claude_code_skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/kdoronin/claude_code_skills.git",
+      "skillPath": "text-to-sql/SKILL.md",
+      "skillFolderHash": "852c0b55399c1d3c206dd7aa0b559b611248fb52",
+      "installedAt": "2026-02-05T13:15:58.805Z",
+      "updatedAt": "2026-02-05T13:15:58.805Z"
+    },
+    "obsidian-markdown": {
+      "source": "kepano/obsidian-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/kepano/obsidian-skills.git",
+      "skillPath": "skills/obsidian-markdown/SKILL.md",
+      "skillFolderHash": "5caf5d9e7de204f3904216857545f2aa36bcfcac",
+      "installedAt": "2026-02-07T09:52:26.926Z",
+      "updatedAt": "2026-03-17T06:51:22.620Z"
+    },
+    "mermaid-visualizer": {
+      "source": "axtonliu/axton-obsidian-visual-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/axtonliu/axton-obsidian-visual-skills.git",
+      "skillPath": "mermaid-visualizer/SKILL.md",
+      "skillFolderHash": "55a0115c2bc2c6b21d71b5d3a2be09d33fbe91d1",
+      "installedAt": "2026-02-07T09:52:33.443Z",
+      "updatedAt": "2026-02-07T09:52:33.443Z"
+    },
+    "skill-creator": {
+      "source": "anthropics/claude-plugins-official",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/claude-plugins-official.git",
+      "skillPath": "plugins/skill-creator/skills/skill-creator/SKILL.md",
+      "skillFolderHash": "5c26c1472b98de33a48074ba5d3efe3a727b8e37",
+      "installedAt": "2026-03-04T06:25:24.100Z",
+      "updatedAt": "2026-03-04T06:25:24.100Z"
+    },
+    "gh-cli": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/github/awesome-copilot.git",
+      "skillPath": "skills/gh-cli/SKILL.md",
+      "skillFolderHash": "437437f7f20bcdbbdb3081cf164435a388c0a39a",
+      "installedAt": "2026-03-17T06:31:38.895Z",
+      "updatedAt": "2026-03-17T06:31:38.895Z"
+    },
+    "git-commit": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/github/awesome-copilot.git",
+      "skillPath": "skills/git-commit/SKILL.md",
+      "skillFolderHash": "883a6a7466f55a9cd9f22cf1cce2d9333fc9b998",
+      "installedAt": "2026-03-17T06:39:23.968Z",
+      "updatedAt": "2026-03-17T06:39:23.968Z"
+    },
+    "obsidian-bases": {
+      "source": "kepano/obsidian-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/kepano/obsidian-skills.git",
+      "skillPath": "skills/obsidian-bases/SKILL.md",
+      "skillFolderHash": "4bef60bb848bfb02b4172b552626d5741b0d4057",
+      "installedAt": "2026-03-17T06:51:08.708Z",
+      "updatedAt": "2026-03-17T06:51:08.708Z"
+    },
+    "obsidian-cli": {
+      "source": "kepano/obsidian-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/kepano/obsidian-skills.git",
+      "skillPath": "skills/obsidian-cli/SKILL.md",
+      "skillFolderHash": "96254a554e480359de7b685571876f2e7f9ba57d",
+      "installedAt": "2026-03-17T06:51:58.630Z",
+      "updatedAt": "2026-03-17T06:51:58.630Z"
+    },
+    "agent-browser": {
+      "source": "vercel-labs/agent-browser",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/agent-browser.git",
+      "skillPath": "skills/agent-browser/SKILL.md",
+      "skillFolderHash": "2cc38c81352e5c6e51c750ee11b8e2d0df28a7ae",
+      "installedAt": "2026-03-17T06:55:13.285Z",
+      "updatedAt": "2026-03-24T02:40:37.235Z"
+    },
+    "mcp-builder": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/mcp-builder/SKILL.md",
+      "skillFolderHash": "9173e2c2107aac82d4ca6c726d71e89d11760470",
+      "pluginName": "example-skills",
+      "installedAt": "2026-03-17T06:55:25.143Z",
+      "updatedAt": "2026-03-17T06:55:25.143Z"
+    },
+    "planning-with-files": {
+      "source": "othmanadi/planning-with-files",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/othmanadi/planning-with-files.git",
+      "skillPath": "skills/planning-with-files/SKILL.md",
+      "skillFolderHash": "6b1230399ee77c246476840f5638daa897a8a241",
+      "installedAt": "2026-03-17T06:55:54.953Z",
+      "updatedAt": "2026-03-17T06:55:54.953Z"
+    },
+    "enhance-prompt": {
+      "source": "google-labs-code/stitch-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/google-labs-code/stitch-skills.git",
+      "skillPath": "skills/enhance-prompt/SKILL.md",
+      "skillFolderHash": "ee608061b9209907f5f296670483884c5eb20827",
+      "installedAt": "2026-03-17T06:56:33.493Z",
+      "updatedAt": "2026-03-17T06:56:33.493Z"
+    },
+    "playwright-cli": {
+      "source": "microsoft/playwright-cli",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/microsoft/playwright-cli.git",
+      "skillPath": "skills/playwright-cli/SKILL.md",
+      "skillFolderHash": "a5a8823e403adc13b2488aae9968d6d92adbd2d7",
+      "installedAt": "2026-03-17T06:57:10.211Z",
+      "updatedAt": "2026-03-20T09:30:09.085Z"
+    },
+    "self-improving-agent": {
+      "source": "charon-fan/agent-playbook",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/charon-fan/agent-playbook.git",
+      "skillPath": "skills/self-improving-agent/SKILL.md",
+      "skillFolderHash": "cc099bdad0f644886d6862da1eb887fdaab1256a",
+      "installedAt": "2026-03-17T07:02:01.454Z",
+      "updatedAt": "2026-03-21T06:34:58.558Z"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills.git",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "skillFolderHash": "69bf4a7eeeaa772290c1c5efd19da0865f903af8",
+      "installedAt": "2026-03-20T09:25:24.374Z",
+      "updatedAt": "2026-03-20T09:25:24.374Z"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills.git",
+      "skillPath": "skills/web-design-guidelines/SKILL.md",
+      "skillFolderHash": "3116f3e62dbd02b44a598b1aa690d2a8938e8f89",
+      "installedAt": "2026-03-20T09:25:47.950Z",
+      "updatedAt": "2026-03-20T09:25:47.950Z"
+    },
+    "remotion-best-practices": {
+      "source": "remotion-dev/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/remotion-dev/skills.git",
+      "skillPath": "skills/remotion/SKILL.md",
+      "skillFolderHash": "d0bc7b74666ce228ba1e37156520d5ada5bbc889",
+      "installedAt": "2026-03-20T09:25:57.944Z",
+      "updatedAt": "2026-03-20T09:25:57.944Z"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "skillFolderHash": "928950704df8a8b885c03de5da626331e6f29cf8",
+      "pluginName": "example-skills",
+      "installedAt": "2026-03-20T09:26:18.731Z",
+      "updatedAt": "2026-03-20T09:26:18.731Z"
+    },
+    "browser-use": {
+      "source": "browser-use/browser-use",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/browser-use/browser-use.git",
+      "skillPath": "skills/browser-use/SKILL.md",
+      "skillFolderHash": "9e127714fb8d78638ab42b5b121c8584b59f68bf",
+      "installedAt": "2026-03-20T09:28:49.583Z",
+      "updatedAt": "2026-03-24T02:40:43.598Z"
+    },
+    "langchain-architecture": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/wshobson/agents.git",
+      "skillPath": "plugins/llm-application-dev/skills/langchain-architecture/SKILL.md",
+      "skillFolderHash": "b4c8dcffbc8743cd94e67c293d408011bbb221b6",
+      "installedAt": "2026-03-21T06:37:06.491Z",
+      "updatedAt": "2026-03-21T06:37:06.491Z"
+    },
+    "architecture-designer": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/jeffallan/claude-skills.git",
+      "skillPath": "skills/architecture-designer/SKILL.md",
+      "skillFolderHash": "f7e871e9c6672062525316d67e44f3edc6901550",
+      "installedAt": "2026-03-21T06:38:10.305Z",
+      "updatedAt": "2026-03-24T02:40:48.791Z"
+    },
+    "microservices-architect": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/jeffallan/claude-skills.git",
+      "skillPath": "skills/microservices-architect/SKILL.md",
+      "skillFolderHash": "152da1a78739dedbf97904d0382d472bda4bffad",
+      "installedAt": "2026-03-21T06:40:05.681Z",
+      "updatedAt": "2026-03-21T06:40:05.681Z"
+    },
+    "architecture-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/wshobson/agents.git",
+      "skillPath": "plugins/backend-development/skills/architecture-patterns/SKILL.md",
+      "skillFolderHash": "e210508eb986c748fce92b191d84f0430da62277",
+      "installedAt": "2026-03-21T06:41:01.847Z",
+      "updatedAt": "2026-03-21T06:41:01.847Z"
+    },
+    "architecture-blueprint-generator": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/github/awesome-copilot.git",
+      "skillPath": "skills/architecture-blueprint-generator/SKILL.md",
+      "skillFolderHash": "85df2c5df09933ba0cf7b1e3b39469d4437c8d95",
+      "installedAt": "2026-03-21T06:43:55.879Z",
+      "updatedAt": "2026-03-21T06:43:55.879Z"
+    },
+    "deep-research": {
+      "source": "199-biotechnologies/claude-deep-research-skill",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/199-biotechnologies/claude-deep-research-skill.git",
+      "skillPath": "SKILL.md",
+      "skillFolderHash": "1341bdb2a18332449aeb296482e0647b48dcfef7",
+      "installedAt": "2026-03-24T02:39:25.971Z",
+      "updatedAt": "2026-03-24T02:39:25.971Z"
+    },
+    "pptx": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/pptx/SKILL.md",
+      "skillFolderHash": "10b3d70962e489867ddfee7da92f7da6b0eccc4f",
+      "pluginName": "document-skills",
+      "installedAt": "2026-03-24T03:29:39.811Z",
+      "updatedAt": "2026-03-24T03:29:39.811Z"
+    },
+    "docx": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/docx/SKILL.md",
+      "skillFolderHash": "a0d216202f9793a78da44cf96aabe48f42e627ac",
+      "pluginName": "document-skills",
+      "installedAt": "2026-03-24T03:29:50.435Z",
+      "updatedAt": "2026-03-24T03:29:50.435Z"
+    },
+    "pdf": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/pdf/SKILL.md",
+      "skillFolderHash": "6369f4649de69bd6857c9bc3b058a77206009238",
+      "pluginName": "document-skills",
+      "installedAt": "2026-03-24T03:31:15.394Z",
+      "updatedAt": "2026-03-24T03:31:15.394Z"
+    }
+  },
+  "dismissed": {
+    "findSkillsPrompt": true
+  },
+  "lastSelectedAgents": [
+    "amp",
+    "antigravity",
+    "cline",
+    "codex",
+    "cursor",
+    "deepagents",
+    "gemini-cli",
+    "github-copilot",
+    "kimi-cli",
+    "opencode",
+    "warp",
+    "claude-code"
+  ]
+}
