@@ -293,6 +293,15 @@
       "pluginName": "document-skills",
       "installedAt": "2026-03-24T03:31:15.394Z",
       "updatedAt": "2026-03-24T03:31:15.394Z"
+    },
+    "tailored-resume-generator": {
+      "source": "composiohq/awesome-claude-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/composiohq/awesome-claude-skills.git",
+      "skillPath": "tailored-resume-generator/SKILL.md",
+      "skillFolderHash": "b1043e0a3ba72a0216c0ce6b8c3351a34e40add6",
+      "installedAt": "2026-03-25T05:42:41.488Z",
+      "updatedAt": "2026-03-25T05:42:41.488Z"
     }
   },
   "dismissed": {
