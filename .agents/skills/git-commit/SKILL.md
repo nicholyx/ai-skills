@@ -1,124 +1,183 @@
 ---
 name: git-commit
-description: 'Execute git commit with conventional commit message analysis, intelligent staging, and message generation. Use when user asks to commit changes, create a git commit, or mentions "/commit". Supports: (1) Auto-detecting type and scope from changes, (2) Generating conventional commit messages from diff, (3) Interactive commit with optional type/scope/description overrides, (4) Intelligent file staging for logical grouping'
+description: 使用约定式提交规范执行 git commit
 license: MIT
 allowed-tools: Bash
 ---
 
-# Git Commit with Conventional Commits
+# Git 约定式提交
 
-## Overview
+## 概述
 
-Create standardized, semantic git commits using the Conventional Commits specification. Analyze the actual diff to determine appropriate type, scope, and message.
+使用约定式提交（Conventional Commits）规范创建标准化、语义化的 git commit。分析实际 diff 来确定合适的 type、scope 和消息。
 
-## Conventional Commit Format
+## 语言设置
 
-```
-<type>[optional scope]: <description>
+**默认生成中文提交消息。** 用户可通过参数指定其他语言，例如：
 
-[optional body]
+- 无参数 → 中文消息
+- `--lang=en` → 英文消息
 
-[optional footer(s)]
-```
-
-## Commit Types
-
-| Type       | Purpose                        |
-| ---------- | ------------------------------ |
-| `feat`     | New feature                    |
-| `fix`      | Bug fix                        |
-| `docs`     | Documentation only             |
-| `style`    | Formatting/style (no logic)    |
-| `refactor` | Code refactor (no feature/fix) |
-| `perf`     | Performance improvement        |
-| `test`     | Add/update tests               |
-| `build`    | Build system/dependencies      |
-| `ci`       | CI/config changes              |
-| `chore`    | Maintenance/misc               |
-| `revert`   | Revert commit                  |
-
-## Breaking Changes
+## 约定式提交格式
 
 ```
-# Exclamation mark after type/scope
-feat!: remove deprecated endpoint
+<type>[可选 scope]: <描述>
 
-# BREAKING CHANGE footer
-feat: allow config to extend other configs
+[可选正文]
 
-BREAKING CHANGE: `extends` key behavior changed
+[可选脚注]
 ```
 
-## Workflow
+### 中文消息示例
 
-### 1. Analyze Diff
+```
+feat(auth): 引入 JWT 验证以保护接口安全
+
+实现 JWT Token 验证中间件，解决接口未鉴权的安全风险：
+- 验证 Token 签名和过期时间，防止伪造请求
+- 从 Payload 提取用户声明，供下游使用
+- 将用户上下文注入请求对象，避免重复查询
+- 处理 Refresh Token 轮换，保持会话连续性
+```
+
+### 英文消息示例
+
+```
+feat(auth): add JWT validation to secure API endpoints
+```
+
+## 提交类型
+
+| 类型       | 用途                         |
+| ---------- | ---------------------------- |
+| `feat`     | 新功能                       |
+| `fix`      | 修复缺陷                     |
+| `docs`     | 仅文档变更                   |
+| `style`    | 代码格式/风格（不影响逻辑）  |
+| `refactor` | 重构（非功能/非修复）        |
+| `perf`     | 性能优化                     |
+| `test`     | 新增/更新测试                |
+| `build`    | 构建系统/依赖变更            |
+| `ci`       | CI/配置变更                  |
+| `chore`    | 维护/杂项                    |
+| `revert`   | 回退提交                     |
+
+## 破坏性变更
+
+```
+# type/scope 后加感叹号
+feat!: 移除已废弃的接口以简化 API 维护
+
+# BREAKING CHANGE 脚注
+feat: 支持配置继承以减少重复配置
+
+BREAKING CHANGE: `extends` 键的行为已变更
+```
+
+## 提交拆分策略
+
+当检测到以下情况时，应建议拆分为多个提交：
+
+1. **混合类型**：新功能 + 缺陷修复在同一提交中
+2. **多关注点**：不相关的变更混在一起
+3. **大范围变更**：跨越多个模块的修改
+4. **文件模式混合**：源码 + 测试 + 文档混杂
+5. **依赖混杂**：依赖更新与功能代码混合
+
+## 工作流程
+
+### 1. 分析差异
 
 ```bash
-# If files are staged, use staged diff
+# 首先检查暂存区
 git diff --staged
 
-# If nothing staged, use working tree diff
-git diff
-
-# Also check status
+# 同时检查状态，判断暂存区和工作区情况
 git status --porcelain
 ```
 
-### 2. Stage Files (if needed)
+**默认只提交暂存区（staged）的代码。** 流程如下：
 
-If nothing is staged or you want to group changes differently:
+1. 先检查暂存区是否有内容（`git diff --staged` 是否有输出）
+2. **暂存区有内容** → 直接使用暂存区差异生成提交消息
+3. **暂存区无内容** → 提示用户："暂存区没有文件，是否要提交工作区的变更？" — 等待用户确认后再执行
+
+### 2. 暂存文件（如需要）
+
+仅在用户确认提交工作区变更后，或需要按逻辑分组时暂存：
 
 ```bash
-# Stage specific files
+# 暂存指定文件
 git add path/to/file1 path/to/file2
 
-# Stage by pattern
+# 按模式暂存
 git add *.test.*
 git add src/components/*
-
-# Interactive staging
-git add -p
 ```
 
-**Never commit secrets** (.env, credentials.json, private keys).
+**绝不能提交密钥文件**（.env、credentials.json、私钥等）。
 
-### 3. Generate Commit Message
+### 3. 生成提交消息
 
-Analyze the diff to determine:
+分析 diff 来确定：
 
-- **Type**: What kind of change is this?
-- **Scope**: What area/module is affected?
-- **Description**: One-line summary of what changed (present tense, imperative mood, <72 chars)
+- **Type**：这是什么类型的变更？
+- **Scope**：影响哪个区域/模块？
+- **描述**：一行概括**为什么要做这个变更**（现在时态、祈使语气、<72 字符），侧重动机而非动作本身
 
-### 4. Execute Commit
+**描述应说明"为什么"，而非仅仅"改了什么"。** 好的描述让读者理解变更的意图和背景，而不需要去看 diff。
+
+示例对比：
+
+```
+# 不好 — 只说了做了什么
+fix: 修改登录接口返回值
+
+# 好 — 说明了为什么改
+fix: 登录接口需返回用户角色以支持权限控制
+```
+
+```
+# 不好 — 只说了做了什么
+feat: 添加缓存模块
+
+# 好 — 说明了为什么加
+feat: 引入缓存层以降低数据库查询延迟
+```
+
+### 4. 执行提交
 
 ```bash
-# Single line
-git commit -m "<type>[scope]: <description>"
+# 单行
+git commit -m "<type>[scope]: <描述>"
 
-# Multi-line with body/footer
+# 多行，含正文/脚注
 git commit -m "$(cat <<'EOF'
-<type>[scope]: <description>
+<type>[scope]: <描述>
 
-<optional body>
+<可选正文>
 
-<optional footer>
+<可选脚注>
 EOF
 )"
 ```
 
-## Best Practices
+### 5. Push 规则
 
-- One logical change per commit
-- Present tense: "add" not "added"
-- Imperative mood: "fix bug" not "fixes bug"
-- Reference issues: `Closes #123`, `Refs #456`
-- Keep description under 72 characters
+**默认不执行 `git push`。** 只有当用户明确说了"push"或"推送"时，才在提交后执行 push。
 
-## Git Safety Protocol
+## 最佳实践
 
-- NEVER update git config
-- NEVER run destructive commands (--force, hard reset) without explicit request
-- NEVER skip hooks (--no-verify) unless user asks
-- NEVER force push to main/master
-- If commit fails due to hooks, fix and create NEW commit (don't amend)
+- 一个提交只包含一个逻辑变更
+- 使用现在时态："添加" 而非 "添加了"
+- 使用祈使语气："修复缺陷" 而非 "修复了缺陷"
+- 引用议题：`Closes #123`、`Refs #456`
+- 描述保持在 72 字符以内
+
+## Git 安全协议
+
+- 禁止修改 git config
+- 未经用户明确要求，禁止执行破坏性命令（--force、hard reset）
+- 未经用户要求，禁止跳过钩子（--no-verify）
+- 禁止 force push 到 main/master
+- 如果提交因钩子失败，修复问题后创建新提交（不要 amend）

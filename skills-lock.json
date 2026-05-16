@@ -7,15 +7,6 @@
       "skillPath": "skills/agent-browser/SKILL.md",
       "computedHash": "228f87d57035100d9dc6efcfc05aafd4b6e3962adacaa04b8217ab2fadb15dc8"
     },
-    "architecture-blueprint-generator": {
-      "source": "github/awesome-copilot",
-      "sourceType": "github",
-      "sourceUrl": "https://github.com/github/awesome-copilot.git",
-      "skillPath": "skills/architecture-blueprint-generator/SKILL.md",
-      "skillFolderHash": "85df2c5df09933ba0cf7b1e3b39469d4437c8d95",
-      "installedAt": "2026-03-21T06:43:55.879Z",
-      "updatedAt": "2026-03-21T06:43:55.879Z"
-    },
     "architecture-designer": {
       "source": "jeffallan/claude-skills",
       "sourceType": "github",
@@ -72,12 +63,6 @@
       "skillFolderHash": "437437f7f20bcdbbdb3081cf164435a388c0a39a",
       "installedAt": "2026-03-17T06:31:38.895Z",
       "updatedAt": "2026-03-17T06:31:38.895Z"
-    },
-    "git-commit": {
-      "source": "github/awesome-copilot",
-      "sourceType": "github",
-      "skillPath": "skills/git-commit/SKILL.md",
-      "computedHash": "2607fc60629b82b257136dd2a7a373f0a4466c0b49df7746d845d59313c99b21"
     },
     "humanizer-zh": {
       "source": "op7418/humanizer-zh",
@@ -163,12 +148,6 @@
       "skillPath": "skills/remotion/SKILL.md",
       "computedHash": "006f8413941b59eff54a7ce64851b8a2fb79e7a3a5f1a895e97a48f01482553d"
     },
-    "self-improving-agent": {
-      "source": "charon-fan/agent-playbook",
-      "sourceType": "github",
-      "skillPath": "skills/self-improving-agent/SKILL.md",
-      "computedHash": "5b95ba0530d21f79cf01f7d593463812e7702b1358dd89d259b8073cf6012349"
-    },
     "skill-creator": {
       "source": "anthropics/claude-plugins-official",
       "sourceType": "github",
@@ -203,7 +182,7 @@
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/web-design-guidelines/SKILL.md",
-      "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
+      "computedHash": "f3bc47f890f42a44db1007ab390709ec368e4b8c089baee6b0007182236ac474"
     }
   }
 }

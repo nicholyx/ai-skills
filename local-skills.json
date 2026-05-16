@@ -1,0 +1,309 @@
+{
+  "generatedAt": "2026-05-16T09:20:33.643Z",
+  "totalLocalSkills": 40,
+  "totalLockedSkills": 30,
+  "githubSkills": [
+    {
+      "name": "agent-browser",
+      "source": "vercel-labs/agent-browser",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/vercel-labs/agent-browser",
+      "skillPath": "skills/agent-browser/SKILL.md"
+    },
+    {
+      "name": "architecture-designer",
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/jeffallan/claude-skills",
+      "skillPath": "skills/architecture-designer/SKILL.md"
+    },
+    {
+      "name": "architecture-patterns",
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/wshobson/agents",
+      "skillPath": "plugins/backend-development/skills/architecture-patterns/SKILL.md"
+    },
+    {
+      "name": "browser-use",
+      "source": "browser-use/browser-use",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/browser-use/browser-use",
+      "skillPath": "skills/browser-use/SKILL.md"
+    },
+    {
+      "name": "deep-research",
+      "source": "199-biotechnologies/claude-deep-research-skill",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/199-biotechnologies/claude-deep-research-skill",
+      "skillPath": "SKILL.md"
+    },
+    {
+      "name": "docx",
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/anthropics/skills",
+      "skillPath": "skills/docx/SKILL.md"
+    },
+    {
+      "name": "enhance-prompt",
+      "source": "google-labs-code/stitch-skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/google-labs-code/stitch-skills",
+      "skillPath": "skills/enhance-prompt/SKILL.md"
+    },
+    {
+      "name": "find-skills",
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/vercel-labs/skills",
+      "skillPath": "skills/find-skills/SKILL.md"
+    },
+    {
+      "name": "frontend-design",
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/anthropics/skills",
+      "skillPath": "skills/frontend-design/SKILL.md"
+    },
+    {
+      "name": "gh-cli",
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/github/awesome-copilot",
+      "skillPath": "skills/gh-cli/SKILL.md"
+    },
+    {
+      "name": "humanizer-zh",
+      "source": "op7418/humanizer-zh",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/op7418/humanizer-zh",
+      "skillPath": "SKILL.md"
+    },
+    {
+      "name": "langchain-architecture",
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/wshobson/agents",
+      "skillPath": "plugins/llm-application-dev/skills/langchain-architecture/SKILL.md"
+    },
+    {
+      "name": "mcp-builder",
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/anthropics/skills",
+      "skillPath": "skills/mcp-builder/SKILL.md"
+    },
+    {
+      "name": "mermaid-visualizer",
+      "source": "axtonliu/axton-obsidian-visual-skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/axtonliu/axton-obsidian-visual-skills",
+      "skillPath": "mermaid-visualizer/SKILL.md"
+    },
+    {
+      "name": "microservices-architect",
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/jeffallan/claude-skills",
+      "skillPath": "skills/microservices-architect/SKILL.md"
+    },
+    {
+      "name": "obsidian-bases",
+      "source": "kepano/obsidian-skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/kepano/obsidian-skills",
+      "skillPath": "skills/obsidian-bases/SKILL.md"
+    },
+    {
+      "name": "obsidian-cli",
+      "source": "kepano/obsidian-skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/kepano/obsidian-skills",
+      "skillPath": "skills/obsidian-cli/SKILL.md"
+    },
+    {
+      "name": "obsidian-markdown",
+      "source": "kepano/obsidian-skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/kepano/obsidian-skills",
+      "skillPath": "skills/obsidian-markdown/SKILL.md"
+    },
+    {
+      "name": "pdf",
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/anthropics/skills",
+      "skillPath": "skills/pdf/SKILL.md"
+    },
+    {
+      "name": "planning-with-files",
+      "source": "othmanadi/planning-with-files",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/othmanadi/planning-with-files",
+      "skillPath": "skills/planning-with-files/SKILL.md"
+    },
+    {
+      "name": "playwright-cli",
+      "source": "microsoft/playwright-cli",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/microsoft/playwright-cli",
+      "skillPath": "skills/playwright-cli/SKILL.md"
+    },
+    {
+      "name": "plugin-creator",
+      "source": "kdoronin/claude_code_skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/kdoronin/claude_code_skills",
+      "skillPath": "plugin-creator/SKILL.md"
+    },
+    {
+      "name": "pptx",
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/anthropics/skills",
+      "skillPath": "skills/pptx/SKILL.md"
+    },
+    {
+      "name": "remotion-best-practices",
+      "source": "remotion-dev/skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/remotion-dev/skills",
+      "skillPath": "skills/remotion/SKILL.md"
+    },
+    {
+      "name": "skill-creator",
+      "source": "anthropics/claude-plugins-official",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/anthropics/claude-plugins-official",
+      "skillPath": "plugins/skill-creator/skills/skill-creator/SKILL.md"
+    },
+    {
+      "name": "tailored-resume-generator",
+      "source": "composiohq/awesome-claude-skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/composiohq/awesome-claude-skills",
+      "skillPath": "tailored-resume-generator/SKILL.md"
+    },
+    {
+      "name": "text-to-sql",
+      "source": "kdoronin/claude_code_skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/kdoronin/claude_code_skills",
+      "skillPath": "text-to-sql/SKILL.md"
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md"
+    },
+    {
+      "name": "vercel-react-best-practices",
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/vercel-labs/agent-skills",
+      "skillPath": "skills/react-best-practices/SKILL.md"
+    },
+    {
+      "name": "web-design-guidelines",
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/vercel-labs/agent-skills",
+      "skillPath": "skills/web-design-guidelines/SKILL.md"
+    }
+  ],
+  "localOnlySkills": [
+    {
+      "name": "extension-dev-skill",
+      "hasSkillMd": true,
+      "files": [
+        ".git",
+        "AGENTS.md",
+        "CHANGELOG.md",
+        "README.md",
+        "README_EN.md",
+        "SKILL.md",
+        "recipes",
+        "resources",
+        "scripts"
+      ]
+    },
+    {
+      "name": "git-commit",
+      "hasSkillMd": true,
+      "files": [
+        "SKILL.md"
+      ]
+    },
+    {
+      "name": "git-smart-update",
+      "hasSkillMd": true,
+      "files": [
+        "SKILL.md",
+        "evals"
+      ]
+    },
+    {
+      "name": "git-sync-upstream",
+      "hasSkillMd": true,
+      "files": [
+        "SKILL.md"
+      ]
+    },
+    {
+      "name": "github-issue-autofix-workflow",
+      "hasSkillMd": true,
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "evals"
+      ]
+    },
+    {
+      "name": "obsidian-note-workflow",
+      "hasSkillMd": true,
+      "files": [
+        "SKILL.md"
+      ]
+    },
+    {
+      "name": "repo-analyzer",
+      "hasSkillMd": true,
+      "files": [
+        "SKILL.md",
+        "evals",
+        "reference",
+        "workspace"
+      ]
+    },
+    {
+      "name": "skills-sync",
+      "hasSkillMd": true,
+      "files": [
+        ".venv",
+        "SKILL.md",
+        "pyproject.toml",
+        "sync.py",
+        "uv.lock"
+      ]
+    },
+    {
+      "name": "update-claude-code",
+      "hasSkillMd": true,
+      "files": [
+        "SKILL.md"
+      ]
+    },
+    {
+      "name": "update-opencode",
+      "hasSkillMd": true,
+      "files": [
+        ".DS_Store",
+        "SKILL.md"
+      ]
+    }
+  ],
+  "localOnlyCount": 10
+}
