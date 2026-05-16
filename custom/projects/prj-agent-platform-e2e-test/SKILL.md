@@ -7,11 +7,6 @@ description: 使用 agent-browser 对 Agent 平台核心功能进行端到端验
 
 使用 agent-browser 对平台核心功能进行端到端验证，确保新功能可用且老功能未被破坏。
 
-## 触发时机
-
-- 用户要求对 Agent 平台进行端到端测试
-- 用户提到"e2e 测试"、"端到端验证"、"功能验证"等关键词
-
 ## 步骤
 
 ### 第一步：启动服务
@@ -23,6 +18,7 @@ description: 使用 agent-browser 对 Agent 平台核心功能进行端到端验
 ```
 
 等待服务就绪，确认以下端口可访问：
+
 - api-server :3000
 - web-frontend :5173
 - aieda-ui :5174
