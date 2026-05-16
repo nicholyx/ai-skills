@@ -43,6 +43,12 @@
       "skillPath": "skills/enhance-prompt/SKILL.md",
       "computedHash": "71cc23e9ec5fc6361e12453495fa8c683f6cf26f3efaf9b230b0f43e0a32cc96"
     },
+    "extension-dev-skill": {
+      "source": "easyeda/extension-dev-skill",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "1d39f9509e1f0ef5382779980a6f96146e6959b55b21346a207e0fa608de8986"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",

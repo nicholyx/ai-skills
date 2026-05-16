@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-05-16T09:20:33.643Z",
-  "totalLocalSkills": 40,
-  "totalLockedSkills": 30,
+  "generatedAt": "2026-05-16T10:59:02.411Z",
+  "totalLocalSkills": 31,
+  "totalLockedSkills": 31,
   "githubSkills": [
     {
       "name": "agent-browser",
@@ -51,6 +51,13 @@
       "sourceType": "github",
       "githubUrl": "https://github.com/google-labs-code/stitch-skills",
       "skillPath": "skills/enhance-prompt/SKILL.md"
+    },
+    {
+      "name": "extension-dev-skill",
+      "source": "easyeda/extension-dev-skill",
+      "sourceType": "github",
+      "githubUrl": "https://github.com/easyeda/extension-dev-skill",
+      "skillPath": "SKILL.md"
     },
     {
       "name": "find-skills",
@@ -214,96 +221,6 @@
       "skillPath": "skills/web-design-guidelines/SKILL.md"
     }
   ],
-  "localOnlySkills": [
-    {
-      "name": "extension-dev-skill",
-      "hasSkillMd": true,
-      "files": [
-        ".git",
-        "AGENTS.md",
-        "CHANGELOG.md",
-        "README.md",
-        "README_EN.md",
-        "SKILL.md",
-        "recipes",
-        "resources",
-        "scripts"
-      ]
-    },
-    {
-      "name": "git-commit",
-      "hasSkillMd": true,
-      "files": [
-        "SKILL.md"
-      ]
-    },
-    {
-      "name": "git-smart-update",
-      "hasSkillMd": true,
-      "files": [
-        "SKILL.md",
-        "evals"
-      ]
-    },
-    {
-      "name": "git-sync-upstream",
-      "hasSkillMd": true,
-      "files": [
-        "SKILL.md"
-      ]
-    },
-    {
-      "name": "github-issue-autofix-workflow",
-      "hasSkillMd": true,
-      "files": [
-        "README.md",
-        "SKILL.md",
-        "evals"
-      ]
-    },
-    {
-      "name": "obsidian-note-workflow",
-      "hasSkillMd": true,
-      "files": [
-        "SKILL.md"
-      ]
-    },
-    {
-      "name": "repo-analyzer",
-      "hasSkillMd": true,
-      "files": [
-        "SKILL.md",
-        "evals",
-        "reference",
-        "workspace"
-      ]
-    },
-    {
-      "name": "skills-sync",
-      "hasSkillMd": true,
-      "files": [
-        ".venv",
-        "SKILL.md",
-        "pyproject.toml",
-        "sync.py",
-        "uv.lock"
-      ]
-    },
-    {
-      "name": "update-claude-code",
-      "hasSkillMd": true,
-      "files": [
-        "SKILL.md"
-      ]
-    },
-    {
-      "name": "update-opencode",
-      "hasSkillMd": true,
-      "files": [
-        ".DS_Store",
-        "SKILL.md"
-      ]
-    }
-  ],
-  "localOnlyCount": 10
+  "localOnlySkills": [],
+  "localOnlyCount": 0
 }
