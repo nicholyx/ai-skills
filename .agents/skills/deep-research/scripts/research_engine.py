@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """
-Deep Research Engine for Claude Code
-Orchestrates comprehensive research across multiple sources with verification and synthesis
+Deep Research Engine — STATE SCAFFOLD (not a runtime orchestrator)
+
+This file provides phase instruction templates and research state persistence.
+It does NOT drive Claude Code — Claude is the orchestrator; this file provides
+data structures and CLI utilities for state management.
+
+For the actual research workflow, see reference/methodology.md.
+For the evidence substrate, see scripts/citation_manager.py and scripts/evidence_store.py.
 """
 
 import argparse

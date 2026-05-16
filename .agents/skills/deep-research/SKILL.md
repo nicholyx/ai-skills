@@ -1,15 +1,15 @@
 ---
 name: deep-research
-description: Conducts enterprise-grade research with multi-source synthesis, citation tracking, and verification. Produces citation-backed reports through a structured pipeline with source credibility scoring. Triggers on "deep research", "comprehensive analysis", "research report", "compare X vs Y", "analyze trends", or "state of the art". Not for simple lookups, debugging, or questions answerable with 1-2 searches.
+description: Use when the user needs multi-source research with citation tracking, evidence persistence, and structured report generation. Triggers on "deep research", "comprehensive analysis", "research report", "compare X vs Y", "analyze trends", or "state of the art". Not for simple lookups, debugging, or questions answerable with 1-2 searches.
 ---
 
 # Deep Research
 
 ## Core Purpose
 
-Deliver citation-backed, verified research reports through a structured pipeline with source credibility scoring, evidence persistence, and progressive context management.
+Deliver citation-tracked research reports through a structured pipeline with evidence persistence, source identity management, claim-level verification, and progressive context management.
 
-**Autonomy Principle:** Operate independently. Infer assumptions from context. Only stop for critical errors or incomprehensible queries.
+**Autonomy Principle:** Operate independently. Infer assumptions from context. Only stop for critical errors or incomprehensible queries. Surface high-materiality assumptions explicitly in the Introduction and Methodology rather than silently defaulting.
 
 ---
 
@@ -34,8 +34,8 @@ Mode Selection
 
 ## Workflow Overview
 
-| Phase | Name | Quick | Standard | Deep | UltraDeep |
-|-------|------|-------|----------|------|-----------|
+| Phase | Name | Quick | Std | Deep | Ultra |
+|-------|------|-------|-----|------|-------|
 | 1 | SCOPE | Y | Y | Y | Y |
 | 2 | PLAN | - | Y | Y | Y |
 | 3 | RETRIEVE | Y | Y | Y | Y |
@@ -45,6 +45,8 @@ Mode Selection
 | 6 | CRITIQUE | - | - | Y | Y |
 | 7 | REFINE | - | - | Y | Y |
 | 8 | PACKAGE | Y | Y | Y | Y |
+
+**Note:** Phases 3-5 operate as an evidence loop per section (retrieve → evidence store → refine outline → draft → verify claims → delta-retrieve if needed), not as strict sequential gates.
 
 ---
 
@@ -82,13 +84,18 @@ Mode Selection
 - Methodology Appendix
 
 **Output files (all to `~/Documents/[Topic]_Research_[YYYYMMDD]/`):**
-- Markdown (primary source)
+- Markdown (primary source of truth)
+- `sources.jsonl` — stable source registry with canonical IDs
+- `evidence.jsonl` — append-only evidence store with quotes and locators
+- `claims.jsonl` — atomic claim ledger with support status
+- `run_manifest.json` — query, mode, assumptions, provider config
 - HTML (McKinsey style, auto-opened)
 - PDF (professional print, auto-opened)
 
 **Quality standards:**
-- 10+ sources, 3+ per major claim
-- All claims cited immediately [N]
+- 10+ sources, 3+ per major claim (cluster-independent, not just count)
+- All factual claims cited immediately [N] with evidence backing in `evidence.jsonl`
+- Claim-support verification mandatory: no unsupported factual claims pass delivery
 - No placeholders, no fabricated citations
 - Prose-first (>=80%), bullets sparingly
 

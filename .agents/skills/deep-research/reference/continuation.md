@@ -22,7 +22,7 @@ Trigger auto-continuation when report exceeds 18,000 words in single run.
 
 ```json
 {
-  "version": "2.1.1",
+  "version": "3.0.0",
   "report_id": "[unique_id]",
   "file_path": "[absolute_path_to_report.md]",
   "mode": "[quick|standard|deep|ultradeep]",
@@ -34,13 +34,11 @@ Trigger auto-continuation when report exceeds 18,000 words in single run.
     "continuation_count": 1
   },
 
-  "citations": {
-    "used": [1, 2, 3, "...", "N"],
-    "next_number": 45,
-    "bibliography_entries": [
-      "[1] Full citation entry",
-      "[2] Full citation entry"
-    ]
+  "artifacts": {
+    "sources_path": "[folder]/sources.jsonl",
+    "evidence_path": "[folder]/evidence.jsonl",
+    "claims_path": "[folder]/claims.jsonl",
+    "run_manifest_path": "[folder]/run_manifest.json"
   },
 
   "research_context": {
@@ -85,7 +83,7 @@ CRITICAL INSTRUCTIONS:
 2. Read existing report: [file_path from state]
 3. Read LAST 3 completed sections for flow/style
 4. Load research context: themes, narrative arc, writing style
-5. Continue citation numbering from state.citations.next_number
+5. Load source registry from state.artifacts.sources_path — use stable source_ids, assign display numbers via citation_manager.py
 6. Maintain quality metrics (avg words, citation density, prose ratio)
 
 YOUR TASK:
@@ -125,7 +123,7 @@ After generating:
 
 - [ ] Loaded research context (themes, question, narrative arc)
 - [ ] Reviewed previous sections for flow
-- [ ] Loaded citation numbering (start from N+1)
+- [ ] Loaded source registry from artifacts (stable source_ids, not citation numbers)
 - [ ] Loaded quality targets (words, density, style)
 - [ ] Understand narrative position (beginning/middle/end)
 

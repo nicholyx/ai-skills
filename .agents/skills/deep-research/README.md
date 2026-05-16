@@ -71,11 +71,11 @@ Reports >18K words auto-continue via recursive agent spawning with context prese
 
 ## Search Tools
 
-| Tool | When | Setup |
-|------|------|-------|
-| WebSearch | Default, always available | None |
-| Exa MCP | Semantic/neural search | MCP config |
-| search-cli | Multi-provider aggregation | `brew install search-cli` + API keys |
+| Tool | Priority | Setup |
+|------|----------|-------|
+| search-cli | **Primary** — all searches go here first | `brew install search-cli` + API keys |
+| WebSearch | Fallback — if search-cli fails or rate-limited | None (built-in) |
+| Exa MCP | Optional — semantic/neural search alongside search-cli | MCP config |
 
 ## Architecture
 

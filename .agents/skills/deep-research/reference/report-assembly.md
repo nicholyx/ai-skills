@@ -41,13 +41,28 @@ mkdir -p ~/Documents/[folder_name]
 **Pattern:** Generate section -> Write/Edit to file -> Move to next section
 Each Write/Edit call contains ONE section (<=2,000 words per call)
 
-**Initialize citation tracking (persist to disk):**
+**Initialize research run (persist to disk):**
 ```bash
-# Create sources.json in the report folder for durable provenance
-# Each entry: {"num": N, "title": "...", "url": "...", "claim": "...", "evidence_quote": "..."}
-echo '[]' > [folder]/sources.json
+# Create run manifest and artifact files using citation_manager CLI
+python scripts/citation_manager.py init-run --out-dir [folder] --query "[question]" --mode [mode]
+# Creates: run_manifest.json, sources.jsonl, evidence.jsonl, claims.jsonl
 ```
-Update sources.json after each section. This survives context compaction and enables continuation agents to pick up citation state.
+
+**Register each source as you encounter it:**
+```bash
+python scripts/citation_manager.py register-source \
+  --json '{"raw_url": "...", "title": "...", "source_type": "academic", "year": "2024"}' \
+  --dir [folder]
+# Returns stable source_id (sha256-based, survives renumbering and continuation)
+```
+
+**Assign display numbers after all sources registered:**
+```bash
+python scripts/citation_manager.py assign-display-numbers --dir [folder]
+# Maps stable source_ids to [1], [2], [3]... for rendering
+```
+
+Source identity is stable across edits and continuation. Display numbers are derived at render time, never stored in state. This survives context compaction and enables continuation agents to pick up citation state via stable IDs.
 
 **Section sequence:**
 
