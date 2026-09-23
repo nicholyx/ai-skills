@@ -1,0 +1,46 @@
+# Dependabot 配置
+#
+# 本仓库是**内容仓库**：没有构建产物、没有语言层面的依赖包，唯一的依赖是
+# 工作流里引用的那些 GitHub Actions。让 Dependabot 盯着它们，可以及时拿到
+# 安全修复与新版本，而不用靠人肉定期翻 release 页。
+#
+# 文档：https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # 保持 .github/workflows/ 中引用的 Actions 处于最新版本。
+  # 本仓库的 Actions 一律按 SHA 固定（附带版本号注释），Dependabot 提交的
+  # 正是「换掉 SHA、同步更新注释」的改动，格式与仓库约定一致。
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 5
+    # 冷却期：新版本发布后先等 7 天再提 PR。
+    # Actions 的 tag 是可以被改投的——上游账号一旦失陷，攻击者能把 v7 指向
+    # 带恶意代码的提交，而所有按 tag 引用的仓库会在下一次 CI 运行时中招。
+    # 冷却期让「被改投」或「新版本身有问题」这两类情况有时间先暴露出来。
+    cooldown:
+      default-days: 7
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      # 生成的提交信息本身即符合约定式提交规范，CI 的提交信息检查不会拦
+      prefix: "ci"
+      include: "scope"
+    # 把同一个 Action 的 minor / patch 更新合并进一个 PR。
+    # 分开提会让 PR 数量随工作流增加而线性增长，最后没人看。
+    # major 不合并：它需要人工判断是否有破坏性改动。
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    reviewers:
+      - "nicholyx"

@@ -1,0 +1,82 @@
+# 工作流名称
+name: Stale
+# 工作流运行时显示名称
+run-name: 清理长期无响应的 Issue 与 PR
+
+# 怎样触发工作流
+on:
+  schedule:
+    # 每天 UTC 01:37（北京时间 09:37）跑一次。
+    # 刻意避开整点：GitHub 的定时任务在整点前后极其拥挤，排队可能延迟很久，
+    # 甚至被直接丢弃。挑一个看起来没什么道理的分钟数，反而更准时。
+    - cron: '37 1 * * *'
+  # 手动触发：调完参数后想立刻看效果时用，不必等第二天
+  workflow_dispatch:
+
+# 需要读写 Issue 与 PR 的权限
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    name: 标记并关闭过期条目
+    runs-on: ubuntu-latest
+    steps:
+      - name: 处理长期无响应的条目
+        uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+          # 60 天没有任何动静标记为 stale，宽限 14 天再关闭。
+          # 这个组合的意思是「半年内没有推进的事，大概率已经不在计划里了」，
+          # 而不是催办 —— 留够两周，任何真的还想继续的人都有机会回一句。
+          days-before-stale: 60
+          days-before-close: 14
+
+          stale-issue-label: 'stale'
+          stale-pr-label: 'stale'
+
+          # 打了这些标签的条目永不标记过期。
+          # security 最要紧：安全相关的讨论不能被自动关闭；
+          # good first issue / help wanted 是给新贡献者留的入口，挂着就说明还有效。
+          exempt-issue-labels: 'pinned,security,good first issue,help wanted'
+          exempt-pr-labels: 'pinned,security,good first issue,help wanted,blocked,work-in-progress'
+
+          # 已经被指派的条目说明有人在跟，不要去打扰
+          exempt-all-assignees: true
+
+          # 每轮最多处理 30 条。默认值（无上限）会在第一次运行时把积压的条目
+          # 全部刷一遍，短时间内的大量写操作可能触发 GitHub 的滥用检测。
+          operations-per-run: 30
+
+          # 有人回复后自动撤销 stale 标记，不需要人工干预
+          remove-stale-when-updated: true
+
+          # ------------------------------------------------------------------
+          # 四段文案。措辞上刻意留余地：它不是通知你「我们要关掉这个」，
+          # 而是说明规则、并明确给出「回复任意内容即可让标记消失」这条路。
+          # ------------------------------------------------------------------
+          stale-issue-message: |
+            这个 Issue 已经 60 天没有新的进展了，我先给它打上 `stale` 标记。
+
+            如果问题依然存在，**回复任意内容即可让这个标记消失**；如果已经有了解决方案，或者不再需要跟进，那就不必理会——14 天后我会自动关闭它。
+
+            这样做的目的只是让待办列表保持可信：列表里的每一条都应该是真正需要处理的事。
+
+          close-issue-message: |
+            由于长期没有新的进展，这个 Issue 已被自动关闭。
+
+            如果问题仍然存在，欢迎随时重新开启，并附上最新的复现信息。感谢你曾经的反馈。
+
+          stale-pr-message: |
+            这个 PR 已经 60 天没有更新了，我先给它打上 `stale` 标记。
+
+            如果还在进行中，回复一下进度、或者把它转成 Draft PR，都可以让标记消失；如果确实不需要了，我会在 14 天后自动关闭，这不会影响你之后重新提交。
+
+            如果只是需要 review 而一直没人看，请直接 @ 维护者——那是我们的问题，不是你的。
+
+          close-pr-message: |
+            这个 PR 因长期没有更新已被自动关闭。
+
+            代码和讨论都还保留着，如果你希望继续推进，随时可以重新开启，或者另开一个 PR。

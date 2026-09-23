@@ -1,0 +1,60 @@
+# 工作流名称
+name: Scorecard supply-chain security
+# 工作流运行时显示名称
+run-name: OSSF Scorecard 供应链安全评分
+
+# 怎样触发工作流
+on:
+  # 维护分支保护规则时重新评分
+  branch_protection_rule:
+  # 每周六凌晨（UTC）例行评分，趋势在 Scorecard 页面上可见。
+  # 与 stale.yml 同理：避开整点，那个时间窗的定时任务最拥挤。
+  schedule:
+    - cron: '43 3 * * 6'
+  push:
+    branches: [main]
+
+# 评分过程本身只需要读。这里显式声明 read-all，而不是放任默认权限——
+# 最小权限是供应链基线的一部分，Scorecard 自己也会检查这一项。
+permissions: read-all
+
+jobs:
+  analysis:
+    name: Scorecard 分析
+    runs-on: ubuntu-latest
+    permissions:
+      # 上传 SARIF 到 code scanning 需要写安全事件
+      security-events: write
+      # publish_results 通过 OIDC 向 Scorecard API 发布公开评分
+      # （README 徽章的数据来源），这一步需要签发 id-token
+      id-token: write
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # 评分只读代码，不需要把 GITHUB_TOKEN 留在 runner 上
+          persist-credentials: false
+
+      - name: 运行分析
+        uses: ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc # v2.4.4
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          # 公开发布评分：README 的 Scorecard 徽章依赖这一步。
+          # 发布要求仓库是公开项目；若将来转为私有仓库，必须改回 false，
+          # 否则这一步会失败。
+          publish_results: true
+
+      # 结果以 SARIF 上传到 code scanning，在 Security 页面能直接看到每一项检查的
+      # 通过与建议——它相当于一份供应链安全的体检报告
+      - name: 上传分析结果
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: SARIF file
+          path: results.sarif
+          retention-days: 5
+
+      - name: 上传到 code scanning
+        uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
+        with:
+          sarif_file: results.sarif
