@@ -1,0 +1,19 @@
+# Issue 模板选择器的配置
+# 文档：https://docs.github.com/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository
+#
+# 关闭空白 Issue：本仓库的问题大多能归入下面三类模板之一，
+# 空白 Issue 往往缺少复现所需的要素，来回追问的成本比一开始就填模板高得多。
+blank_issues_enabled: false
+
+contact_links:
+  - name: 🔒 报告安全漏洞
+    url: https://github.com/nicholyx/ai-skills/security/advisories/new
+    about: 涉及可疑/危险技能内容、提示注入等问题，请用这个私有渠道，不要提公开 Issue。
+
+  - name: 💬 提问与讨论
+    url: https://github.com/nicholyx/ai-skills/discussions
+    about: 使用方式上的疑问、想法交流、想要新技能但没有具体场景，欢迎到 Discussions。
+
+  - name: 📚 先看 SUPPORT.md
+    url: https://github.com/nicholyx/ai-skills/blob/main/SUPPORT.md
+    about: 不确定该去哪问？这里写了「先查文档、后提问、再提 Issue」的顺序。

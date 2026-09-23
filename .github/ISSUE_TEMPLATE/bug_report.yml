@@ -1,0 +1,116 @@
+name: 🐛 Bug 报告
+description: 技能行为异常、脚本报错，或实际行为与文档描述不符
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你花时间反馈问题！
+
+        提交之前，请先确认三件事，这能帮我们省下大量来回沟通的时间：
+        1. 搜索[已有 Issue](https://github.com/nicholyx/ai-skills/issues)，避免重复
+        2. 查阅 [SUPPORT.md](https://github.com/nicholyx/ai-skills/blob/main/SUPPORT.md)，
+           里面写了「先查哪里、后问哪里」的顺序
+        3. 如果问题出在 `.agents/` 下的上游技能，先确认它是不是上游本身的缺陷
+           —— 那些技能不是我们写的，我们只能向对应上游反馈
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已搜索过现有 Issue，确认没有重复
+          required: true
+        - label: 这不是安全漏洞（技能诱导执行危险命令、读取本地敏感文件等问题请走 SECURITY.md 的私有渠道，不要提公开 Issue）
+          required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: 涉及的模块
+      description: 出问题的是哪一部分？
+      options:
+        - custom/daily 技能（自建通用技能）
+        - custom/projects 技能（自建项目专用技能）
+        - .agents 上游技能（npx skills add 安装的）
+        - scripts/ 检查脚本（lint.sh 等）
+        - CI 工作流
+        - 文档
+        - 不确定
+    validations:
+      required: true
+
+  - type: input
+    id: skill-name
+    attributes:
+      label: 涉及的技能或文件
+      description: 技能目录名，或仓库内的文件路径。如果是整体问题可以留空
+      placeholder: custom/daily/git-smart-update
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 你的使用环境
+      description: 技能的加载方式与运行环境会直接影响复现，请尽量写全
+      render: yaml
+      placeholder: |
+        ai_tool: Claude Code 2.x / CodeBuddy / 其他
+        os: macOS 15.5 (Apple Silicon)
+        install_method: npx skills add nicholyx/ai-skills --full-depth
+        sync_target: ~/.claude/skills（经 skills-sync 软链）
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望的行为
+      placeholder: 技能应当按 SKILL.md 的描述生成日报，并写入指定文件
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际的行为与完整报错
+      description: |
+        请直接粘贴**文本**而不是截图。技能输出、模型回复片段、脚本堆栈都算，
+        请保留完整的错误信息，不要只贴你判断相关的那半句。
+      render: shell
+      placeholder: |
+        $ ./scripts/lint.sh --only links
+        ✗ 失败：链接目标不在 git 索引里：docs/FAQ.md → docs/FAQ.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现方式
+      description: 是必现还是偶发？你用了什么提示词触发的？有没有试出触发条件？
+      placeholder: |
+        必现。对模型说「帮我更新代码」就会走到 git-smart-update，
+        然后它在有本地未提交改动时直接报错退出，没有走 stash 分支。
+    validations:
+      required: true
+
+  - type: input
+    id: revision
+    attributes:
+      label: 你使用的版本
+      description: 提交哈希或日期。本地跑 `git -C <仓库路径> rev-parse --short HEAD` 可以得到
+      placeholder: f1f3835
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 补充信息
+      description: 任何你觉得有帮助的线索。例如「换个说法触发就正常」这类观察非常有价值
+    validations:
+      required: false
