@@ -9,6 +9,10 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-24
+
+这一版把仓库从「裸仓库」建成符合主流规范的开源项目：CI 检查层、治理文件、仓库自动化、文档体系，以及把维护流程本身沉淀为两个可复用的技能。
+
 ### 新增
 
 - **建立仓库地基：`.gitignore` / `.gitattributes` / `.editorconfig` / `.yamllint`**（[#1](https://github.com/nicholyx/ai-skills/pull/1)）。此前这是一个裸仓库，没有任何一层配置。`.DS_Store` 与 `custom/daily/skills-sync/.venv/` 之所以没被提交进来，靠的是使用者本机的全局 gitignore —— 换一台机器、换一个贡献者就会立刻泄漏进来。
@@ -66,6 +70,7 @@
 - `[Unreleased]` 段由维护者在合并 PR 时更新；每个分类下按「改了什么 → 为什么」写，被否掉的方案也记进去，避免下次重新踩一遍
 - 每个版本的分类固定为：`新增` / `变更` / `弃用` / `移除` / `修复` / `安全`，**不自创分类**；某一类没有内容就整段省略
 - 破坏性变更在条目里用 **BREAKING** 标出。对这个仓库来说，「技能的行为变了」算破坏性变更 —— 使用者依赖的是技能的行为，不是它的文件名
-- 目前还没有发布过版本（没有 tag），所以这里只有 `[Unreleased]` 一段
+- 已发布的版本按 `[X.Y.Z] - 日期` 归档，`[Unreleased]` 恢复为空壳
 
-[Unreleased]: https://github.com/nicholyx/ai-skills/commits/main
+[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.0.0
