@@ -49,7 +49,7 @@ ai-skills/
 ├── .agents/skills/          # ← 上游 vendor 区，31 个技能，只读
 │   └── <skill>/SKILL.md
 ├── custom/
-│   ├── daily/               # ← 自建通用区，12 个技能
+│   ├── daily/               # ← 自建通用区，14 个技能
 │   │   └── <skill>/SKILL.md
 │   └── projects/            # ← 自建项目专用区，1 个技能
 │       └── prj-<...>/SKILL.md
@@ -183,7 +183,7 @@ AI 工具里**加载失败** —— 而这个仓库的唯一用途就是「这�
 
 warn 的代价只是每次多几行输出，而被否掉的方案（排除）的代价是看不见真实故障。
 
-当前 44 个技能里，上游有 3 处 frontmatter 额外键（`hidden`、`tags`、`user-invocable`/`hooks`），
+当前 46 个技能里，上游有 3 处 frontmatter 额外键（`hidden`、`tags`、`user-invocable`/`hooks`），
 每次 lint 都会如实打印并注明「上游 vendored，不阻塞」。**本地全绿时它们仍然在，
 这是设计，不是漏检。**
 
