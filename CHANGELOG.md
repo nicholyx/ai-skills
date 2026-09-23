@@ -25,10 +25,28 @@
   - `lint-selftest` 用五条方向相反的断言守「本地过 = CI 过」，包括在无 `.git` 的目录里必须明确拒绝执行而不是崩溃
 - **上游 vendor 区的分级策略**（[#1](https://github.com/nicholyx/ai-skills/pull/1)）。`.agents/**` 的违规只 warn、不计入退出码；但也不排除 —— 排除等于看不见，上游引入「缺 `name`」这类问题会让技能直接加载失败，而本仓库的唯一用途就是「这些技能能被加载」。需要严格检查时用 `VENDOR_STRICT=1`，不必改代码。
 
+- **补齐开源治理文件与仓库模板**（[#2](https://github.com/nicholyx/ai-skills/pull/2)）：`CONTRIBUTING.md`、`CODE_OF_CONDUCT.md`、`SECURITY.md`、`SUPPORT.md`、`.github/CODEOWNERS`、PR 模板与 bug / feature / docs 三类 Issue 表单。
+  - `SECURITY.md` 的威胁模型是**为本仓库写的**，不是照搬通用模板：本仓库不是「持有凭证的自动化仓库」，而是**分发 AI 指令的内容仓库** —— `custom/**` 会被 `skills-sync` 软链进使用者的全局环境，所以核心风险是「恶意或误导性内容随一次 pull 直接进入使用者的 AI 环境」。同时写明了**不在威胁模型内**的情况，挡掉「这算不算安全问题」的无效讨论
+  - `CONTRIBUTING.md` 的类型表与 `scripts/check-commit-msg.sh` 的 `ALLOWED_TYPES` 逐字一致，并如实写明 `lint.sh` **验不了 PR 标题** —— 标题在 PR 建立之前不存在，本地任何入口都验不了它
+- **接入 Trellis 作为任务与知识上下文层**（[#3](https://github.com/nicholyx/ai-skills/pull/3)）。`.trellis/spec/` 存编码规范（会话自动注入）、`.trellis/tasks/` 存任务 PRD、`.trellis/workspace/` 存会话记忆；它与 GitHub 侧闭环（Issue / 里程碑 / PR / 发布）分工互补，两者不重叠。
+  - spec **没有沿用 Trellis 的默认骨架**：它生成的是 `backend/` + `frontend/`，那是为 Web 应用设计的，与本仓库（Markdown/JSON 内容仓库，无构建、无依赖）完全不符。按真实形态重组为 `skills/`、`checks/`、`maintenance/`、`guides/`，并删掉默认的 `00-bootstrap-guidelines` 占位任务
+  - `AGENTS.md` 采用 Trellis 的「受管块 + 手写块」分层。手写块特别点明一处歧义：受管块里的 `.agents/skills/` 是 Trellis 的通用措辞，而本仓库该路径指的是**上游 vendored 技能**，含义完全不同 —— 否则后来者极易误改 `.agents/**`
+- **新增 `oss-bootstrap` 与 `maintain-loop` 两个技能**（[#3](https://github.com/nicholyx/ai-skills/pull/3)）。前者「从 0 到 1 搭基建」，后者「基建就位后的日常迭代闭环」，分工互补。
+  - 两者都写成**不绑定具体仓库的通用型**：开篇先探测目标仓库（语言与工具链、仓库现状、权限、已有文件），项目专属项全部换成判据与占位符。因此任何项目都能用，也可以直接分发给别人
+  - 从真实踩坑沉淀的规则原样保留，没有为了「通用」而稀释 —— 判断成败禁止管道接 `tail`/`head`、CHANGELOG 锚点必须校验在正确段落、`gh pr create` 正文必须用 `--body-file`、`set -u` 下空数组在 bash 3.2 与 5.x 的行为差异、GNU 与 BSD sed 的 `\n` 语义差异。这些与项目无关，是纯经验，删掉就等于重新踩一遍
+- **建立文档体系**（[#4](https://github.com/nicholyx/ai-skills/pull/4)）：`README.md` 重写为面向使用者、新增 `README.en.md` 英文入口、`docs/` 四件套（USAGE / ARCHITECTURE / TROUBLESHOOTING / MAINTAINER_GUIDE），以及本文件。
+  - `ARCHITECTURE.md` 重点写「**为什么这样设计**」并记录被否掉的方案，而不是罗列目录结构；`TROUBLESHOOTING.md` 保留报错原文，并写明「什么情况下不该用这个方案」
+- **仓库自动化工作流**（[#5](https://github.com/nicholyx/ai-skills/pull/5)）：labeler（按改动路径自动打标签）、welcome（首次贡献者致意）、stale（长期无响应自动清理）、release（三段式发布说明）、scorecard（供应链公开评分）与 dependabot（Actions 生态，含 7 天 cooldown 与同 Action 合并更新）。
+  - `release.yml` 的三段式说明 = **人工归纳（CHANGELOG 手写段）+ 机器枚举（GitHub 原生 `generate-notes`）+ 可选润色（AI 摘要）**，三个输入源各自独立降级，任一缺失都不阻断发布
+  - AI 摘要**只在配了 key 时启用**，实现时实测出一个真实缺陷：裸引用 `$ANTHROPIC_API_KEY` 在 `set -u` 下会让**整个步骤失败** —— 没配 key 的人本意是跳过摘要，却连发布一起挂掉。已改为 `"${ANTHROPIC_API_KEY:-}"`
+  - `.github/zizmor.yml` 最终只有一条豁免（labeler / welcome 的 `pull_request_target`），依据写明「两者都不 checkout、不执行任何 PR 内容」，并预先声明「若将来有工作流要 checkout PR 的 head 分支，必须改代码而不是往豁免列表里加文件」
+
 ### 变更
 
 - **`scripts/check-local-skills.{js,sh}` 由 `scripts/gen-local-skills.js` 与 `scripts/checks/vendor-lock.js` 取代**（[#1](https://github.com/nicholyx/ai-skills/pull/1)）。原脚本同时兼着「生成器」与「校验器」两个身份，一个想写文件、一个永远 `exit 0`，互相破坏。现在职责分开：生成器默认只打 stdout（要 `--write` 才落盘），一致性由检查器断言。
   - 生成物不再含时间戳，因此对同一份工作区逐字节确定，「生成物与生成器一致」这条判据才成立
+
+- **`hygiene` 检查器豁免 `.trellis/.version` 与 `.trellis/.template-hashes.json` 的风格检查**（[#3](https://github.com/nicholyx/ai-skills/pull/3)）。这两个是 Trellis 自己写的记账文件，会在 `trellis update` 时被重写 —— 直接补末尾换行更简单，但那等于给未来的例行维护埋一个「CI 突然变红」。所以按与 vendor 区同样的原则豁免**风格**检查（末尾换行、BOM），**正确性检查照常执行**（UTF-8、U+FFFD、JSON 可解析）。
 
 ### 移除
 

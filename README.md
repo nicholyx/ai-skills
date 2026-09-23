@@ -89,7 +89,7 @@ npx skills update
 
 ### 自建 · 通用（`custom/daily/`）
 
-这 12 个技能跨项目可用，是 `npx skills add nicholyx/ai-skills --full-depth` 装到的主要内容。
+这 14 个技能跨项目可用，是 `npx skills add nicholyx/ai-skills --full-depth` 装到的主要内容。
 
 | 技能 | 说明 |
 | --- | --- |
@@ -100,7 +100,9 @@ npx skills update
 | `git-smart-update` | 智能 Git 更新工具，支持自动暂存、冲突解决和本地提交处理。当用户说"更新代码"、"拉取最新代码"、"git pull"、"更新当前分支"、"更新所有分支"、"保留本地修改并更新"时触发。自动处理 stash-update-restore 循环，智能解决冲突（优先采用远程改进，同时保留本地调试代码），支持 rebase 和 merge 两种模式。 |
 | `git-sync-upstream` | Fork 仓库同步 upstream 最新代码到当前分支，使用 rebase 方式保持提交历史整洁。当用户说"同步upstream"、"rebase upstream"、"更新upstream main"、"拉取upstream更新"、"同步上游仓库"、"fork仓库更新"、"更新PR分支"时触发。自动处理未提交更改（stash/rebase/pop）、fetch upstream、rebase 到最新、强制推送更新 PR。专门用于 fork 仓库同步上游更新的场景，不适用于普通的 git pull 操作。 |
 | `github-issue-autofix-workflow` | 使用 superpowers 工作流修复 GitHub issue。支持自动化模式（用户输入"自动化处理"时全程无需确认）。强制使用 brainstorming 理解需求，test-driven-development 编写测试，verification-before-completion 验证，requesting-code-review 代码审查。适用于用户请求修复 issue、处理 bug、添加功能等场景。 |
+| `maintain-loop` | 开源项目的维护闭环流程——规划、实现、发布、继续规划的完整循环，以及踩坑沉淀的硬规则。当需要在项目中继续迭代（新功能、修缺陷、补文档）、发布新版本、盘点未完成事项，或有人说「继续」「走维护流程」「按开源流程开发」时使用。 |
 | `obsidian-note-workflow` | Use when creating, querying, or managing Obsidian notes with preview-first workflow, intelligent classification, automatic directory creation, and vault initialization |
+| `oss-bootstrap` | 把一个新项目（或只有代码的裸仓库）落实为符合主流规范的开源项目——CI、治理文件、Issue/PR 模板、仓库自动化、文档体系、看板与发布流程。当用户说「新建开源项目」「给项目加上 CI / 规范」「按热门开源项目的标准搭基建」时使用。基建就位后的日常迭代请改用 `maintain-loop`。 |
 | `repo-analyzer` | 深入研究代码仓库的源代码，以首次开发人员的角度进行全面分析。当用户说"深入研究一下 xxx 项目"、"帮我分析这个代码仓库"、"了解这个项目的架构"、"分析 github.com/xxx/xxx 仓库"时触发。支持本地目录和 GitHub 仓库地址，自动下载并分析项目结构、启动流程、核心业务流程、模块职责等，最后生成详细的分析报告文档。 |
 | `skills-sync` | Use when you need to synchronize commands and skills from ~/.agents/ to AI tool directories like Claude or CodeBuddy using symbolic links |
 | `update-claude-code` | 当用户提到"更新 claude"、"升级 claude code"、"检查 claude 版本"、"claude code 最新版本"时使用此技能。 |

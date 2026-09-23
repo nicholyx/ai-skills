@@ -7,8 +7,8 @@
  *
  * 本机 `python3 -c "import yaml"` 失败（无 PyYAML），官方 validator
  * `quick_validate.py` 因此跑不起来。而引入 `package.json` + `yaml` 会把一个
- * 零依赖的技能仓库变成「有 node_modules、CI 要跑 npm ci」的仓库 —— 对 831 个
- * 文件的纯数据仓库是过度工程。
+ * 零依赖的技能仓库变成「有 node_modules、CI 要跑 npm ci」的仓库 —— 对一个纯数据
+ * 仓库是过度工程。
  *
  * ## 边界：这里不实现 YAML
  *
