@@ -1,0 +1,54 @@
+# CODEOWNERS
+#
+# 语法说明：https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# 被匹配到的文件发生改动时，对应的所有者会自动收到 review 请求。
+#
+# 注意 GitHub 的匹配规则：**最后一条命中的规则生效**，因此下面的顺序是
+# 「先兜底、后收窄」，越靠下的规则优先级越高。
+
+# 兜底规则：所有文件的默认所有者
+*                                   @nicholyx
+
+# ---------------------------------------------------------------------------
+# 本仓库的高风险路径
+# ---------------------------------------------------------------------------
+
+# custom/ 下是我们自己维护的技能内容。它会经 `npx skills add` 落到
+# ~/.agents/skills/，再由 skills-sync 软链进 ~/.claude/skills 与
+# ~/.codebuddy/skills —— 也就是说，这里的每一行 Markdown 都会在**使用者的
+# 全局 AI 环境**里生效，而不是只影响本仓库。这类改动必须由维护者过目。
+/custom/                            @nicholyx
+
+# scripts/ 是 CI 判据的执行体。放宽其中任何一条检查（或删掉一个 fail）
+# 等价于整体降低校验强度，而且 diff 看起来往往很小，容易被放过。
+/scripts/                           @nicholyx
+
+# CI 工作流决定「什么算通过」，同时持有 workflows 的写入能力。
+/.github/workflows/                 @nicholyx
+
+# ---------------------------------------------------------------------------
+# 文档与治理文件
+# ---------------------------------------------------------------------------
+
+# 文档写不清楚会直接影响使用者的技能使用体验，按治理文件对待。
+/docs/                              @nicholyx
+/README.md                          @nicholyx
+
+# 治理文件本身：改这些文件等于改规则，必须维护者亲自确认。
+/CONTRIBUTING.md                    @nicholyx
+/CODE_OF_CONDUCT.md                 @nicholyx
+/SECURITY.md                        @nicholyx
+/SUPPORT.md                         @nicholyx
+/LICENSE                            @nicholyx
+
+# 模板与 CODEOWNERS 自身。改这里可以在不被察觉的情况下改变「谁来 review」，
+# 因此同样需要维护者确认。
+/.github/CODEOWNERS                 @nicholyx
+/.github/ISSUE_TEMPLATE/            @nicholyx
+/.github/PULL_REQUEST_TEMPLATE.md   @nicholyx
+
+# ---------------------------------------------------------------------------
+# 说明：`.agents/**` 是 vendored 内容（由 skills-lock.json 追踪），
+# 我们不接受对它的就地修改 —— 任何改动都会在 `npx skills update` 时丢失。
+# 因此这里不单独列规则，走上面的兜底即可。
+# ---------------------------------------------------------------------------

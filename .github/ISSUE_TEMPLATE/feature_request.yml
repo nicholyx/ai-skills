@@ -1,0 +1,99 @@
+name: 💡 功能请求
+description: 提出一个新技能、新检查项或改进建议
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        欢迎提出想法！为了让讨论更高效，请先说明**你遇到的实际问题**，
+        而不只是「希望增加 X 功能」。
+
+        了解问题背景，我们往往能找到比原方案更好的解法：可能是组合两个已有技能，
+        可能是一条文档说明，也可能根本不需要新技能 —— 但如果你只写「加一个 X」，
+        这些可能性就都没机会出现。
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已搜索过现有 Issue 与 Pull Request，确认没有重复
+          required: true
+        - label: 我已在 README 与 custom/ 下确认现有技能无法满足（或说明了为什么不够用）
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 你遇到的问题
+      description: 描述你当前的困境。这是整个请求里最重要的部分，请写具体场景而不是抽象需求
+      placeholder: |
+        我同时用 Claude Code 和 CodeBuddy，每次改完技能都要手动跑两次 skills-sync，
+        而且经常忘了其中一个，导致两个工具里的技能版本不一致，排查起来很费劲。
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: 你希望怎么解决
+      description: 如果你有具体的实现想法，写在这里。没有也可以，上面的问题描述才是关键
+      placeholder: |
+        希望 skills-sync 能在同步完成后校验两个目标目录指向的是同一份内容，
+        不一致时给出提示。
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: 期望落在哪个模块
+      options:
+        - custom/daily 新增技能
+        - custom/projects 新增技能
+        - 改进已有自建技能
+        - scripts/ 检查脚本或 lint.sh
+        - CI 工作流
+        - 文档
+        - 不确定
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 你考虑过的替代方案
+      description: 有没有别的做法也能解决这个问题？为什么你更倾向于上面的方案？
+    validations:
+      required: false
+
+  - type: textarea
+    id: upstream
+    attributes:
+      label: 是否与某个上游技能相关
+      description: 如果这个需求更适合向上游仓库提，请在这里写明是哪一个
+      placeholder: 这个能力看起来属于 .agents/skills/ 里的 xxx，来源是 owner/repo
+    validations:
+      required: false
+
+  - type: dropdown
+    id: willing
+    attributes:
+      label: 你愿意参与实现吗
+      description: 无论选哪个都不影响我们接受这个建议，只是想了解你的意向
+      options:
+        - 愿意，我可以提 PR
+        - 愿意，但需要有人指导
+        - 暂时没有精力，仅提出建议
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 补充信息
+      description: 相关链接、其他仓库的实现参考等
+    validations:
+      required: false

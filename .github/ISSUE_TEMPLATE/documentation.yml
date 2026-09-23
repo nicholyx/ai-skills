@@ -1,0 +1,92 @@
+name: 📖 文档问题
+description: 文档写错了、看不懂、或者缺少内容
+title: "[Docs] "
+labels:
+  - documentation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        文档问题同样是有效的问题，在本仓库尤其如此。
+
+        技能就是文档：`SKILL.md` 里的 `description` 决定它会不会被触发，
+        正文决定它被触发后做什么。**说明写不清楚，技能就等于不存在。**
+        所以「我看不懂这一段」本身就是重要反馈，请不要因为「可能是我太笨」
+        而放弃提交 —— 看不懂通常意味着写的人没写清楚。
+
+  - type: input
+    id: location
+    attributes:
+      label: 涉及的文档位置
+      description: 文件路径或页面链接，越具体越好
+      placeholder: custom/daily/git-smart-update/SKILL.md 的「常见错误」一节
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 问题类型
+      options:
+        - 内容错误（描述与实际行为不符）
+        - 表述不清（能读但难以理解）
+        - 缺少内容（某个场景没有覆盖）
+        - 缺少示例（说了要做什么，但没给可照抄的例子）
+        - 触发条件问题（description 写得不清楚，导致技能不被触发或误触发）
+        - 链接失效或路径错误
+        - 其他
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: 涉及的模块
+      options:
+        - custom/daily 技能文档
+        - custom/projects 技能文档
+        - .agents 上游技能文档
+        - 仓库文档（README / CONTRIBUTING / SECURITY / SUPPORT）
+        - CI 与检查脚本的说明
+        - 不确定
+    validations:
+      required: true
+
+  - type: textarea
+    id: detail
+    attributes:
+      label: 具体说明
+      description: |
+        哪里有问题？你在读到这一句的时候以为它是什么意思？
+        把你当时的理解写下来 —— 那正是这段文字实际传达出去的意思。
+      placeholder: |
+        文档说「同步会自动清理无效软链」，但没说「无效」的判定标准是什么。
+        我原以为是「目标文件被改过」，读完才知道是「链接指向的路径不存在」。
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: 你期望看到什么
+      description: 如果由你来写这一段，你会怎么描述？没有想法也可以留空
+    validations:
+      required: false
+
+  - type: dropdown
+    id: willing
+    attributes:
+      label: 你愿意直接提 PR 修正吗
+      options:
+        - 愿意
+        - 愿意，但需要有人指导
+        - 暂时没有精力
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 补充信息
+    validations:
+      required: false
