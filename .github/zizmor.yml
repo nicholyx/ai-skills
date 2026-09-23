@@ -1,0 +1,41 @@
+# zizmor 配置 —— GitHub Actions 工作流的静态安全扫描
+#
+# CI 里的 zizmor job 与 ./scripts/lint.sh 都以本文件为准。
+#
+# 这里的每一条豁免都必须写明**可验证的安全依据**：说清楚「为什么不构成威胁」。
+# 写不出这条依据的，就不该出现在这个文件里。
+#
+# 文档：https://docs.zizmor.sh/configuration/
+
+rules:
+  # labeler.yml 与 welcome.yml 使用 pull_request_target。
+  #
+  # 为什么必须用它：fork 来的 PR 在 pull_request 事件下只能拿到**只读**的
+  # GITHUB_TOKEN，打不了标签、发不了评论 —— 而打标签和发评论正是这两个工作流的
+  # 全部职责。换成 pull_request 等于让它们直接失效。
+  #
+  # 为什么不构成威胁（逐条可验证）：
+  #   1. 两个工作流都**没有 checkout 步骤**，从头到尾不接触 PR 里的代码；
+  #   2. 两个工作流都**没有 run: 步骤**，因此不存在把 PR 数据拼进命令行的注入面
+  #      （表达式注入、参数注入、环境注入都以「能执行命令」为前提）；
+  #   3. 唯二执行的是 actions/labeler 与 actions/first-interaction，都是
+  #      GitHub 官方 Action，且已按 commit SHA 固定；
+  #   4. with: 里没有一处取自 PR 作者可控的上下文。welcome 的评论正文是写死在
+  #      工作流里的固定文本，PR 作者改标题、改描述都无法改变其中执行的内容；
+  #   5. 权限已收窄到刚好够用 —— labeler 是 contents:read + pull-requests:write，
+  #      welcome 是 issues:write + pull-requests:write，两者都没有 contents:write，
+  #      因此即便被滥用也改不动仓库内容。
+  #
+  # 关于为什么两个文件都列进来：zizmor 1.30.1 对 pull_request_target 的判定还会
+  # 参考步骤里引用的 Action，因此当前只报了 welcome.yml，labeler.yml 没有被报出。
+  # 但这不是两个文件在安全性上有区别 —— 它们的安全依据是同一条。一并写明，是为了
+  # 让豁免对应「我们做出的决定」，而不是对应「某个版本的启发式恰好报了哪几个文件」；
+  # 否则一次 zizmor 升级就可能让 labeler.yml 突然变红，而原因看起来像是新问题。
+  #
+  # 边界：若将来任何一个工作流需要 checkout PR 的 head 分支，或者需要在 run: 里
+  # 用到 PR 的标题、分支名、文件内容，**必须改代码**（改用 pull_request + 显式
+  # 授权，例如 environment 审批或维护者手动触发），而不是把那个文件也加进这个列表。
+  dangerous-triggers:
+    ignore:
+      - labeler.yml
+      - welcome.yml

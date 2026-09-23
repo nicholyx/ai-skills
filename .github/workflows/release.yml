@@ -1,0 +1,330 @@
+# 工作流名称
+name: Release
+# 工作流运行时显示名称
+run-name: 发布 ${{ github.ref_name }}
+
+# 怎样触发工作流
+on:
+  push:
+    # 形如 v1.2.3 的 tag 触发发布。
+    #
+    # 末尾的 `*` 是必要的：没有它，`v1.2.3-rc.1` 这类预发布 tag 根本不会触发本
+    # 工作流，下面那段预发布处理逻辑就成了永远走不到的死代码 —— 而且不会报错，
+    # 只会安静地什么都不发生。
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+# 创建 Release 需要写 contents 的权限
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: 创建 GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # 发布过程用不到 git 凭证（推送由 gh 用 GH_TOKEN 完成），
+          # 不持久化，让 checkout 之后的任何脚本都拿不到 GITHUB_TOKEN
+          persist-credentials: false
+          # 需要完整历史：既要找上一个 tag，也要让 GitHub 生成可用的对比链接
+          fetch-depth: 0
+
+      # -----------------------------------------------------------------------
+      # ① 从 CHANGELOG 里提取本版本的手写说明
+      #
+      # 这是面向使用者的归纳，放在发布说明的主体位置。
+      # 仓库目前还没有 CHANGELOG.md，所以这一步必须能在文件缺失时安静降级，
+      # 否则「第一次给仓库打 tag」会直接失败在第一个步骤上。
+      # -----------------------------------------------------------------------
+      - name: 提取 CHANGELOG 中本版本的说明
+        id: changelog
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          version="${TAG#v}"
+          : > changelog-section.md
+
+          if [[ ! -f CHANGELOG.md ]]; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::仓库中还没有 CHANGELOG.md，发布说明将只包含变更清单"
+            exit 0
+          fi
+
+          echo "从 CHANGELOG.md 提取 ${version} 的说明"
+
+          # 取出版本标题之后、下一个版本标题之前的内容。
+          # 以 `## [` 作为段落分隔符，标题行里含 [ver] 的那一段就是本版本。
+          awk -v ver="$version" '
+            BEGIN { found = 0 }
+            /^## \[/ {
+              if (found) exit
+              if (index($0, "[" ver "]") > 0) { found = 1; next }
+            }
+            found { print }
+          ' CHANGELOG.md > changelog-section.md
+
+          if [[ -s changelog-section.md ]]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            echo "已提取 $(wc -l < changelog-section.md) 行"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::CHANGELOG.md 中没有 ${version} 的条目，发布说明将只包含变更清单"
+          fi
+
+      # -----------------------------------------------------------------------
+      # ② 用 GitHub 原生 API 生成变更清单
+      #
+      # releases/generate-notes 会返回自上一个 tag 以来的 PR 列表、贡献者致谢，
+      # 以及 Full Changelog 对比链接。自己拼这些既麻烦又容易漏掉贡献者。
+      # -----------------------------------------------------------------------
+      - name: 生成变更清单
+        id: prs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          # 按版本号倒序找出上一个 tag，排除当前这个
+          prev="$(git tag --sort=-v:refname | grep -vx "${TAG}" | head -n 1 || true)"
+
+          if [[ -z "$prev" ]]; then
+            echo "::notice::没有找到上一个 tag，跳过变更清单"
+            : > pr-list.md
+            exit 0
+          fi
+
+          echo "上一个版本：${prev}"
+          echo "prev_tag=${prev}" >> "$GITHUB_OUTPUT"
+
+          if ! gh api "repos/${GITHUB_REPOSITORY}/releases/generate-notes" \
+              -f tag_name="$TAG" \
+              -f previous_tag_name="$prev" \
+              --jq '.body' > pr-list.md; then
+            echo "::warning::变更清单生成失败，发布说明将不含 PR 列表"
+            : > pr-list.md
+            exit 0
+          fi
+
+          echo "已生成 $(wc -l < pr-list.md) 行变更清单"
+
+      # -----------------------------------------------------------------------
+      # ③ AI 摘要（可选）
+      #
+      # 只在配了 ANTHROPIC_API_KEY 时启用；未配置就静默跳过。
+      # **任何失败都 exit 0** —— 摘要只是锦上添花，绝不能成为发布的单点故障：
+      # 一次 API 抖动不该让一个已经打好的 tag 发不出 Release。
+      # -----------------------------------------------------------------------
+      - name: 生成发布摘要
+        id: summary
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          : > summary.md
+
+          # 用 :- 兜底再判断。GitHub 在 secret 未配置时会把变量设成空串，但
+          # 裸引用一个**不存在**的变量会在 set -u 下直接让本步骤失败 ——
+          # 那正是这里最不该发生的事：没配 key 的人只是想跳过摘要，
+          # 结果连发布一起挂了。
+          api_key="${ANTHROPIC_API_KEY:-}"
+
+          if [[ -z "$api_key" ]]; then
+            echo "未配置 ANTHROPIC_API_KEY，跳过 AI 摘要（发布流程不受影响）"
+            exit 0
+          fi
+
+          # 准备素材：CHANGELOG 段落 + PR 清单
+          {
+            echo "版本：${TAG}"
+            echo ""
+            if [[ -s changelog-section.md ]]; then
+              echo "## CHANGELOG 记录"
+              echo ""
+              cat changelog-section.md
+              echo ""
+            fi
+            if [[ -s pr-list.md ]]; then
+              echo "## 包含的 PR"
+              echo ""
+              cat pr-list.md
+            fi
+          } > ai-input.txt
+
+          # 控制输入规模，避免异常长的 CHANGELOG 让请求过大
+          head -c 12000 ai-input.txt > ai-input-trimmed.txt
+
+          # 这个 prompt 是**技能仓库专用**的：读者关心的是「我的技能变了什么」，
+          # 而不是某个镜像被同步到了哪个 registry。
+          cat > ai-prompt.txt <<'PROMPT'
+          你是这个 Claude Code 技能仓库的维护者，正在为一次版本发布撰写摘要。
+
+          这个仓库的产出物是技能（skill）：`custom/` 下是自己编写维护的技能，
+          `.agents/` 下是通过 `npx skills add` 从上游装来的技能。
+
+          请根据下面提供的材料，写一段中文摘要，要求：
+          - 2~3 句话，不超过 150 字
+          - 面向**使用这些技能的人**，说清这一版新增或改进了哪些技能、对他们的日常使用意味着什么
+          - 如果这一版主要是修 bug、补文档或调整仓库设施，就照实说，不要硬凑出「新功能」
+          - 抓住主线，不要逐条罗列改动
+          - 语气平实，不要营销腔，不要用「重磅」「震撼」这类词
+          - 直接输出摘要正文，不要标题、不要代码块、不要 markdown 标记
+
+          材料如下：
+
+          PROMPT
+          cat ai-input-trimmed.txt >> ai-prompt.txt
+
+          payload="$(jq -n \
+            --arg model "claude-sonnet-5" \
+            --rawfile prompt ai-prompt.txt \
+            '{model: $model, max_tokens: 1024, messages: [{role: "user", content: $prompt}]}')"
+
+          echo "调用 Claude API 生成摘要..."
+          response="$(curl -sS --max-time 90 \
+            -X POST "https://api.anthropic.com/v1/messages" \
+            -H "x-api-key: ${api_key}" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            -d "$payload" 2>/dev/null)" || {
+              echo "::warning::AI 摘要生成失败（网络问题），发布流程继续"
+              exit 0
+            }
+
+          summary="$(printf '%s' "$response" | jq -r '.content[0].text // empty' 2>/dev/null || true)"
+
+          if [[ -z "$summary" ]]; then
+            # 把 API 的返回原样打出来便于排查
+            echo "::warning::AI 摘要生成失败，发布流程继续"
+            printf '%s\n' "$response" | head -c 500
+            exit 0
+          fi
+
+          printf '%s\n' "$summary" > summary.md
+          echo "摘要已生成（$(printf '%s' "$summary" | wc -m) 字）"
+
+      # -----------------------------------------------------------------------
+      # ④ 组装最终的发布说明
+      #
+      # 顺序固定为：摘要 → CHANGELOG 手写段 → 分隔线 → PR 清单。
+      # 摘要放最上面，因为它是最短、最像「人话」的那部分；
+      # PR 清单放最后，因为它是给想深挖的人看的明细。
+      # -----------------------------------------------------------------------
+      - name: 组装发布说明
+        env:
+          TAG: ${{ github.ref_name }}
+          HAS_CHANGELOG: ${{ steps.changelog.outputs.found }}
+          PREV_TAG: ${{ steps.prs.outputs.prev_tag }}
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          : > release-notes.md
+
+          # —— 摘要：用引用块包起来，与下面的正文区分开 ——
+          if [[ -s summary.md ]]; then
+            {
+              echo "> $(cat summary.md)"
+              echo ""
+            } >> release-notes.md
+          fi
+
+          # —— 变更内容（CHANGELOG 的手写部分）——
+          # HAS_CHANGELOG / PREV_TAG 来自上游步骤的输出，而 step ① 与 ② 都有
+          # 「提前 exit 0」的分支 —— 那种情况下对应的输出根本没有被写过。
+          # 用 :- 兜底，避免一个没被写过的输出让组装步骤在 set -u 下失败。
+          if [[ "${HAS_CHANGELOG:-}" == "true" ]] && [[ -s changelog-section.md ]]; then
+            cat changelog-section.md >> release-notes.md
+          elif [[ -n "${PREV_TAG:-}" ]]; then
+            # CHANGELOG 没写时不要只留一句占位——直接把对比入口给出来，
+            # 读者仍然能一键看到全部改动
+            {
+              echo "本版本未在 \`CHANGELOG.md\` 中单独登记。"
+              echo ""
+              echo "完整的代码改动可以通过下方的变更清单与对比链接查看；"
+              echo "如果这一版改动了技能，也欢迎提 Issue 提醒维护者补充版本说明。"
+              echo ""
+            } >> release-notes.md
+          fi
+
+          # —— 变更清单（PR / 贡献者 / 对比链接）——
+          if [[ -s pr-list.md ]]; then
+            printf '\n---\n\n' >> release-notes.md
+            cat pr-list.md >> release-notes.md
+          fi
+
+          # 三段素材可能同时为空：仓库还没有 CHANGELOG.md、这是第一个 tag
+          # （没有可对比的上一个版本）、AI 摘要也没配。那种情况下发布说明会是
+          # 一个空文件 —— 与其发出去一个正文全空的 Release，不如留一句话。
+          # 本仓库目前就处在「还没有 CHANGELOG.md」的状态，这条路径会真的被走到。
+          if [[ ! -s release-notes.md ]]; then
+            {
+              echo "本版本（\`${TAG}\`）的说明尚未整理。"
+              echo ""
+              echo "欢迎提 Issue 提醒维护者补充 \`CHANGELOG.md\`。"
+            } >> release-notes.md
+          fi
+
+          echo "=== 最终发布说明 ==="
+          cat release-notes.md
+
+      # -----------------------------------------------------------------------
+      # ⑤ 创建 Release
+      # -----------------------------------------------------------------------
+      - name: 创建 Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          # 预发布版本（形如 v1.2.3-rc.1）加 --prerelease，且不标为 latest。
+          #
+          # 这里用 `${var:+"$var"}` 这个写法，原因是另外几种都会出问题：
+          #   - 裸写 $var：shellcheck 会判为未加引号的展开（它要防的是再次分词
+          #     与通配），而且 gh 拿到的是一个空参数而不是「没有这个参数」；
+          #   - 直接写 "$var"：空值时会多传一个空参数给 gh，那是个语法错误；
+          #   - 数组 "${arr[@]}"：空数组的展开在 bash 4.4 之前会触发 set -u
+          #     报「未绑定变量」—— 本仓库在 macOS 上维护，那里默认的
+          #     /bin/bash 还停在 3.2。
+          # `:+` 的语义刚好是我们要的：空值展开成零个参数，非空展开成一个。
+          prerelease_flag=""
+          if [[ "$TAG" == *-* ]]; then
+            prerelease_flag="--prerelease"
+            echo "检测到预发布标记：本次不标记为 latest"
+          fi
+
+          # 先查后建。tag 被重复推送（网络抖动时 push 报了失败、远端其实已经成功，
+          # 重试就是第二次推送）会触发两次本工作流，第二次的 create 会因
+          # 「Release.tag_name already exists」而 422 失败，留下一个红的运行记录。
+          # 这时改走 edit 更新说明即可。
+          if gh release view "$TAG" --json tagName >/dev/null 2>&1; then
+            echo "Release ${TAG} 已存在（多半是 tag 被重复推送），改用 edit 更新发布说明"
+            gh release edit "$TAG" \
+              --title "$TAG" \
+              --notes-file release-notes.md \
+              ${prerelease_flag:+"$prerelease_flag"}
+            echo "Release ${TAG} 说明已更新"
+            echo "### Release [${TAG}](https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}) 已存在，发布说明已更新" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file release-notes.md \
+            --verify-tag \
+            ${prerelease_flag:+"$prerelease_flag"}
+
+          echo "Release ${TAG} 已创建"
+          echo "### Release [${TAG}](https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}) 已发布" >> "$GITHUB_STEP_SUMMARY"

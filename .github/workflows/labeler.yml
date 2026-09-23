@@ -1,0 +1,41 @@
+# 工作流名称
+name: Labeler
+# 工作流运行时显示名称
+#
+# 这里必须加引号：YAML 中 `#` 前面只要有空白就会被当成注释起点，
+# 不加引号的话 `#${{ github.event.number }} 自动打标签` 会被整段吃掉，
+# run-name 里只剩下「为 PR」三个字。
+run-name: "为 PR #${{ github.event.number }} 自动打标签"
+
+# 怎样触发工作流
+on:
+  # 用 pull_request_target 而不是 pull_request：
+  # 来自 fork 的 PR 在 pull_request 事件下只能拿到**只读**的 GITHUB_TOKEN，
+  # 打不了标签；pull_request_target 在目标分支的上下文里运行，有写权限。
+  #
+  # ⚠️ 安全前提：本工作流**绝不 checkout PR 的代码**，也不执行 PR 提交的任何
+  # 内容。它为 actions/labeler 提供的输入只有「改动到的文件路径清单」，
+  # 而路径清单由 GitHub 在服务端算出，不是 PR 作者能构造的脚本。
+  #
+  # 若未来有任何一个工作流要 checkout PR 的 head 分支，必须改用 pull_request
+  # + 显式授权（例如维护者手动触发），而**不是在这里加豁免**。
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+# 最小权限：读内容（比对文件路径）、写 PR 标签
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  label:
+    name: 按改动路径打标签
+    runs-on: ubuntu-latest
+    steps:
+      - name: 应用标签规则
+        uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+          # PR 中相关的改动被撤销时，同步把标签摘掉，避免标签越挂越多
+          sync-labels: true

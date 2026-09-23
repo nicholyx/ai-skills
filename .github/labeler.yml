@@ -1,0 +1,64 @@
+# PR 自动打标签规则
+#
+# 由 .github/workflows/labeler.yml 驱动（actions/labeler）。
+# 规则只看**改动到的文件路径**，不依赖人工操作，也不读取文件内容。
+#
+# 文档：https://github.com/actions/labeler
+
+# CI / 工作流基础设施
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/workflows/**'
+          - '.github/dependabot.yml'
+          - '.github/labeler.yml'
+          - '.github/zizmor.yml'
+
+# 仓库自动化脚本（lint.sh 与各检查器）
+automation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'scripts/**'
+
+# 文档
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - 'docs/**'
+          - 'LICENSE'
+
+# 仓库治理配置
+governance:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/ISSUE_TEMPLATE/**'
+          - '.github/PULL_REQUEST_TEMPLATE.md'
+          - '.github/CODEOWNERS'
+          - 'CODE_OF_CONDUCT.md'
+          - 'SECURITY.md'
+          - 'CONTRIBUTING.md'
+
+# 依赖更新
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/dependabot.yml'
+
+# ---------------------------------------------------------------------------
+# 本仓库的两个领域标签
+# ---------------------------------------------------------------------------
+
+# 自建技能：自己编写和维护，可以直接改
+custom:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'custom/**'
+
+# 上游技能：npx skills add 装来的 vendored 内容。
+# 单独打标的意义在于——这里的问题通常不该在本仓库直接改（下一次
+# npx skills update 就会覆盖掉），而是回到上游修，或者改 skills-lock.json 的版本。
+skills:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.agents/**'
