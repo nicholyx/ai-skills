@@ -1,0 +1,25 @@
+# ---------------------------------------------------------------------------
+# 本仓库不追踪的本地文件
+#
+# 此前这一层是**缺失**的：.DS_Store 与 custom/daily/skills-sync/.venv/ 之所以
+# 没被提交进去，靠的是使用者本机的全局 gitignore（~/.gitignore_global）。
+# 换一台机器、换一个贡献者，它们就会立刻出现在 git status 里。
+# ---------------------------------------------------------------------------
+
+# macOS
+.DS_Store
+
+# 编辑器与 IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Claude Code 的本地设置：各人不同，不该进仓库
+.claude/settings.local.json

@@ -1,4 +1,4 @@
-# superpowers-github-issue-fix
+# github-issue-autofix-workflow
 
 使用 superpowers 工作流修复 GitHub issue。
 

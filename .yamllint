@@ -1,0 +1,52 @@
+# yamllint 配置
+#
+# 针对 GitHub Actions 工作流做了适配：
+# GitHub 的 YAML 方言与标准 YAML 有若干差异，直接用 default 规则集会误报。
+#
+# 本地运行：yamllint -c .yamllint .github/
+
+extends: default
+
+rules:
+  # 工作流里的 run: 块经常有很长的命令行，限制行长会逼着写出难读的折行
+  line-length: disable
+
+  # 关键：GitHub Actions 用 on: 作为顶层键，而 YAML 1.1 会把裸写的 on
+  # 解析成布尔值 true，触发 truthy 规则误报。这里关闭对键名的检查。
+  truthy:
+    allowed-values: ["true", "false"]
+    check-keys: false
+
+  # 注释需要与内容之间留空格，但允许行首注释紧贴内容
+  comments:
+    min-spaces-from-content: 1
+    require-starting-space: true
+
+  # 工作流文件习惯上不带 --- 开头
+  document-start: disable
+
+  # 空行数量的限制放宽，便于用空行分段提升可读性
+  empty-lines:
+    max: 2
+    max-start: 0
+    max-end: 1
+
+  # 序列缩进风格统一即可，不强制必须缩进
+  indentation:
+    spaces: 2
+    indent-sequences: consistent
+    check-multi-line-strings: false
+
+  # 行尾空格会污染 diff，这个必须拦
+  trailing-spaces: enable
+
+  # 允许 ${{ }} 表达式出现在任何位置
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+    min-spaces-inside-empty: 0
+    max-spaces-inside-empty: 0
+
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
