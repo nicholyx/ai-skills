@@ -111,9 +111,13 @@ gh label list --repo nicholyx/ai-skills
 gh api repos/nicholyx/ai-skills --jq '.has_discussions'
 ```
 
-这个仓库的定位是「个人技能仓库 + 开源」，**issue 比 discussion 合适**：
-技能请求、排错提问都是可关闭的具体事项，不是开放式讨论。
-如果以后要收集「你希望有哪些技能」这类开放话题，再开 Discussions 不迟。
+**当前是开启的**，用途是承接**使用提问**（「怎么装」「为什么没生效」），
+避免这类内容把 issue 列表淹没 —— `ISSUE_TEMPLATE/config.yml` 与 `SUPPORT.md`
+都指向它。
+
+但它的边界要说清楚：**技能请求与排错仍是 issue，不是 discussion**。
+它们是可关闭的具体事项，不是开放式讨论 —— 这一点是刻意区分的，
+不要让 Discussions 变成第二个 issue 列表。
 
 ### Projects 看板
 
@@ -140,6 +144,39 @@ gh variable list --repo nicholyx/ai-skills
 > 它们是 `.github/workflows/ci.yml` 的 `env:`。别放到 Variables 里 ——
 > 那会让 `lint.sh` 读不到（它从 ci.yml 里 sed 出来），于是本地与 CI 静默漂移。
 
+### 安全功能开关
+
+```bash
+gh api repos/nicholyx/ai-skills --jq '.security_and_analysis'
+gh api repos/nicholyx/ai-skills/private-vulnerability-reporting
+```
+
+| 功能 | 状态 | 说明 |
+| --- | --- | --- |
+| Secret scanning | ✅ 开 | 自动识别提交进来的凭证 |
+| Push protection | ✅ 开 | 在推送阶段就拦住已知凭证，而不是事后告警 |
+| Private vulnerability reporting | ✅ 开 | `SECURITY.md` 与 `ISSUE_TEMPLATE/config.yml` 都指向 `security/advisories/new`。**不开的话那个入口根本不存在**，文档里的链接是死的 |
+| Dependabot security updates | ❌ **关** | 见下 |
+
+**为什么关掉 Dependabot security updates**（这一条容易被误认为是疏漏）：
+
+它基于仓库的**依赖图谱**全仓扫描，而且**无法按路径限定**。本仓库唯一的依赖清单
+全在 vendor 区（`.agents/skills/*/package.json`、`*/requirements.txt`、
+`plugin-creator/assets/templates/**`），自建内容的依赖面是零
+（`custom/daily/skills-sync/pyproject.toml` 的 `dependencies = []`）。
+
+于是它只会去改**我们无权改的 vendor 内容** —— 那些改动会在下次
+`npx skills update` 时被覆盖，永远合不了。实测：开启后立刻产生了一次失败运行
+（`npm_and_yarn in .../mcp-server-typescript` → `dependency_file_not_supported`），
+而它盯的正是上游模板里的 `@modelcontextprotocol/sdk`。
+
+`dependabot.yml` 里的 **version updates 仍然有效**（只配了 `github-actions` 生态），
+那才是本仓库真正需要 Dependabot 的地方 —— 维护工作流里按 SHA 固定的那些 action。
+
+> 如果将来本仓库真的有了自己的依赖（例如某个技能开始带 `package.json`），
+> 再把这个开关打开。**判据是「依赖清单在不在我们自己的目录里」**，
+> 不是「GitHub 有没有提示你去开」。
+
 ### 换机器重建清单
 
 克隆仓库之后，**代码里的东西都在了**，下面这些要重做：
@@ -148,7 +185,8 @@ gh variable list --repo nicholyx/ai-skills
 | --- | --- | --- |
 | 1 | 分支保护（勾 `CI 总览`） | `gh api repos/nicholyx/ai-skills/branches/main/protection` |
 | 2 | 标签体系 | `gh label list` |
-| 3 | Discussions 开关（当前建议**不开**） | `gh api repos/nicholyx/ai-skills --jq '.has_discussions'` |
+| 3 | Discussions 开关（当前**开启**） | `gh api repos/nicholyx/ai-skills --jq '.has_discussions'` |
+| 3b | 安全功能开关（见下） | `gh api repos/nicholyx/ai-skills --jq '.security_and_analysis'` |
 | 4 | Projects 看板（可选） | `gh project list --owner nicholyx` |
 | 5 | 自动化设施对应的仓库权限 | 见下一节 |
 | 6 | 本机工具（`shellcheck` / `actionlint` / `yamllint` / `docker`） | `./scripts/lint.sh` 的收尾会列出跳过项与安装方式 |
