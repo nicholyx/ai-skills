@@ -1,0 +1,37 @@
+# 换行符策略
+#
+# 目的有二：避免 Windows 贡献者提交 CRLF 造成无意义的 diff；以及防止 CRLF 混进
+# .sh —— 带 CRLF 的 shebang 会让脚本直接执行失败，那不是风格问题是缺陷。
+#
+# ## 为什么所有规则都锚定到仓库根（以 / 开头）
+#
+# 上游 `.agents/**` 里有 17 个文件的工作区副本是 CRLF、而 index 里是 LF ——
+# 这是 `core.autocrlf=input` 的正常结果（提交时归一化成 LF，检出时不改）。
+# 本机与 CI 的比较都靠它归一化，所以 git 认为这些文件是干净的。
+#
+# **任何匹配到 `.agents/**` 的规则都会打破这一点。** 实测：加上 `.agents/** -text`
+# 之后，一旦改动某个 vendor 的 CRLF 文件，git 不再归一化、「整文件都变了」的假 diff
+# 就出现了 —— 比不加 .gitattributes 还糟。所以这里只写锚定到根的规则，
+# 让 vendor 区继续由 core.autocrlf 决定，与加本文件之前完全一致。
+
+# --- 自建内容：统一 LF（/ 开头 = 只匹配仓库根下，不波及 .agents/）---
+/scripts/**      text eol=lf
+/custom/**       text eol=lf
+/docs/**         text eol=lf
+/.github/**      text eol=lf
+/*.md            text eol=lf
+/*.json          text eol=lf
+/.gitignore      text eol=lf
+/.gitattributes  text eol=lf
+/.editorconfig   text eol=lf
+/.yamllint       text eol=lf
+
+# --- 二进制文件不做换行符转换 ---
+# 用扩展名而非路径：二进制判定与「谁的代码」无关。
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.gz   binary
+*.zip  binary

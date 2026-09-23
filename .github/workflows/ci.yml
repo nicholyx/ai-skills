@@ -1,0 +1,516 @@
+name: CI
+
+run-name: CI · ${{ github.event_name }} · ${{ github.ref_name }}
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# 最小权限：CI 只读仓库，不写回任何东西。
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # 版本 pin 的**唯一真源**。scripts/lint.sh 与所有 job 都从这里取，
+  # 不写第二份 —— 写死两份会在升级时静默漂移，而「本地过 = CI 过」正是靠它成立。
+  ACTIONLINT_VERSION: "1.7.12"
+  ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+  SHELLCHECK_VERSION: "0.11.0"
+  # shellcheck 的 release **不提供校验和文件**，因此按内容哈希固定。
+  SHELLCHECK_SHA256: "8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198"
+  YAMLLINT_VERSION: "1.38.0"
+  ZIZMOR_VERSION: "1.30.1"
+  NODE_VERSION: "24"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 静态检查层。九个 job 互相独立（没有 needs），因为它们都是亚秒级的，
+  # 串行只会让反馈变慢；而独立 job 意味着一个检查器崩溃不影响其他结果的可见性。
+  #
+  # 下面 job 的 id 与 scripts/lint.sh --list 输出的 id **逐字对应**，
+  # lint-selftest 会断言这一点，防止「加了本地检查却忘了接进 CI」。
+  # ---------------------------------------------------------------------------
+
+  frontmatter:
+    name: 技能 frontmatter 校验
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false # GITHUB_TOKEN 不残留在 runner 上
+      - name: 设置 Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 运行检查
+        run: node scripts/checks/frontmatter.js
+
+  evals:
+    name: evals.json 结构校验
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: 设置 Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 运行检查
+        run: node scripts/checks/evals.js
+
+  vendor-lock:
+    name: 上游技能 lock 一致性
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: 设置 Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 运行检查
+        run: node scripts/checks/vendor-lock.js
+
+  hygiene:
+    name: 编码与 JSON 校验
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: 设置 Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 运行检查
+        run: node scripts/checks/hygiene.js
+
+  links:
+    name: 相对链接校验
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: 设置 Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 运行检查
+        run: node scripts/checks/links.js
+
+  scripts:
+    name: 脚本语法检查
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: 设置 Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 运行检查
+        run: node scripts/checks/scripts.js
+
+  shellcheck:
+    name: shellcheck（Shell 静态分析）
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      # 不用 apt-get / runner 预装的版本：它们随镜像更新漂移，
+      # 而 shellcheck 不同版本报的告警确实不同 —— 那是「本地绿、CI 红」的常见来源。
+      - name: 安装 shellcheck（按内容校验）
+        env:
+          VERSION: ${{ env.SHELLCHECK_VERSION }}
+          SHA256: ${{ env.SHELLCHECK_SHA256 }}
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          tarball="shellcheck-v${VERSION}.linux.x86_64.tar.xz"
+          curl -sSL -o "$tarball" \
+            "https://github.com/koalaman/shellcheck/releases/download/v${VERSION}/${tarball}"
+          echo "${SHA256}  ${tarball}" | sha256sum -c -
+          tar -xJf "$tarball"
+          sudo install -m 0755 "shellcheck-v${VERSION}/shellcheck" /usr/local/bin/shellcheck
+          shellcheck --version | head -n 3
+      - name: 运行检查
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          # 目标集与 scripts/lint.sh 逐字一致
+          mapfile -t targets < <(find scripts -name '*.sh' | sort)
+          shellcheck -x "${targets[@]}"
+
+  actionlint:
+    name: actionlint（工作流静态检查）
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: 安装 actionlint（按内容校验）
+        env:
+          VERSION: ${{ env.ACTIONLINT_VERSION }}
+          SHA256: ${{ env.ACTIONLINT_SHA256 }}
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          tarball="actionlint_${VERSION}_linux_amd64.tar.gz"
+          curl -sSL -o "$tarball" \
+            "https://github.com/rhysd/actionlint/releases/download/v${VERSION}/${tarball}"
+          echo "${SHA256}  ${tarball}" | sha256sum -c -
+          tar -xzf "$tarball" actionlint
+          sudo install -m 0755 actionlint /usr/local/bin/actionlint
+          actionlint --version
+      - name: 运行检查
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          # 显式传工作流文件列表，不裸跑：裸跑时 actionlint 靠 .git 定位项目根。
+          # 目标集**只收 .github/workflows/**，不能复用 yamllint 的目标集 ——
+          # dependabot.yml / ISSUE_TEMPLATE/*.yml 不是工作流，喂进去会报
+          # 「"jobs" section is missing in workflow」。
+          mapfile -t targets < <(find .github/workflows \( -name '*.yml' -o -name '*.yaml' \) | sort)
+          actionlint -color "${targets[@]}"
+
+  yamllint:
+    name: yamllint（YAML 风格）
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      # 用 venv 而不是 pipx：venv 的 bin 目录可以由我们显式加进 PATH，
+      # 不依赖 runner 镜像里 pipx 的默认行为。
+      - name: 安装 yamllint
+        env:
+          VERSION: ${{ env.YAMLLINT_VERSION }}
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/yamllint-venv"
+          "$RUNNER_TEMP/yamllint-venv/bin/pip" install --quiet "yamllint==${VERSION}"
+          echo "$RUNNER_TEMP/yamllint-venv/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/yamllint-venv/bin/yamllint" --version
+      - name: 运行检查
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          mapfile -t targets < <(find .github \( -name '*.yml' -o -name '*.yaml' \) | sort)
+          yamllint -c .yamllint "${targets[@]}"
+
+  zizmor:
+    name: zizmor（工作流安全扫描）
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: 运行检查
+        env:
+          VERSION: ${{ env.ZIZMOR_VERSION }}
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          # 工具本身也是供应链的一环，所以按 tag 固定（与 actions 按 SHA 固定同理）。
+          # 挂载只读（:ro）：扫描器没有理由改动被扫描的文件。
+          # --no-online-audits 让它离线且确定。
+          docker run --rm -v "$PWD":/repo:ro \
+            "ghcr.io/zizmorcore/zizmor:${VERSION}" /repo --no-online-audits
+
+  # ---------------------------------------------------------------------------
+  # 提交信息规范。只在 PR 上跑：推送到 main 的提交已经过过一次 PR。
+  # ---------------------------------------------------------------------------
+  commit-messages:
+    name: 提交信息规范
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # 区间校验需要祖先提交，浅克隆拿不到
+      - name: 校验 PR 中的提交信息
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: ./scripts/check-commit-msg.sh --range "${BASE_SHA}..${HEAD_SHA}"
+      # squash 合并后 PR 标题会成为提交信息，所以标题也要合规。
+      # 上下文值一律经 env 中转，绝不直接写进 run:（表达式注入）。
+      - name: 校验 PR 标题
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: ./scripts/check-commit-msg.sh --message "$PR_TITLE"
+
+  # ---------------------------------------------------------------------------
+  # lint.sh 自测。lint.sh 是 CI 里**被调用为零**的脚本，而它的全部价值就是
+  # 「本地过 = CI 过」—— 这条保证本身需要有人守。
+  # 断言方向两两相反：既防「本地太松」，也防「本地太严」。
+  # ---------------------------------------------------------------------------
+  lint-selftest:
+    name: lint.sh 自测
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: 设置 Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 断言 lint.sh 的检查项与 ci.yml 的 needs 一致
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          # lint.sh --list 的 id 必须等于 ci-summary 的 needs 减去「CI 专属」的两项。
+          # 只比数量会漏掉同长度互换，所以比排序后的完整集合。
+          lint_ids="$(./scripts/lint.sh --list | cut -f1 | sort)"
+          # 只取方括号里的内容：tr -d '[],' 会把 "needs:" 前缀也切出来当成 id。
+          needs_ids="$(grep -m1 '^    needs: \[' .github/workflows/ci.yml \
+                       | sed 's/.*\[//; s/\].*//' | tr ',' '\n' | tr -d ' ' | grep . \
+                       | grep -vx -e 'commit-messages' -e 'lint-selftest' | sort)"
+          if [[ "$lint_ids" != "$needs_ids" ]]; then
+            echo "::error::lint.sh 的检查项与 ci.yml 的 needs 不一致——有检查项不进判据"
+            diff <(printf '%s\n' "$lint_ids") <(printf '%s\n' "$needs_ids") || true
+            exit 1
+          fi
+          echo "一致：$(printf '%s' "$lint_ids" | tr '\n' ' ')"
+      - name: 断言自建技能的违规会失败
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          work="$(mktemp -d)"; trap 'rm -rf "$work"' EXIT
+          make_sandbox() {
+            local dir="$1"
+            tar -cf - --exclude=.git . | (cd "$dir" && tar -xf -)
+            # 副本必须自成一个 git 仓库。检查器以 git 索引为目标集，不带 .git 的
+            # 副本会让每个检查器直接 exit 2 —— 那样无论注入什么都"失败"，
+            # 断言就成了恒真，测的是「没有 .git」而不是「注入的键被拦下」。
+            (cd "$dir" && git init -q && git add -A \
+              && git -c user.email=ci@example.invalid -c user.name=ci commit -qm sandbox)
+          }
+          make_sandbox "$work"
+          # 用 head/tail 拼接而不是 sed：`sed 's/x/y\nz/'` 的 \n 在 GNU sed 里是
+          # 换行、在 BSD sed 里是字面的 n —— 那样本地跑会静默不生效。
+          {
+            head -n 1 "$work/custom/daily/git-commit/SKILL.md"
+            echo 'bogus-key: 1'
+            tail -n +2 "$work/custom/daily/git-commit/SKILL.md"
+          } > "$work/tmp.md" && mv "$work/tmp.md" "$work/custom/daily/git-commit/SKILL.md"
+          grep -q '^bogus-key: 1$' "$work/custom/daily/git-commit/SKILL.md" \
+            || { echo "::error::注入失败，断言无效"; exit 1; }
+
+          rc=0
+          out="$(cd "$work" && ./scripts/lint.sh --only frontmatter 2>&1)" || rc=$?
+          if [[ "$rc" -eq 0 ]]; then
+            echo "::error::自建技能加了非法 frontmatter 键，lint.sh 却通过了"
+            printf '%s\n' "$out"
+            exit 1
+          fi
+          # 必须确认失败的原因是那个非法键，而不是别的东西（例如环境问题）
+          printf '%s\n' "$out" | grep -q 'bogus-key' \
+            || { echo "::error::失败了，但原因不是注入的非法键——断言测错了东西"; printf '%s\n' "$out"; exit 1; }
+          echo "自建技能的违规会失败，且原因是那个键 ✓"
+      - name: 断言上游技能的违规不阻塞
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          work="$(mktemp -d)"; trap 'rm -rf "$work"' EXIT
+          make_sandbox() {
+            local dir="$1"
+            tar -cf - --exclude=.git . | (cd "$dir" && tar -xf -)
+            (cd "$dir" && git init -q && git add -A \
+              && git -c user.email=ci@example.invalid -c user.name=ci commit -qm sandbox)
+          }
+          make_sandbox "$work"
+          {
+            head -n 1 "$work/.agents/skills/agent-browser/SKILL.md"
+            echo 'bogus-key: 1'
+            tail -n +2 "$work/.agents/skills/agent-browser/SKILL.md"
+          } > "$work/tmp.md" && mv "$work/tmp.md" "$work/.agents/skills/agent-browser/SKILL.md"
+          grep -q '^bogus-key: 1$' "$work/.agents/skills/agent-browser/SKILL.md" \
+            || { echo "::error::注入失败，断言无效"; exit 1; }
+
+          # 上游区加同样非法的键；这一项**必须**仍然通过，
+          # 否则上游的既有违规会让 CI 永久红。
+          rc=0
+          out="$(cd "$work" && ./scripts/lint.sh --only frontmatter 2>&1)" || rc=$?
+          if [[ "$rc" -ne 0 ]]; then
+            echo "::error::上游技能的问题阻塞了 CI——分级被写反了"
+            printf '%s\n' "$out"
+            exit 1
+          fi
+          # 且必须仍然**可见**：静默跳过与通过无法区分
+          printf '%s\n' "$out" | grep -q 'bogus-key' \
+            || { echo "::error::上游违规没有出现在输出里——静默跳过与通过无法区分"; printf '%s\n' "$out"; exit 1; }
+          printf '%s\n' "$out" | grep -q '不阻塞' \
+            || { echo "::error::没有说明它不阻塞，读者会以为已经修好了"; printf '%s\n' "$out"; exit 1; }
+          echo "上游技能的违规不阻塞、且可见 ✓"
+      - name: 断言 hygiene 的输出可复现
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          # 旧版清单生成器里的 generatedAt 让「同一份工作区跑两次结果不同」，
+          # 这类不确定性会让任何基于 diff 的判据失效。
+          first="$(node scripts/checks/hygiene.js 2>&1 || true)"
+          second="$(node scripts/checks/hygiene.js 2>&1 || true)"
+          if [[ "$first" != "$second" ]]; then
+            echo "::error::同一份工作区跑两次，hygiene 的输出不同"
+            diff <(printf '%s\n' "$first") <(printf '%s\n' "$second") || true
+            exit 1
+          fi
+          echo "输出可复现 ✓"
+      - name: 断言非 git 目录下明确拒绝执行而非崩溃
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          work="$(mktemp -d)"; trap 'rm -rf "$work"' EXIT
+          # 这一项**故意**不带 .git：模拟从 source tarball 解压出来的目录
+          tar -cf - --exclude=.git . | (cd "$work" && tar -xf -)
+          [[ -d "$work/.git" ]] && { echo "::error::副本里竟然有 .git，断言无效"; exit 1; }
+
+          rc=0
+          out="$(cd "$work" && ./scripts/lint.sh 2>&1)" || rc=$?
+          if [[ "$rc" -eq 0 ]]; then
+            echo "::error::非 git 目录下 lint.sh 竟然全绿——检查器可能悄悄什么都没查"
+            exit 1
+          fi
+          printf '%s\n' "$out" | grep -q '以 git 索引为目标集' \
+            || { echo "::error::失败原因不是「缺少 git 仓库」，说明是崩溃而不是拒绝执行"; printf '%s\n' "$out"; exit 1; }
+          if printf '%s\n' "$out" | grep -q 'at Object.<anonymous>'; then
+            echo "::error::非 git 目录下抛异常了，应当明确报错退出"
+            exit 1
+          fi
+          echo "非 git 目录下明确拒绝执行 ✓"
+
+  # ---------------------------------------------------------------------------
+  # 汇总。分支保护只勾这一个 check，所以增删检查项不必回头改仓库设置。
+  #
+  # 这里的 jobs 数组是**派生**的：env 变量由 id 机械推导（R_ + 大写、- 换 _），
+  # 不维护第二份平行列表。参考实现里 needs / names / results 三份手写列表
+  # 就曾漏掉一项，导致子 job 失败而汇总仍报成功。
+  # ---------------------------------------------------------------------------
+  ci-summary:
+    name: CI 总览
+    runs-on: ubuntu-latest
+    needs: [frontmatter, evals, vendor-lock, hygiene, links, scripts, shellcheck, actionlint, yamllint, zizmor, commit-messages, lint-selftest]
+    if: always()
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: 汇总各检查结果
+        env:
+          R_FRONTMATTER: ${{ needs.frontmatter.result }}
+          R_EVALS: ${{ needs.evals.result }}
+          R_VENDOR_LOCK: ${{ needs.vendor-lock.result }}
+          R_HYGIENE: ${{ needs.hygiene.result }}
+          R_LINKS: ${{ needs.links.result }}
+          R_SCRIPTS: ${{ needs.scripts.result }}
+          R_SHELLCHECK: ${{ needs.shellcheck.result }}
+          R_ACTIONLINT: ${{ needs.actionlint.result }}
+          R_YAMLLINT: ${{ needs.yamllint.result }}
+          R_ZIZMOR: ${{ needs.zizmor.result }}
+          R_COMMIT_MESSAGES: ${{ needs.commit-messages.result }}
+          R_LINT_SELFTEST: ${{ needs.lint-selftest.result }}
+        run: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          declare -a jobs=(
+            "frontmatter:技能 frontmatter 校验"
+            "evals:evals.json 结构校验"
+            "vendor-lock:上游技能 lock 一致性"
+            "hygiene:编码与 JSON 校验"
+            "links:相对链接校验"
+            "scripts:脚本语法检查"
+            "shellcheck:shellcheck（Shell 静态分析）"
+            "actionlint:actionlint（工作流静态检查）"
+            "yamllint:yamllint（YAML 风格）"
+            "zizmor:zizmor（工作流安全扫描）"
+            "commit-messages:提交信息规范"
+            "lint-selftest:lint.sh 自测"
+          )
+
+          # 断言：jobs 数组与 needs 列表必须是同一个集合。
+          # 只比数量会漏掉同长度互换，所以比排序后的完整集合。
+          # 只取方括号里的内容：直接 tr -d '[],' 会把 "needs:" 这个前缀
+          # 也切出来当成一个 id，于是断言永远不相等。
+          cfg_ids="$(grep -m1 '^    needs: \[' .github/workflows/ci.yml \
+                     | sed 's/.*\[//; s/\].*//' | tr ',' '\n' | tr -d ' ' | grep . | sort)"
+          arr_ids="$(printf '%s\n' "${jobs[@]}" | cut -d: -f1 | sort)"
+          if [[ "$cfg_ids" != "$arr_ids" ]]; then
+            echo "::error::汇总表的 jobs 数组与 needs 不是同一个集合——有检查项不进判据"
+            diff <(printf '%s\n' "$cfg_ids") <(printf '%s\n' "$arr_ids") || true
+            exit 1
+          fi
+
+          failed=0
+          {
+            echo "## CI 检查结果"
+            echo ""
+            echo "| 检查项 | 结果 |"
+            echo "| --- | :---: |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          for spec in "${jobs[@]}"; do
+            id="${spec%%:*}"; label="${spec#*:}"
+            var="R_$(printf '%s' "$id" | tr 'a-z-' 'A-Z_')"
+            result="${!var:-}"
+
+            # 缺 env 就是「这一项进了 needs 但没进判据」——正是要防的那个缺陷
+            if [[ -z "$result" ]]; then
+              echo "::error::needs 里有 ${id}，但没有对应的 env ${var}——该项不进判据"
+              printf '| %s | ⚠️ 未纳入判据 |\n' "$label" >> "$GITHUB_STEP_SUMMARY"
+              failed=1
+              continue
+            fi
+
+            case "$result" in
+              success) icon="✅" ;;
+              skipped)
+                # 只有 commit-messages 的 skipped 是良性的（非 PR 触发）。
+                # 别处出现 skipped，说明那个 job 的 if 条件写错了，不能当通过。
+                if [[ "$id" == "commit-messages" ]]; then
+                  icon="⏭️"
+                else
+                  icon="⚠️ 意外跳过"; failed=1
+                fi ;;
+              *) icon="❌"; failed=1 ;;
+            esac
+            printf '| %s | %s |\n' "$label" "$icon" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$failed" -ne 0 ]]; then
+            echo "❌ 存在未通过的检查，请查看上方各任务的日志。" >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::CI 未能全部通过"
+            exit 1
+          fi
+          echo "✅ 全部检查通过。" >> "$GITHUB_STEP_SUMMARY"
