@@ -39,6 +39,22 @@ const path = require("path");
 const { Report } = require("../lib/report");
 const { REPO_ROOT, trackedFiles, tierOf } = require("../lib/gitfiles");
 
+/**
+ * Trellis 自己的记账文件：由 trellis 写入，我们不该手改，也不该拿本仓库的风格
+ * 约定去约束它们 —— 否则一次例行的 `trellis update` 就会让 CI 突然变红。
+ *
+ * 它们**不在** `.trellis/.template-hashes.json` 里（那份清单是 trellis 用来追踪
+ * 它生成的其他文件的），所以只能显式列出。按同样理由排除的还有上游 `.agents/**`
+ * （见 lib/report.js 的分级说明）。
+ *
+ * 只豁免**风格**检查（末尾换行、BOM）；正确性检查（UTF-8 合法性、U+FFFD、JSON
+ * 可解析）照常执行 —— 那些坏了是真的坏了。
+ */
+const TRELLIS_BOOKKEEPING = new Set([
+  ".trellis/.version",
+  ".trellis/.template-hashes.json",
+]);
+
 const report = new Report("编码与 JSON 校验");
 
 const files = trackedFiles();
@@ -73,6 +89,7 @@ for (const rel of files) {
   // 风格问题，只对自建内容报（SKILL.md 上的 BOM 由 frontmatter 检查器另行覆盖）。
   if (
     tier === "self" &&
+    !TRELLIS_BOOKKEEPING.has(rel) &&
     buf.length >= 3 &&
     buf[0] === 0xef &&
     buf[1] === 0xbb &&
@@ -106,7 +123,7 @@ for (const rel of files) {
   // 末尾换行：风格问题，只对自建内容报。判 fail 而非 warn —— .editorconfig 已经
   // 声明了 insert_final_newline，遵守它的编辑器会自动补上；这里报错说明有人绕过了
   // 编辑器配置，而修复成本是零。既然规则写下来了，就不该只提示不拦。
-  if (tier === "self" && text.length > 0 && !text.endsWith("\n")) {
+  if (tier === "self" && !TRELLIS_BOOKKEEPING.has(rel) && text.length > 0 && !text.endsWith("\n")) {
     report.fail(rel, lines.length, "文件末尾缺少换行（见 .editorconfig）");
   }
 

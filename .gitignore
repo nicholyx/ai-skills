@@ -23,3 +23,6 @@ venv/
 
 # Claude Code 的本地设置：各人不同，不该进仓库
 .claude/settings.local.json
+
+# Claude Code 的 subagent worktree（并行 agent 各占一个）
+.claude/worktrees/
