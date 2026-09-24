@@ -146,8 +146,9 @@ git status --short && git log --oneline -3
 - **汇总 job 卡 in_progress 而 run 汇总显示 success**：GitHub 状态机不一致。
   `gh pr close <N> && gh pr reopen <N>` 重新触发即可恢复
 - **分支保护拒绝合并、提示 not up to date**：`git fetch --prune && git rebase main && git push --force-with-lease`
-- **`gh pr merge --auto` 报 Auto merge is not allowed**：仓库未开启该功能，
-  改为等检查完成后手动合并
+- **`gh pr merge --auto` 报 Auto merge is not allowed**：仓库未开启 auto-merge。
+  **先去仓库设置里确认那个开关，而不是找绕过办法** —— 它是一个没打开的配置，
+  不是需要绕过的故障（见下）。
 - **`gh run view --log` 的输出混着源码行**：过滤 ANSI 回显（`\x1b[36;1m`）再看实际输出
 - **日志只显示 `exit code 2` 却没有任何输出**：多半是 `set -e` 下某条命令失败导致整个
   步骤中断。**故意要失败的命令必须包在 `set +e` / `set -e` 之间**
@@ -230,6 +231,27 @@ if out="$(gh pr merge N --squash 2>&1)"; then echo "$out"; fi
 后果实例：一条 `gh pr merge | tail -1` 的判断让「合并没有发生」报成成功，tag 跟着
 打在错误的提交上、release 用错误内容生成。**merge / push 之后必须复核远端真实状态**：
 `gh pr view N --json state`、`git ls-remote --tags origin vX.Y.Z`。
+
+### 先分清「行为问题」与「配置问题」
+
+遇到反复出现的操作摩擦时，先问一句：**这是工具的行为，还是一个没打开的开关？**
+
+真实教训：某个项目的维护手册在「应急处理」里长期记着一条
+
+> `gh pr merge --auto` 报 Auto merge is not allowed：仓库未开启该功能，改为等待检查完成后手动合并。
+
+前半句是对的，后半句把它当成故障绕过去了。而 `allow_auto_merge` 一直是仓库设置里
+一个能勾的选项 —— **打开它，这条「已知故障」就消失了**。
+
+**把「某个开关没开」记成「已知故障」，会让后来者去找根本不存在的 bug。** 判断方法：
+
+- 报错里出现 `is not allowed` / `not enabled` / `permission denied` 这类措辞时，
+  先去设置的对应位置看一眼，而不是先想绕法
+- 一条「故障」如果每次都以同样的方式出现、且绕法每次都有效，它多半是配置
+- 文档里写下绕法时，同时写下「为什么不能直接改配置」—— 写不出来就说明该去改配置
+
+同类：合并后不自动删分支（`delete_branch_on_merge`）—— 此前要靠每次记得带
+`--delete-branch`，开了设置之后忘带也不会留下垃圾分支。
 
 ### 进程模型：值跨进程边界的流向必须与模型对齐
 
