@@ -144,6 +144,51 @@ gh variable list --repo nicholyx/ai-skills
 > 它们是 `.github/workflows/ci.yml` 的 `env:`。别放到 Variables 里 ——
 > 那会让 `lint.sh` 读不到（它从 ci.yml 里 sed 出来），于是本地与 CI 静默漂移。
 
+### 仓库基本信息
+
+```bash
+gh api repos/nicholyx/ai-skills --jq '{description, homepage, topics}'
+```
+
+| 项 | 当前值 | 为什么它算「配置」而不是「装饰」 |
+| --- | --- | --- |
+| 描述 | 可复用的 Claude Code 技能集：Git 工作流、代码审查、Bug 根因分析、仓库分析等日常场景，以及把仓库改造成规范开源项目的完整流程。`npx skills add nicholyx/ai-skills` | **它是社区标准评分的一部分。** 实测：`community/profile` 在有描述时返回 100%，无描述时 85% —— 其余六项（README / LICENSE / CONTRIBUTING / 行为准则 / SECURITY / PR 模板）都齐全也一样扣 |
+| Topics | `claude-code`、`claude-skills`、`agent-skills`、`ai-agents`、`developer-tools`、`automation`、`prompt-engineering`、`llm`、`skill-library`、`workflow` | 决定 GitHub 搜索能不能搜到。仓库名不会被搜「claude skills」的人命中 |
+| Homepage | 未设置 | 有独立文档站时再填；暂时空着不扣分 |
+
+> **描述与 topics 是随时可改的**，不需要开 PR，也就不会在代码里留下痕迹 ——
+> 所以它们最容易被漏掉。上面的表格是**当下值**，改了记得回来同步。
+
+### 合并相关设置
+
+```bash
+gh api repos/nicholyx/ai-skills --jq '{delete_branch_on_merge, allow_auto_merge}'
+```
+
+两项都已开启：
+
+- **合并后自动删分支（`delete_branch_on_merge`）** —— 不开的话，每次 `gh pr merge`
+  都得记得带 `--delete-branch`，忘了就留下一个已合并分支。开了之后**忘带也不会留垃圾**。
+  手动带上仍是幂等的，所以文档里的命令不必改。
+- **允许自动合并（`allow_auto_merge`）** —— 不开的话 `gh pr merge --auto` 会报
+  `Auto merge is not allowed`。注意这是一个**配置**，不是一个需要绕过的故障 ——
+  判别方法见 `custom/daily/maintain-loop` 的「先分清行为问题与配置问题」。
+
+### Wiki：已关闭
+
+```bash
+gh api repos/nicholyx/ai-skills --jq '.has_wiki'
+```
+
+**关闭是有意的。** 文档正文在 `docs/`，随 PR 一起被 review（CODEOWNERS 覆盖该目录），
+不会出现文档与代码脱节。而 Wiki 是独立的 git 仓库，改代码时很容易忘记同步。
+
+此前的状态是**开着但从未初始化**：仓库页面上留着一个「Create the first page」入口，
+点进去是空页面 —— 对访客来说这比没有 Wiki 更糟。
+
+> 真要重新启用时：GitHub 要求**先在网页端创建首个页面**才会初始化它的 git 仓库
+> （这一步没有 API），之后才可以 `git clone https://github.com/nicholyx/ai-skills.wiki.git`。
+
 ### 安全功能开关
 
 ```bash
@@ -187,6 +232,8 @@ gh api repos/nicholyx/ai-skills/private-vulnerability-reporting
 | 2 | 标签体系 | `gh label list` |
 | 3 | Discussions 开关（当前**开启**） | `gh api repos/nicholyx/ai-skills --jq '.has_discussions'` |
 | 3b | 安全功能开关（见下） | `gh api repos/nicholyx/ai-skills --jq '.security_and_analysis'` |
+| 3c | **仓库描述与 topics（见上）** | `gh api repos/nicholyx/ai-skills --jq '{description, topics}'` |
+| 3d | **合并相关设置与 Wiki 开关** | `gh api repos/nicholyx/ai-skills --jq '{delete_branch_on_merge, allow_auto_merge, has_wiki}'` |
 | 4 | Projects 看板（可选） | `gh project list --owner nicholyx` |
 | 5 | 自动化设施对应的仓库权限 | 见下一节 |
 | 6 | 本机工具（`shellcheck` / `actionlint` / `yamllint` / `docker`） | `./scripts/lint.sh` 的收尾会列出跳过项与安装方式 |

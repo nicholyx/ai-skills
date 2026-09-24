@@ -11,6 +11,16 @@
 
 ### 变更
 
+- **仓库设置对齐：社区标准从 85% 提到 100%**（[#12](https://github.com/nicholyx/ai-skills/pull/12)）。缺口是**仓库描述为空** —— 实测对照证明了这一点：`community/profile` 在有描述时返回 100%，无描述时 85%，其余六项（README / LICENSE / CONTRIBUTING / 行为准则 / SECURITY / PR 模板）都齐全也一样扣。同时补上了 10 个 topics。
+  - **描述与 topics 是最容易被漏掉的一类配置**：它们随时可改、不进代码、不开 PR，因此不会在任何 diff 里留下痕迹。已写进 `MAINTAINER_GUIDE` 的配置清单，并注明「上表是当下值，改了记得回来同步」
+  - 顺带澄清一个假警报：`community/profile` 报的 `issue_template: false` **不是缺口**。实测 vscode、cli/cli、ohmyzsh 同样是 `null` 但健康度都是 100% —— 那个字段只认旧的**单文件** `ISSUE_TEMPLATE.md`，不认目录式模板
+- **开启「合并后自动删分支」与「允许自动合并」，关闭空 Wiki**（[#12](https://github.com/nicholyx/ai-skills/pull/12)）。前两项此前一直是关闭的：前者要每次记得带 `--delete-branch`，后者会让 `gh pr merge --auto` 报 `Auto merge is not allowed`。
+  - Wiki 的状态是**开着但从未初始化**：仓库页面留着一个「Create the first page」入口，点进去是空页面 —— 对访客来说这比没有 Wiki 更糟。而本仓库本来就明确「文档在 `docs/`，不放 Wiki」
+- **修正里程碑模型：Roadmap Issue 不再挂在版本里程碑下**（[#12](https://github.com/nicholyx/ai-skills/pull/12)）。Roadmap 是**持续维护的活文档**，不是某个版本的交付物；挂在 v1.0.0 下会让那个已发布的版本永远显示「未完成 1」。已将其移出并关闭 v1.0.0 里程碑。
+
+
+### 变更
+
 - **`maintain-loop` 新增一条判断：「先分清行为问题与配置问题」**（[#11](https://github.com/nicholyx/ai-skills/pull/11)）。起因是对另一个项目做仓库设置审计时发现，它的维护手册把 `gh pr merge --auto` 报的 `Auto merge is not allowed` 当作「已知故障」记了绕过办法 —— 而 `allow_auto_merge` 只是仓库设置里一个能勾的选项，打开它那条「故障」就消失了。
   - 由此提炼出判断方法：报错里出现 `is not allowed` / `not enabled` / `permission denied` 这类措辞时先去看设置的对应位置；一条「故障」如果每次都以同样方式出现、且绕法每次都有效，它多半是配置；**在文档里写下绕法时，同时写下「为什么不能直接改配置」—— 写不出来就说明该去改配置**
   - 同时改掉了 skill 里同源的那条表述：原先写「仓库未开启该功能，改为等待检查完成后再合并」，现在写明「先去确认那个开关，而不是找绕过办法」
