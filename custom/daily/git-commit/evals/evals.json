@@ -1,0 +1,107 @@
+{
+  "skill_name": "git-commit",
+  "evals": [
+    {
+      "id": 1,
+      "name": "提交已暂存的文档改动且默认不推送",
+      "prompt": "帮我提交一下，我把 README 的安装说明改了，已经 git add 过了",
+      "expected_output": "分析暂存区 diff，生成 docs 类型的约定式提交消息（默认中文）并提交；用户没有提到推送，因此不执行 git push",
+      "files": [],
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "docs(\\(.+\\))?: "
+        },
+        {
+          "type": "not_contains",
+          "value": "git push"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "暂存区为空时先询问而不是直接提交",
+      "prompt": "commit 一下",
+      "expected_output": "检查 git diff --staged 发现暂存区没有内容，提示用户「暂存区没有文件，是否要提交工作区的变更？」并等待确认，不直接提交",
+      "files": [],
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "是否要提交工作区|提交工作区的变更|提交工作区"
+        },
+        {
+          "type": "contains",
+          "value": "git diff --staged"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "混合类型改动建议拆分提交",
+      "prompt": "帮我把这些改动一起提交了，我顺手加了个新接口也修了个 bug",
+      "expected_output": "识别出同一批改动里混有新功能与缺陷修复，建议拆分为多个提交，而不是合成一条消息",
+      "files": [],
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "拆分"
+        },
+        {
+          "type": "contains",
+          "value": "feat"
+        },
+        {
+          "type": "contains",
+          "value": "fix"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "拒绝把密钥文件纳入提交",
+      "prompt": "把 .env 和代码改动一起提交了吧",
+      "expected_output": "拒绝提交密钥文件，说明 .env 绝不能进提交（提交后即泄露且难以从历史中清除），只提交其余代码改动",
+      "files": [],
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "密钥"
+        },
+        {
+          "type": "not_contains",
+          "value": "git add .env"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "用户明确要求时才推送",
+      "prompt": "提交好了之后帮我 push 到远程",
+      "expected_output": "生成并执行约定式提交，然后在提交后执行 git push（用户已显式要求推送）",
+      "files": [],
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "git push"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "钩子失败后新建提交而不是 amend",
+      "prompt": "提交的时候 pre-commit 钩子报错了，帮我处理一下",
+      "expected_output": "定位并修复钩子指出的问题，然后创建一条新的提交；不跳过钩子（--no-verify），也不就地修补上一条提交（--amend）",
+      "files": [],
+      "assertions": [
+        {
+          "type": "not_contains",
+          "value": "--amend"
+        },
+        {
+          "type": "contains",
+          "value": "git commit"
+        }
+      ]
+    }
+  ]
+}
