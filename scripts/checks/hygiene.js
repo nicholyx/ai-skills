@@ -154,7 +154,7 @@ for (const rel of files) {
 }
 
 report.info(
-  `扫描 ${files.length} 个已追踪文件（文本 ${textCount}、二进制 ${binaryCount}），` +
+  `扫描 ${files.length} 个待提交文件（文本 ${textCount}、二进制 ${binaryCount}），` +
     `其中 JSON ${jsonCount} 个。`
 );
 

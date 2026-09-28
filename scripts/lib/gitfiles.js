@@ -48,23 +48,60 @@ function requireRepo() {
 }
 
 /**
- * 已追踪文件的仓库相对路径（正斜杠分隔）。
+ * 目标集：**会被提交的文件** = 已追踪 ∪ 未追踪但未被忽略。
  *
- * 用 `-z` 而不是默认输出：`-z` 给出的是**未经引号转义的原始字节**，
- * 非 ASCII 路径（本仓库有中文文件名）可以直接用。默认输出受 `core.quotePath`
- * 影响，中文会变成 `\344\275\240` 这种形式，无法与真实路径比对。
+ * ## 为什么要带上「未追踪」
+ *
+ * 此前只取 `git ls-files`（已追踪）。这留下一个真实踩过的坑：
+ * `task.py` 生成了 `.trellis/tasks` 下每个任务的 `task.json`，**提交前**跑 `lint.sh` 得到全绿，
+ * 提交推送后 CI 立刻变红 —— 因为新文件还没进索引，检查器根本看不到它。
+ *
+ * 那破坏了这条命令存在的唯一理由（「本地过 = CI 过」）：**本地绿 CI 红是最坏的组合**，
+ * 它让你以为安全，而其实不是。
+ *
+ * 而「未追踪但未被忽略」的文件，正是 `git add -A && commit && push` 之后 CI 会看到的
+ * 那一批。把它们纳入，本地过才真的蕴含 CI 过（本地集 ⊇ CI 集）。
+ *
+ * 代价是可能出现「本地红 CI 绿」（那些文件如果最终没提交的话）。这个方向是**保守**的，
+ * 而且自我纠正 —— 不想让某个文件被检查，就该把它写进 `.gitignore`，而不是让它悬在
+ * 「随时可能被提交」的状态。
+ *
+ * ## 两个实现细节
+ *
+ * - 用 `-z` 而不是默认输出：`-z` 给出的是**未经引号转义的原始字节**，非 ASCII 路径
+ *   （本仓库有中文文件名）可以直接用。默认输出受 `core.quotePath` 影响，中文会变成
+ *   `\344\275\240` 这种形式，无法与真实路径比对。
+ * - `--exclude-standard` 让 git 按 `.gitignore` 过滤，所以 `.venv/`、`.DS_Store`、
+ *   `.claude/` 这些**永远不会进仓库**的东西仍然不在目标集里 —— 这一点没有变。
  */
 function trackedFiles() {
   requireRepo();
-  const out = execFileSync("git", ["ls-files", "-z"], {
+  const run = (args) =>
+    execFileSync("git", args, {
+      cwd: REPO_ROOT,
+      encoding: "buffer",
+      maxBuffer: 64 * 1024 * 1024,
+    })
+      .toString("utf8")
+      .split("\0")
+      .filter((p) => p.length > 0);
+
+  const tracked = run(["ls-files", "-z"]);
+  const untracked = run(["ls-files", "-z", "--others", "--exclude-standard"]);
+  // 去重并保持稳定顺序，保证输出可复现
+  return [...new Set([...tracked, ...untracked])].sort();
+}
+
+/** 当前有多少未追踪但未被忽略的文件 —— 用于在 lint 收尾如实说明覆盖范围的边界。 */
+function untrackedCount() {
+  requireRepo();
+  return execFileSync("git", ["ls-files", "--others", "--exclude-standard"], {
     cwd: REPO_ROOT,
-    encoding: "buffer",
+    encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
-  });
-  return out
-    .toString("utf8")
-    .split("\0")
-    .filter((p) => p.length > 0);
+  })
+    .split("\n")
+    .filter((p) => p.length > 0).length;
 }
 
 /** 目标集的 Set 形式，用于 O(1) 的「这个路径在索引里吗」。 */
@@ -72,7 +109,7 @@ function trackedSet() {
   return new Set(trackedFiles());
 }
 
-/** 按扩展名筛选已追踪文件。 */
+/** 按扩展名筛选目标集（会被提交的文件）。 */
 function trackedWithExt(ext) {
   return trackedFiles().filter((p) => p.endsWith(ext));
 }
@@ -96,7 +133,7 @@ function byName(a, b) {
  * 真实技能目录。
  *
  * 技能 = `.agents/skills/`、`custom/daily/`、`custom/projects/` 的**深度 1**
- * 子目录，且该目录下有一个已追踪的 `SKILL.md`。
+ * 子目录，且该目录下有一个会随提交进入仓库的 `SKILL.md`。
  *
  * 深度限制是必须的，不是保守：plugin-creator 的 assets/templates 下有一个
  * 嵌套更深的 SKILL.md，它是一个**模板资产**而非技能，其 `name: skill-template`
@@ -132,7 +169,7 @@ function skillDirs() {
   return found;
 }
 
-/** 读一个已追踪文件的内容。文件不在磁盘上时返回 null。 */
+/** 读一个目标文件的内容。文件不在磁盘上时返回 null。 */
 function readTracked(relPath) {
   try {
     return fs.readFileSync(path.join(REPO_ROOT, relPath), "utf8");
@@ -150,6 +187,7 @@ module.exports = {
   EXIT_ABORT,
   requireRepo,
   trackedFiles,
+  untrackedCount,
   trackedSet,
   trackedWithExt,
   trackedWithSuffix,

@@ -418,6 +418,16 @@ if [[ "$FAILED" -gt 0 ]]; then
   exit 1
 fi
 
+if [[ ${#NONSYNC_NOTES[@]} -eq 0 && "$FAILED" -eq 0 ]]; then
+  # 目标集含「未追踪但未被忽略」的文件，等价于「git add -A 之后 CI 会看到的那批」。
+  # 如实说明范围，免得读者以为只查了已提交的内容。
+  _untracked="$(git ls-files --others --exclude-standard 2>/dev/null | wc -l | tr -d ' ')"
+  if [[ "${_untracked:-0}" -gt 0 ]]; then
+    printf '%s  本次目标集 %s 个文件尚未 git add —— 它们的改动也已被检查。%s\n' \
+      "$C_DIM" "$_untracked" "$C_RESET"
+  fi
+fi
+
 printf '\n%s✓ 以上检查全部通过。%s\n' "$C_GREEN" "$C_RESET"
 printf '%s  注意：PR 标题不在其中 —— CI 的 commit-messages job 会校验它，%s\n' "$C_YELLOW" "$C_RESET"
 printf '        而标题在 PR 建立之前不存在，本地无从验证。请按规范写 PR 标题。\n'

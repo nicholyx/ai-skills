@@ -22,7 +22,7 @@ const { SKILL_PARENTS, skillDirs, readTracked, trackedFiles } = require("./gitfi
 
 const VENDOR_SKILLS_PARENT = SKILL_PARENTS[0]; // ".agents/skills"
 
-/** 某个仓库相对目录下的全部已追踪文件。 */
+/** 某个仓库相对目录下、会随提交进入仓库的全部文件。 */
 function trackedUnder(prefix) {
   return trackedFiles().filter((p) => p.startsWith(`${prefix}/`));
 }
