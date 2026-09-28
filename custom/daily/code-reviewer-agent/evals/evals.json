@@ -1,0 +1,56 @@
+{
+  "skill_name": "code-reviewer-agent",
+  "evals": [
+    {
+      "id": 1,
+      "name": "未指定目标时默认审查暂存变更",
+      "prompt": "帮我做一下代码审查",
+      "expected_output": "把审查目标整理为「当前项目的 git 暂存变更（git diff --cached）」，再 spawn 一个 description 为「深度代码审查」的 subagent，model 取自 code-reviewer.md frontmatter 的 model 字段（opus），而不是默认 sonnet",
+      "files": [],
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "git diff --cached|暂存"
+        },
+        {
+          "type": "contains",
+          "value": "opus"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "把完整审查规范传给 subagent",
+      "prompt": "审查一下 src/auth/ 的安全问题",
+      "expected_output": "只把「审查 src/auth/ 的安全问题」这层描述交给 subagent，对应目录的代码由 subagent 自己读；code-reviewer.md 的完整内容（含 OWASP 安全审查专长）与用户需求拼接后作为 prompt，不截断也不摘要",
+      "files": [],
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "OWASP"
+        },
+        {
+          "type": "contains",
+          "value": "审查任务"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "审查结果按严重程度结构化输出",
+      "prompt": "帮我审查一下当前分支相对 main 的改动，简单说结论就行",
+      "expected_output": "仍然完整输出 subagent 返回的审查结果（不做摘要或缩写），并按严重程度/优先级组织反馈，而不是因用户说「简单说」就省略细节",
+      "files": [],
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "严重|优先级|Critical|High"
+        },
+        {
+          "type": "contains",
+          "value": "opus"
+        }
+      ]
+    }
+  ]
+}
