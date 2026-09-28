@@ -168,6 +168,39 @@ description: Use when you need to do X, typically triggered by "帮我做 X"
 `description` 的写法值得多花点心思：**它是技能唯一的触发依据**。写清楚「什么时候用它」，
 比写清楚「它是什么」重要得多。
 
+### `metadata`：再写一份给人看的
+
+`description` 是写给**模型**的（塞触发词，本仓库实测 44～482 字符），人浏览时读不下去。
+所以用 `metadata` 补一层给**人**看的：
+
+```yaml
+metadata:
+  category: 代码质量                # 归到哪个场景，决定目录里的分组
+  tagline: "一句话说清它能干什么"     # → docs/SKILLS.md 的「它能做什么」列
+  example: "审查一下我暂存区的改动"   # → docs/SKILLS.md 的「你可以这样说」列
+```
+
+这两个字段直接影响**访客能不能看懂你这个技能** —— 它们会出现在
+[技能目录](docs/SKILLS.md)里，而那是陌生人决定装不装的依据。缺了不会让 CI 变红，
+但新技能会以占位符出现在目录里，等于没被介绍出去。
+
+> `example` 要写成**一句可以直接说出口的话**（「帮我提交」），
+> 不是功能描述（「支持提交」）。前者能照着念，后者不能。
+
+### 用脚手架创建（推荐）
+
+```bash
+node scripts/new-skill.js my-skill \
+  --tagline "一句话说清它能干什么" \
+  --example "你可以这样说"
+
+node scripts/gen-catalogue.js --write   # 让它进 docs/SKILLS.md
+./scripts/lint.sh                       # 提交前自查
+```
+
+脚手架生成的就是合规骨架，省得你回去对照上面那张表。它还会提醒你补 `description`
+—— 那一步只能人来，因为触发词取决于技能真实的行为。
+
 ### `evals/evals.json`（可选，但推荐）
 
 如果一个技能有 `evals/` 目录，就必须有 `evals.json`，且结构如下：
@@ -345,7 +378,7 @@ uv run --directory ~/.agents/skills/skills-sync python sync.py \
 ./scripts/lint.sh
 ```
 
-它依次执行 10 项检查：技能 frontmatter、evals.json 结构、上游 lock 一致性、
+它依次执行 13 项检查：技能 frontmatter、evals.json 结构、上游 lock 一致性、
 编码与 JSON、相对链接、脚本语法、shellcheck、actionlint、yamllint、zizmor。
 任何一项失败都会以非零码退出，并告诉你具体是哪个文件哪一行。**提交前跑一次，
 能省掉一轮 CI 返工** —— 提交信息与 PR 标题那一项除外，见下。
@@ -424,7 +457,7 @@ uv run --directory ~/.agents/skills/skills-sync python sync.py \
 
 ### 提交 PR 之后
 
-1. **CI 自动跑**（约 1 分钟内）—— 10 项静态检查 + 提交信息校验
+1. **CI 自动跑**（约 1 分钟内）—— 13 项静态检查 + 提交信息校验
 2. **维护者 review** —— 通常几天内；如果一周没动静，欢迎在 PR 里 @ 维护者催一下
 3. **合并** —— 维护者会使用 squash merge
 

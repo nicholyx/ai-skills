@@ -3,6 +3,10 @@ name: git-commit
 description: 使用约定式提交规范执行 git commit
 license: MIT
 allowed-tools: Bash
+metadata:
+  category: Git 与协作
+  tagline: "按约定式提交规范生成提交信息并提交"
+  example: "帮我提交"
 ---
 
 # Git 约定式提交

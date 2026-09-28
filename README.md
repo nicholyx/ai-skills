@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/github/license/nicholyx/ai-skills)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/nicholyx/ai-skills?style=social)](https://github.com/nicholyx/ai-skills/stargazers)
 
-[快速开始](#快速开始) · [使用指南](docs/USAGE.md) · [架构与原理](docs/ARCHITECTURE.md) · [排错手册](docs/TROUBLESHOOTING.md) · [维护者手册](docs/MAINTAINER_GUIDE.md) · [更新日志](CHANGELOG.md)
+[快速开始](#快速开始) · [技能目录](docs/SKILLS.md) · [使用指南](docs/USAGE.md) · [架构与原理](docs/ARCHITECTURE.md) · [排错手册](docs/TROUBLESHOOTING.md) · [维护者手册](docs/MAINTAINER_GUIDE.md) · [更新日志](CHANGELOG.md)
 
 **中文** | [English](README.en.md)
 
@@ -45,13 +45,26 @@
 - **1 个项目专用技能**，按 `prj-` 前缀隔离，不污染通用安装
 - **上游区与自建区物理隔离**：`npx skills update` 只动 `.agents/`，不会碰到你的自建技能
 - **上游技能有 lock 可查**：`skills-lock.json` 记录每个技能来自哪个 GitHub 仓库，`npx skills update` 据此更新
-- **一套本地静态检查**：`./scripts/lint.sh` 一条命令跑完 10 项检查，其中 6 项是纯 Node、无需额外安装
+- **一套本地静态检查**：`./scripts/lint.sh` 一条命令跑完 13 项检查，其中 6 项是纯 Node、无需额外安装
 - **零第三方依赖**：检查器只用 Node 标准库；`skills-sync` 的 `pyproject.toml` 依赖列表为空
 - **技能自带评测用例**：部分技能附带 `evals/evals.json`，CI 校验其结构
 
 ---
 
 ## 快速开始
+
+### 先试再装
+
+**不确定要不要装？任何一个技能都可以不安装先试。** 把技能名换成[技能目录](docs/SKILLS.md)里的名字：
+
+```bash
+npx skills use nicholyx/ai-skills@<技能名>
+```
+
+它会生成一段可直接粘贴给 AI 的提示词 —— **不写文件、不动配置、不改任何设置**，
+试完不满意没有任何残留。觉得好用再往下走。
+
+### 装到本地
 
 ```bash
 # 装本仓库的全部技能（15 个）
@@ -95,6 +108,8 @@ npx skills update
 ## 技能清单
 
 ### 自建 · 通用（`custom/daily/`）
+
+> 📖 带**触发示例**与**试用命令**的版本在[技能目录](docs/SKILLS.md) —— 下面这张表是给搜索引擎和快速扫读用的简表。
 
 这 14 个技能跨项目可用，是 `npx skills add nicholyx/ai-skills` 装到的主要内容。
 
