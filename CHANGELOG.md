@@ -9,6 +9,14 @@
 
 ## [Unreleased]
 
+### 修复
+
+- **安装说明此前把分发关系讲反了**（[#23](https://github.com/nicholyx/ai-skills/pull/23)）。多处文档写着「默认命令装 `.agents/skills` 里的技能」，并据此给出「只要上游那 31 个就装默认」「不想要上游就装 `/custom`」的选型建议 —— **两个方向都是反的**。实测：`npx skills add nicholyx/ai-skills` 装到的是 `custom/` 下的 15 个技能，`.agents/skills/` 那 31 个一个都装不到。
+  - 同时修正一个更细的错误：`custom/projects/` 下的项目专用技能**会被默认命令装到**，而多处文档声称「三条命令都不含它」——那也是反的。现在文档写明「不想要它就用 `.../custom/daily`」
+  - 补充「那 31 个上游技能到底怎么装」：`.agents/skills/` 是 `npx skills` 的**安装目标目录**（工具的工作区），不是本仓库分发的产品。要用就从各自的源仓库装，来源记在 `skills-lock.json` 里。这条已实测验证（`npx skills add vercel-labs/agent-browser` 可装）
+  - 顺带清掉三处过时计数：`AGENTS.md` 的「13 个技能」（实为 15）、「10 项检查」（实为 11），以及它把 `.claude/` 描述为「由 trellis update 管理」（实为已 gitignore、不在仓库里）
+
+
 ### 变更
 
 - **仓库设置对齐：社区标准从 85% 提到 100%**（[#12](https://github.com/nicholyx/ai-skills/pull/12)）。缺口是**仓库描述为空** —— 实测对照证明了这一点：`community/profile` 在有描述时返回 100%，无描述时 85%，其余六项（README / LICENSE / CONTRIBUTING / 行为准则 / SECURITY / PR 模板）都齐全也一样扣。同时补上了 10 个 topics。

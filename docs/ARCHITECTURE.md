@@ -586,7 +586,7 @@ node scripts/gen-local-skills.js --out /tmp/x.json
 直接插进 `run:` 就是脚本注入。CI 里每一处用到上下文值的地方都走 `env:`。
 
 **4. `.agents/**` 是第三方代码。**
-它被追踪、被分发，但不由这里维护。审查 PR 时如果看到 `.agents/` 的改动，
+它被追踪、**但不对外分发**，也不由这里维护。审查 PR 时如果看到 `.agents/` 的改动，
 先确认那是 `npx skills update` 的结果，而不是有人手工塞进去的东西。
 
 **5. 检查器不做任何写操作。**

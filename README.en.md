@@ -61,37 +61,31 @@ before merge.
 ## Quick Start
 
 ```bash
-# Install the skills under .agents/skills (default search depth)
+# Install everything (15 skills)
 npx skills add nicholyx/ai-skills
 
-# Install everything, including the self-maintained skills under custom
-npx skills add nicholyx/ai-skills --full-depth
-
-# Install only the self-maintained skills under custom
-npx skills add nicholyx/ai-skills/custom
+# Install only the general-purpose ones, skipping the single project-specific skill (14)
+npx skills add nicholyx/ai-skills/custom/daily
 ```
 
-> ⚠️ None of the three commands installs the project-specific skills under `custom/projects/` —
-> see [Layout](#layout). Copy that directory yourself if you want them.
+**You get the skills under `custom/`** — the ones this repository maintains and ships.
 
-Afterwards:
+> The 31 upstream skills under `.agents/skills/` are **not** part of the install surface and are
+> not installed by either command. That directory is `npx skills`'s *install target* (the tool's
+> working area), not a product this repository ships. To get one of them, install it from its
+> **own upstream repository** — the sources are recorded in `skills-lock.json`:
+>
+> ```bash
+> npx skills add vercel-labs/agent-browser
+> ```
+>
+> This repository does not re-distribute them because they are third-party content: we cannot
+> fix them, and edits would be wiped on `npx skills update`.
 
-```bash
-# See what got installed (Claude Code shown here)
-ls ~/.claude/skills/
+> ⚠️ The project-specific skill under `custom/projects/` **is** installed by the default command.
+> It assumes you are working in that specific project, so it is noise anywhere else — use the
+> second command to skip it.
 
-# Check whether upstream skills have newer versions
-npx skills check
-
-# Update all upstream skills
-npx skills update
-```
-
-> 💡 "The skill is installed but nothing happens" is the most common problem people hit.
-> See the troubleshooting entry
-> [技能装了但不生效](docs/TROUBLESHOOTING.md#技能装了但不生效) (Chinese).
-
----
 
 ## Skills
 
@@ -161,6 +155,7 @@ ai-skills/
 
 | | `.agents/skills/` | `custom/` |
 | --- | --- | --- |
+| **Shipped to users?** | **No** — it is the tool's install target | **Yes** — `npx skills add` installs this |
 | Source | Installed from upstream repos by `npx skills add` | Written and maintained here |
 | Tracking | `skills-lock.json` | No lock file |
 | Updates | Replaced wholesale by `npx skills update` | Manual |

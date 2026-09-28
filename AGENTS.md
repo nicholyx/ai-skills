@@ -29,13 +29,13 @@ Managed by Trellis. Edits outside this block are preserved; edits inside may be 
 
 ### 这个仓库是什么
 
-一个 Claude Code Skills 仓库：自建技能在这里维护，上游技能在这里分发。
+一个 Claude Code Skills 仓库：**自建技能在这里维护并对外分发**（`npx skills add` 装到的就是它们），上游第三方技能只是本地工作区、不转发。
 
 | 位置 | 是什么 | 能不能改 |
 | --- | --- | --- |
-| `custom/daily/`、`custom/projects/` | **自建技能**，13 个 | ✅ 这是主要工作区 |
-| `.agents/skills/` | `npx skills add` 装来的**上游技能**，31 个，占仓库 97% 体积 | ❌ **一律不改**，改了会在 `npx skills update` 时丢失 |
-| `.claude/` | Trellis 生成的集成层 | ❌ 由 `trellis update` 管理 |
+| `custom/daily/`、`custom/projects/` | **自建技能**，15 个（`npx skills add` 装到的就是它们） | ✅ 这是主要工作区 |
+| `.agents/skills/` | **上游技能**，31 个，占仓库 97% 体积。是 `npx skills` 的**安装目标目录**，**不随本仓库分发** | ❌ **一律不改**，改了会在 `npx skills update` 时丢失 |
+| `.claude/` | Trellis 的平台层，**已 gitignore、不在仓库里** | — 克隆后跑一次 `trellis init --claude -y` 生成，见 [CONTRIBUTING](CONTRIBUTING.md) |
 
 `custom/**` 的内容会被 `custom/daily/skills-sync/` 软链进 `~/.claude/skills`，
 **在使用者的全局 AI 环境里生效**。写技能内容时按这个前提对待。
@@ -54,7 +54,7 @@ Managed by Trellis. Edits outside this block are preserved; edits inside may be 
 ### 本地检查入口
 
 ```bash
-./scripts/lint.sh          # 10 项静态检查，目标是「本地绿 == CI 绿」
+./scripts/lint.sh          # 11 项静态检查，目标是「本地绿 == CI 绿」
 ./scripts/lint.sh --list   # 看有哪些检查项
 ```
 
