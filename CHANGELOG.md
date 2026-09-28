@@ -9,6 +9,10 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-29
+
+这一版的主线是**让陌生人一眼看到有什么、并且零成本试一次**：把写给模型的 482 字符说明书，变成人能读的目录；把一直存在却没人知道的「不装先试」摆到明面上。
+
 ### 新增
 
 - **技能目录 `docs/SKILLS.md`**（[#30](https://github.com/nicholyx/ai-skills/pull/30)）。按场景分组的技能清单，每个技能一句话 tagline、一句**可以直接照念**的示例、以及是否有可验证的评测用例。
@@ -125,6 +129,7 @@
 - 破坏性变更在条目里用 **BREAKING** 标出。对这个仓库来说，「技能的行为变了」算破坏性变更 —— 使用者依赖的是技能的行为，不是它的文件名
 - 已发布的版本按 `[X.Y.Z] - 日期` 归档，`[Unreleased]` 恢复为空壳
 
-[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.2.0
 [1.1.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.1.0
 [1.0.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.0.0
