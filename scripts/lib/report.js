@@ -98,7 +98,17 @@ class Report {
 
     // 结果行同样交给 lint.sh 去打，避免出现两个「✓ 通过」。
     if (!process.env.LINT_QUIET) {
-      if (warns.length === 0) {
+      if (fails.length > 0) {
+        // 有失败时**绝不能**打印「✓ 通过」。此前这里只判断了 warns，于是
+        // 「有失败但无警告」的场景会打出「✗ …」紧接着「✓ 通过」——
+        // 退出码是对的（CI 仍然会红），但读日志的人会以为通过了。
+        const selfFails = fails.filter((f) => f.tier !== "vendor").length;
+        const vendorFails = fails.length - selfFails;
+        const parts = [];
+        if (selfFails > 0) parts.push(`${selfFails} 处失败`);
+        if (vendorFails > 0) parts.push(`${vendorFails} 处上游失败`);
+        process.stdout.write(`  ${C.red}✗ 未通过：${parts.join("，")}${C.reset}\n`);
+      } else if (warns.length === 0) {
         process.stdout.write(`  ${C.green}✓ 通过${C.reset}\n`);
       } else {
         // 「上游遗留」与「自建内容的提示」是两回事：前者我们无权修（改了会在

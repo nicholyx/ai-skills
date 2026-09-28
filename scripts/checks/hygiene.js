@@ -55,6 +55,19 @@ const TRELLIS_BOOKKEEPING = new Set([
   ".trellis/.template-hashes.json",
 ]);
 
+/**
+ * 由 trellis 脚本写入、我们不会手改的文件（用前缀/后缀匹配，因为任务是随日期新增的）。
+ *
+ * `task.json` 由 `task.py` 写入且**末尾不带换行**，与我们自己的风格约定无关 ——
+ * 手动补上也会在下一次 task.py 操作时丢掉。
+ *
+ * 注意范围：`.trellis/tasks/**` 下的 `prd.md` / `design.md` 是**人写的**，
+ * 仍然照常检查（本次修复正是被它们之外的一个 task.json 触发的）。
+ */
+function isTrellisGenerated(rel) {
+  return rel.startsWith(".trellis/tasks/") && rel.endsWith("/task.json");
+}
+
 const report = new Report("编码与 JSON 校验");
 
 const files = trackedFiles();
@@ -90,6 +103,7 @@ for (const rel of files) {
   if (
     tier === "self" &&
     !TRELLIS_BOOKKEEPING.has(rel) &&
+    !isTrellisGenerated(rel) &&
     buf.length >= 3 &&
     buf[0] === 0xef &&
     buf[1] === 0xbb &&
@@ -123,7 +137,7 @@ for (const rel of files) {
   // 末尾换行：风格问题，只对自建内容报。判 fail 而非 warn —— .editorconfig 已经
   // 声明了 insert_final_newline，遵守它的编辑器会自动补上；这里报错说明有人绕过了
   // 编辑器配置，而修复成本是零。既然规则写下来了，就不该只提示不拦。
-  if (tier === "self" && !TRELLIS_BOOKKEEPING.has(rel) && text.length > 0 && !text.endsWith("\n")) {
+  if (tier === "self" && !TRELLIS_BOOKKEEPING.has(rel) && !isTrellisGenerated(rel) && text.length > 0 && !text.endsWith("\n")) {
     report.fail(rel, lines.length, "文件末尾缺少换行（见 .editorconfig）");
   }
 
