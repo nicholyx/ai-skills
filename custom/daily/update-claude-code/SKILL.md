@@ -1,6 +1,10 @@
 ---
 name: update-claude-code
 description: 当用户提到"更新 claude"、"升级 claude code"、"检查 claude 版本"、"claude code 最新版本"时使用此技能。
+metadata:
+  category: 环境与工具
+  tagline: "检查并升级 Claude Code 到最新版本"
+  example: "更新 claude"
 ---
 
 # 更新 Claude Code CLI

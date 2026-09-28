@@ -44,6 +44,44 @@ CRLF 换行、UTF-8 BOM、块标量（`description: >-` 写多行）、重复顶
 真正重要的是**触发词**：Claude 靠 description 判断该不该加载这个技能，写清楚
 「什么时候用」比写得漂亮有用。实测长度 22~257 字符都在合理范围内。
 
+## `metadata`：给人看的那一层
+
+frontmatter 的 `description` 是**写给模型看的** —— 塞满触发词，本仓库的实测长度在
+44～482 字符之间。人浏览时读不下去，而「这仓库里有什么、我该装哪个」正是访客最先
+问的问题。
+
+所以用 `metadata` 补一层**给人看**的信息，三个字段：
+
+```yaml
+metadata:
+  category: 代码质量                          # 归到哪个场景（决定目录里的分组）
+  tagline: "一句话说清它能干什么"              # 目录里的「它能做什么」列
+  example: "审查一下我暂存区的改动"            # 目录里的「你可以这样说」列
+```
+
+| 字段 | 给谁看 | 写法要求 |
+| --- | --- | --- |
+| `description` | 模型 | 塞触发词，越长越准。**不要为了好看而精简它** |
+| `metadata.tagline` | 人 | 一句话。不要复述 description，那是另一个读者 |
+| `metadata.example` | 人 | **一句可以直接说出口的话**，不要写成「支持 X 功能」 |
+| `metadata.category` | 人 | 常用集合见 `scripts/new-skill.js` 的 `CATEGORIES` |
+
+`metadata` 是官方 frontmatter 白名单里的六个键之一，放这些是合规的（`checks/frontmatter.js`
+不会拦）。**约定本身由 `scripts/checks/catalogue.js` 与目录生成器共同维持** ——
+缺字段不会 fail，但新技能会以占位符出现在 `docs/SKILLS.md` 里，等于没被介绍给访客。
+
+### 用脚手架创建一个技能
+
+```bash
+node scripts/new-skill.js <名字> --tagline "一句话" --example "你可以这样说" [--category 分类]
+```
+
+它生成合规骨架、提醒你补 `description`、并告诉你**要重跑目录生成器** ——
+忘了重跑不会静默通过，CI 的「技能目录校验」会拦住。
+
+> `metadata` 只解析**一层**子键的标量（见 `lib/frontmatter.js`）。要放更复杂的结构，
+> 先想清楚读者是谁 —— 目录只需要这三个字段。
+
 ## 目录布局
 
 ```

@@ -62,9 +62,13 @@ function stripQuotes(value) {
  *
  * @param {string} text 文件全文
  * @returns {{ok: true, keys: string[], values: Map<string, string|undefined>,
+ *            nested: Map<string, Map<string, string>>,
  *            duplicates: string[], bom: boolean, crlf: boolean,
  *            startLine: number, endLine: number, body: string}
  *          | {ok: false, reason: string, line: number}}
+ *
+ *   `nested` 只解析**一层**子键的标量值（如 `metadata:` 下的 `category` / `tagline`）。
+ *   更深的结构仍然跳过 —— 边界没有变，只是从「顶层」放宽到「顶层 + 一层」。
  */
 function parseFrontmatter(text) {
   const bom = text.charCodeAt(0) === 0xfeff;
@@ -103,6 +107,7 @@ function parseFrontmatter(text) {
 
   const body = lines.slice(1, endLine);
   const values = new Map();
+  const nested = new Map();
   const keys = [];
   const duplicates = [];
 
@@ -142,6 +147,18 @@ function parseFrontmatter(text) {
       const next = body[i + 1];
       if (next !== undefined && /^\s+\S/.test(next)) {
         values.set(key, undefined); // 嵌套结构，值不在此处解析
+
+        // 顺带收一层子键的标量值（子键缩进必须一致，且值为单行标量）
+        const sub = new Map();
+        const indent = next.match(/^\s+/)[0];
+        let j = i + 1;
+        while (j < body.length && body[j].startsWith(indent) && !body[j].startsWith(indent + " ")) {
+          const line = body[j].slice(indent.length);
+          const m2 = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(line);
+          if (m2 && m2[2].trim() !== "") sub.set(m2[1], stripQuotes(m2[2].trim()));
+          j += 1;
+        }
+        if (sub.size > 0) nested.set(key, sub);
       } else {
         values.set(key, "");
       }
@@ -155,6 +172,7 @@ function parseFrontmatter(text) {
     ok: true,
     keys,
     values,
+    nested,
     duplicates,
     bom,
     crlf,

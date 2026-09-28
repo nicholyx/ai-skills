@@ -1,6 +1,10 @@
 ---
 name: update-opencode
 description: Use when users need to update OpenCode CLI or oh-my-opencode plugin, check for new versions, or troubleshoot version-related issues. Use when seeing errors like "seems to be managed by a package manager" or "opencode upgrade doesn't move to newest version".
+metadata:
+  category: 环境与工具
+  tagline: "检查并升级 OpenCode 与 oh-my-opencode 插件"
+  example: "更新 opencode"
 ---
 
 # 更新 OpenCode 和 Oh-My-OpenCode

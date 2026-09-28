@@ -1,6 +1,10 @@
 ---
 name: git-sync-upstream
 description: Fork 仓库同步 upstream 最新代码到当前分支，使用 rebase 方式保持提交历史整洁。当用户说"同步upstream"、"rebase upstream"、"更新upstream main"、"拉取upstream更新"、"同步上游仓库"、"fork仓库更新"、"更新PR分支"时触发。自动处理未提交更改（stash/rebase/pop）、fetch upstream、rebase 到最新、强制推送更新 PR。专门用于 fork 仓库同步上游更新的场景，不适用于普通的 git pull 操作。
+metadata:
+  category: Git 与协作
+  tagline: "fork 仓库用 rebase 同步上游，保持提交历史线性"
+  example: "同步 upstream"
 ---
 
 # Git Sync Upstream

@@ -57,9 +57,11 @@ ai-skills/
 ├── scripts/
 │   ├── lint.sh              # 本地统一校验入口
 │   ├── check-commit-msg.sh  # 约定式提交校验
-│   ├── checks/*.js          # 六个检查器
+│   ├── checks/*.js          # 九个检查器
 │   ├── lib/*.js             # 检查器共用层
-│   └── gen-local-skills.js  # local-skills.json 生成器
+│   ├── gen-local-skills.js  # local-skills.json 生成器
+│   ├── gen-catalogue.js     # docs/SKILLS.md 生成器
+│   └── new-skill.js         # 新技能脚手架
 ├── skills-lock.json         # 上游技能的来源与版本
 └── local-skills.json        # 上游技能的人读清单（生成物）
 ```
@@ -82,7 +84,7 @@ ai-skills/
 改技能 / 改脚本
       │
       ▼
-./scripts/lint.sh            ← 本地 10 项静态检查
+./scripts/lint.sh            ← 本地 13 项静态检查
       │                        exit 0 才继续
       ▼
 git commit                   ← 提交信息走约定式提交
@@ -91,7 +93,7 @@ git commit                   ← 提交信息走约定式提交
 git push + 开 PR
       │
       ▼
-CI：10 个静态检查 job
+CI：13 个静态检查 job
     + 提交信息规范（含 PR 标题）
     + lint.sh 自测
       │
@@ -102,7 +104,7 @@ CI 总览（唯一挂了分支保护的那个 check）
 合并
 ```
 
-关键点：CI 里的 10 个静态 job 与 `./scripts/lint.sh` 的 10 个检查项**逐字对应**，
+关键点：CI 里的 13 个静态 job 与 `./scripts/lint.sh` 的 13 个检查项**逐字对应**，
 `lint-selftest` job 会断言这一点。所以「本地过 = CI 过」不是口号，是有断言守着的性质。
 
 ---
@@ -394,16 +396,21 @@ CI 的 `commit-messages` job 校验两件事：PR 里的每个提交信息，**�
 
 ```text
 scripts/
-├── lint.sh                   # 本地统一入口：调度 10 项检查、汇总、给安装提示
+├── lint.sh                   # 本地统一入口：调度 13 项检查、汇总、给安装提示
 ├── check-commit-msg.sh       # 约定式提交校验（CI 与本地 hook 共用）
 ├── gen-local-skills.js       # 生成 local-skills.json
+├── gen-catalogue.js          # 生成 docs/SKILLS.md（技能目录）
+├── new-skill.js              # 新技能脚手架（按仓库约定生成骨架）
 ├── checks/
 │   ├── frontmatter.js        # 技能 frontmatter 校验
 │   ├── evals.js              # evals/evals.json 结构校验
 │   ├── vendor-lock.js        # 上游 lock 一致性 + 清单可复现性
 │   ├── hygiene.js            # 编码（UTF-8 / U+FFFD / BOM）+ 末尾换行 + JSON 语法
 │   ├── links.js              # 自建 Markdown 的相对链接有效性
-│   └── scripts.js            # JS / Shell / Python 语法 + 入口脚本可执行位
+│   ├── scripts.js            # JS / Shell / Python 语法 + 入口脚本可执行位
+│   ├── distribution.js       # 分发面：只允许预期目录出现 SKILL.md
+│   ├── catalogue.js          # docs/SKILLS.md 与技能源头一致
+│   └── doc-counts.js         # 文档里的计数与事实一致（支持 --fix）
 └── lib/
     ├── gitfiles.js           # 目标集枚举的唯一入口（git 索引）+ tier 判定
     ├── frontmatter.js        # 受限 frontmatter 解析与校验规则
@@ -474,6 +481,24 @@ scripts/
 | `manifest.js` | `local-skills.json` 的构建与序列化。生成器与校验器共用这一份 —— 两处各写一遍迟早会漂移，而「生成物与生成器一致」正是校验要验的东西 |
 | `report.js` | 结果收集、分级（tier → level）、输出格式、退出码 |
 
+### `gen-catalogue.js` —— 技能目录生成器
+
+`docs/SKILLS.md` 是**给访客看的技能目录**：按场景分组、每个技能一句 tagline、一句可照念的
+示例、以及零安装试用命令。
+
+**为什么需要单独一份目录？** 因为 `SKILL.md` 的 `description` 是写给**模型**的 ——
+塞满触发词，本仓库实测 44～482 字符。人浏览时读不下去，而「这仓库里有什么、我该装哪个」
+正是陌生人最先问的问题。所以用 `metadata` 补一层给人看的（见
+[`.trellis/spec/skills/index.md`](../.trellis/spec/skills/index.md)）。
+
+**没有第二份需要维护的清单**：目录完全从技能本身生成。`checks/catalogue.js` 断言它与源头
+逐字节一致 —— 改了 `metadata` 却忘了重跑，CI 会指出**第一个差异行**（「目录过时了」这句话
+本身没有可操作性）。
+
+同一套模式在本仓库用了三次：`local-skills.json`、`docs/SKILLS.md`、以及
+`doc-counts` 覆盖的文档计数。**共同点是：生成物会静默变旧 —— 文件还在、格式还对、
+链接还有效，只是内容已经不是真的了。** 唯一能发现这种「旧」的办法就是专门断言。
+
 ### `gen-local-skills.js` —— 生成器
 
 ```bash
@@ -492,7 +517,7 @@ node scripts/gen-local-skills.js --out /tmp/x.json
 
 ## CI 结构
 
-`.github/workflows/ci.yml` 共 14 个 job：
+`.github/workflows/ci.yml` 共 16 个 job：
 
 | Job | 名称 | 内容 |
 | --- | --- | --- |

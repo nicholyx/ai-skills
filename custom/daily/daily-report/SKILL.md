@@ -1,6 +1,10 @@
 ---
 name: daily-report
 description: 根据 git 提交记录生成工作日报，支持指定日期查询和智能归类
+metadata:
+  category: 知识与记录
+  tagline: "从 git 提交记录生成工作日报，按项目自动归类"
+  example: "生成今天的日报"
 ---
 
 # 工作日报生成

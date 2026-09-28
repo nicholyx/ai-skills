@@ -1,6 +1,10 @@
 ---
 name: git-smart-update
 description: 智能 Git 更新工具，支持自动暂存、冲突解决和本地提交处理。当用户说"更新代码"、"拉取最新代码"、"git pull"、"更新当前分支"、"更新所有分支"、"保留本地修改并更新"时触发。自动处理 stash-update-restore 循环，智能解决冲突（优先采用远程改进，同时保留本地调试代码），支持 rebase 和 merge 两种模式。
+metadata:
+  category: Git 与协作
+  tagline: "带 stash 循环的智能拉取，自动处理本地改动与冲突"
+  example: "更新代码"
 ---
 
 # Git 智能更新

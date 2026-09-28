@@ -54,7 +54,7 @@ Managed by Trellis. Edits outside this block are preserved; edits inside may be 
 ### 本地检查入口
 
 ```bash
-./scripts/lint.sh          # 11 项静态检查，目标是「本地绿 == CI 绿」
+./scripts/lint.sh          # 13 项静态检查，目标是「本地绿 == CI 绿」
 ./scripts/lint.sh --list   # 看有哪些检查项
 ```
 

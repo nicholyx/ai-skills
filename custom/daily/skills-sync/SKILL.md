@@ -1,6 +1,10 @@
 ---
 name: skills-sync
 description: Use when you need to synchronize commands and skills from ~/.agents/ to AI tool directories like Claude or CodeBuddy using symbolic links
+metadata:
+  category: 环境与工具
+  tagline: "用软链接把技能与命令同步到 Claude / CodeBuddy"
+  example: "把我的技能同步到 Claude"
 ---
 
 # Skills Sync

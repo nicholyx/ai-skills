@@ -1,6 +1,10 @@
 ---
 name: obsidian-note-workflow
 description: Use when creating, querying, or managing Obsidian notes with preview-first workflow, intelligent classification, automatic directory creation, and vault initialization
+metadata:
+  category: 知识与记录
+  tagline: "预览优先的 Obsidian 笔记创建、分类与整库初始化"
+  example: "把这段内容记到我的 Obsidian 里"
 ---
 
 # Obsidian Note Workflow
