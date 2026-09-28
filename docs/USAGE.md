@@ -89,7 +89,7 @@ npx skills add vercel-labs/agent-browser
 
 ```text
 .agents/skills/<技能名>/SKILL.md     # 上游 vendored，31 个
-custom/daily/<技能名>/SKILL.md       # 自建通用，12 个
+custom/daily/<技能名>/SKILL.md       # 自建通用，14 个
 custom/projects/<技能名>/SKILL.md    # 自建项目专用，1 个
 ```
 
@@ -324,10 +324,16 @@ description: Use when ... （写清楚什么时候该触发，这是 AI 选择�
 ### 我在另一台机器上，想拿到全部技能
 
 ```bash
-npx skills add nicholyx/ai-skills --full-depth
+npx skills add nicholyx/ai-skills
 ```
 
-自建技能和上游技能都会装上。`custom/projects/` 下的项目技能需要手工复制。
+这一条就够 —— **它装的是本仓库的全部 15 个技能**（14 个通用 + 1 个项目专用）。
+
+不需要加 `--full-depth`：实测它装到的东西与默认命令**完全相同**。
+
+> ⚠️ `.agents/skills/` 下那 31 个**上游技能不会被装上** —— 无论用哪条命令。
+> 它们是 `npx skills` 的安装目标目录，不随本仓库分发。要用就从各自的源仓库装，
+> 来源记在 `skills-lock.json` 里（见[第一步](#第一步安装技能)）。
 
 ### 我改了 `custom/` 里的技能，怎么让它在我本机生效
 
