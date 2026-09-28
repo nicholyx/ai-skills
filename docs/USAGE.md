@@ -37,26 +37,49 @@
 ## 第一步：安装技能
 
 ```bash
-# 安装 .agents/skills 中的技能（默认搜索深度）
+# 装全部（15 个）
 npx skills add nicholyx/ai-skills
 
-# 安装全部技能（包括 custom 中的自建技能）
-npx skills add nicholyx/ai-skills --full-depth
-
-# 仅安装 custom 中的自建技能
-npx skills add nicholyx/ai-skills/custom
+# 只装通用技能，跳过项目专用的那 1 个（14 个）
+npx skills add nicholyx/ai-skills/custom/daily
 ```
 
-### 三条命令怎么选
+### 两条命令怎么选
 
 | 命令 | 装到什么 | 什么时候用 |
 | --- | --- | --- |
-| `npx skills add nicholyx/ai-skills` | `.agents/skills` 中的技能（默认搜索深度） | 只要上游那 31 个 |
-| `npx skills add nicholyx/ai-skills --full-depth` | 全部，含 `custom/` 下的自建技能 | **推荐**，一次装齐 |
-| `npx skills add nicholyx/ai-skills/custom` | 只有 `custom/` 下的自建技能 | 不想要上游那 31 个 |
+| `npx skills add nicholyx/ai-skills` | `custom/` 下的全部技能（14 个通用 + 1 个项目专用） | **多数情况选它** |
+| `npx skills add nicholyx/ai-skills/custom/daily` | 只有通用技能（14 个） | 不想要项目专用的那个 |
 
-> ⚠️ 三条命令**都不会**装 `custom/projects/` 下的项目专用技能 —— 它们假设你在那个项目里，
-> 装到别处只会变成噪音。要它们就把目录复制走：见[目录约定](#目录约定)。
+> `--full-depth` 与默认命令**装到的东西相同**（都是 15 个）。它控制的是搜索深度，
+> 在本仓库的目录结构下不产生差异。
+
+> 警告：**`custom/projects/` 下的项目专用技能会被默认装到。** 它假设你手上就是那个项目
+> （特定的页面、特定的接口、特定的启动方式），装在别处只会变成噪音 —— 不想要它就用
+> 上面第二条命令。
+
+### `.agents/skills/` 里的 31 个上游技能怎么办
+
+**它们不随本仓库分发**，上面两条命令都装不到。
+
+`.agents/skills/` 是 `npx skills` 的**安装目标目录** —— 你自己跑
+`npx skills add <上游仓库>` 装进来的东西会落在这里。本仓库把它们提交进去，只是为了让
+这套环境可复现（`skills-lock.json` 记录来源与版本）。
+
+要用其中某个，从它**自己的源仓库**装：
+
+```bash
+# 先查来源
+jq -r '.skills | to_entries[] | "\(.key)\t\(.value.source)"' skills-lock.json
+
+# 再装，例如 agent-browser
+npx skills add vercel-labs/agent-browser
+```
+
+**为什么本仓库不转发它们？** 那些是第三方内容：我们无权修改（改了会在
+`npx skills update` 时丢失），出了问题也修不了。转发一份「看起来像本仓库提供的」第三方
+技能，风险远大于便利。详见[架构与原理](ARCHITECTURE.md)。
+
 
 ### 目录约定
 

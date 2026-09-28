@@ -54,18 +54,25 @@
 ## 快速开始
 
 ```bash
-# 安装 .agents/skills 中的技能（默认搜索深度）
+# 装本仓库的全部技能（15 个）
 npx skills add nicholyx/ai-skills
 
-# 安装全部技能（包括 custom 中的自建技能）
-npx skills add nicholyx/ai-skills --full-depth
-
-# 仅安装 custom 中的自建技能
-npx skills add nicholyx/ai-skills/custom
+# 只装通用技能，跳过项目专用的那 1 个（14 个）
+npx skills add nicholyx/ai-skills/custom/daily
 ```
 
-> ⚠️ 三条命令装到的技能都**不含** `custom/projects/` 下的项目专用技能 —— 见[目录约定](#目录约定)。
-> 想要它们，把整个目录复制走，或者用 `skills-sync` 自己软链。
+**装到的是 `custom/` 下的技能** —— 也就是本仓库自己维护、自己分发的那部分。
+
+> **`.agents/skills/` 里的 31 个上游技能不在安装面内**，也不会被这两条命令装到。
+> 它们是 `npx skills` 的**安装目标目录**（工具的工作区），不是本仓库分发的产品。
+> 想要其中某个，从它**自己的源仓库**装 —— 来源都记在 `skills-lock.json` 里：
+>
+> ```bash
+> npx skills add vercel-labs/agent-browser        # 例：装 agent-browser
+> ```
+>
+> 本仓库不转发它们，是因为那些是第三方内容：我们无权修，出了问题也改不了。
+> 详见[为什么 `.agents/` 不在安装面](docs/ARCHITECTURE.md)。
 
 装完之后：
 
@@ -89,7 +96,7 @@ npx skills update
 
 ### 自建 · 通用（`custom/daily/`）
 
-这 14 个技能跨项目可用，是 `npx skills add nicholyx/ai-skills --full-depth` 装到的主要内容。
+这 14 个技能跨项目可用，是 `npx skills add nicholyx/ai-skills` 装到的主要内容。
 
 | 技能 | 说明 |
 | --- | --- |
@@ -123,7 +130,11 @@ npx skills update
 
 ### 上游（`.agents/skills/`）
 
-31 个第三方技能，来源记录在 `skills-lock.json` 里。列出全部来源：
+31 个第三方技能，**不随本仓库分发**。它们是 `npx skills` 的安装目标目录 ——
+你自己用 `npx skills add <上游仓库>` 装进来的东西会落在这里，提交进仓库只是为了让
+这套环境可复现。
+
+要用其中某个，直接从它**自己的源仓库**装。来源都记在 `skills-lock.json` 里：
 
 ```bash
 # 技能名 + 上游仓库，按仓库名排序
@@ -142,7 +153,7 @@ jq -r '.skills | to_entries | sort_by(.value.source)[] | "\(.key)\t\(.value.sour
 ai-skills/
 ├── .agents/skills/         # 上游 vendored 技能（31 个，只读，占仓库约 97% 体积）
 ├── custom/
-│   ├── daily/              # 自建通用技能（12 个）
+│   ├── daily/              # 自建通用技能（14 个）
 │   └── projects/           # 自建项目专用技能（1 个，prj- 前缀）
 ├── docs/                   # 本仓库的文档
 ├── scripts/                # 静态检查与生成器
@@ -155,6 +166,7 @@ ai-skills/
 
 | | `.agents/skills/` | `custom/` |
 | --- | --- | --- |
+| **会分发给用户吗** | **不会** —— 是工具的安装目标目录 | **会** —— `npx skills add` 装到的就是它 |
 | 来源 | `npx skills add` 从上游仓库安装 | 自己编写和维护 |
 | 追踪 | `skills-lock.json` 记录来源与版本 | 无 lock 文件 |
 | 更新 | `npx skills update` 全量替换 | 手动维护 |
@@ -167,7 +179,7 @@ ai-skills/
 | --- | --- | --- |
 | 定位 | 通用技能，任何项目都能用 | 特定项目专用 |
 | 命名 | 直接用功能名，如 `git-commit` | 加 `prj-` 前缀，如 `prj-agent-platform-e2e-test` |
-| 安装 | `npx skills add` 装得到 | 不随通用安装分发 |
+| 安装 | 默认命令装得到 | **默认也装得到** —— 想跳过就用 `.../custom/daily` |
 | 示例 | 日报生成、git 操作、代码分析 | 某项目的 e2e 测试、某项目的部署流程 |
 
 ---
