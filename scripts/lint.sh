@@ -97,6 +97,7 @@ CHECKS=(
   "hygiene:编码与 JSON 校验"
   "links:相对链接校验"
   "scripts:脚本语法检查"
+  "distribution:分布面校验"
   "shellcheck:shellcheck（Shell 静态分析）"
   "actionlint:actionlint（工作流静态检查）"
   "yamllint:yamllint（YAML 风格）"
@@ -354,6 +355,7 @@ dispatch() {
     hygiene)     run_check "$name" node scripts/checks/hygiene.js ;;
     links)       run_check "$name" node scripts/checks/links.js ;;
     scripts)     run_check "$name" node scripts/checks/scripts.js ;;
+    distribution) run_check "$name" node scripts/checks/distribution.js ;;
     shellcheck)  check_shellcheck "$name" ;;
     actionlint)  check_actionlint "$name" ;;
     yamllint)    check_yamllint "$name" ;;

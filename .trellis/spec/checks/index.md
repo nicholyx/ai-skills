@@ -112,6 +112,50 @@ print(bad if bad else 'OK')
   需要插入行时用 `{ head -n 1 f; echo ...; tail -n +2 f; } > tmp && mv tmp f`，
   否则本地静默不生效、断言变成恒真
 
+## 分布面校验：断言「仓库在别人眼里长什么样」
+
+多数检查器查的是**仓库内部是否自洽**（格式、链接、编码）。`distribution.js` 查的是
+另一件事：**仓库对外分发的技能集合**。
+
+起因是一个真实缺陷：接入 Trellis 后 `.claude/skills/`（9 个 Trellis meta-skill）把
+`custom/` 顶掉了，`npx skills add nicholyx/ai-skills` 装出来的是 9 个 Trellis 内部
+技能。**它不在任何 diff 里，也不会让任何一项检查变红。**
+
+### 为什么断言结构，而不是跑 `npx skills --list`
+
+实测过 CLI 的发现规则，它比想象的复杂，且**不是**「任何含 SKILL.md 的目录」：
+
+| 仓库结构 | 默认 `--list` |
+| --- | --- |
+| 只有 `custom/daily/x` | 发现 x |
+| 只有 `.agents/skills/x` | 发现 x |
+| 只有 `.claude/skills/x` | 发现 x |
+| `custom/daily/x` + `.agents/skills/y` | **只**发现 y |
+| 三者共存 | 发现 y 与 `.claude` 的，`custom` 仍被顶掉 |
+
+规则还受 `--full-depth`、以及仓库是否存在 `skills-lock.json` 影响。
+**复刻这条规则写出来的断言会跟着一起错**，而断言的失效是静默的。
+
+所以断言的是一个**不依赖 CLI 优先级**的结构不变量：让「多个来源」这件事根本不发生 ——
+仓库里只允许 `custom/daily/`、`custom/projects/`、`.agents/skills/` 三处出现 SKILL.md。
+
+### 它抓什么、不抓什么
+
+**变异验证**（每条都实际跑过）：
+
+| 变异 | 结果 |
+| --- | --- |
+| `.claude/skills/` 被强制追踪 | 抓到 |
+| 新增一个**未预料到**的工具目录 `tool-x/skills/` | 抓到 ← 复刻规则做不到这个 |
+| 删光 `custom/`（产品面为空） | 抓到 |
+| 仓库根放一个技能目录 | 抓到 |
+
+**两道防线的关系**：`.gitignore` 里 `.claude/` 是第一道（`git add -A` 不会带上它），
+这个检查器是第二道（万一有人 `-f` 强加、或新增了别的工具目录）。
+
+> **`.gitignore` 不是断言。** 它挡住的是常规操作，挡不住 `git add -f`、
+> 也挡不住「另一个工具往别处写技能目录」。所以两层都要有。
+
 ## 供应链基线
 
 `zizmor` 基线 0 findings，豁免集中在 `.github/zizmor.yml`，**每条豁免必须写明可
