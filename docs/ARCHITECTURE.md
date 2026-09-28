@@ -492,7 +492,7 @@ node scripts/gen-local-skills.js --out /tmp/x.json
 
 ## CI 结构
 
-`.github/workflows/ci.yml` 共 13 个 job：
+`.github/workflows/ci.yml` 共 14 个 job：
 
 | Job | 名称 | 内容 |
 | --- | --- | --- |

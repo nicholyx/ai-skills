@@ -9,7 +9,12 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-29
+
+这一版的主线是**让第一次接触的人拿到正确的东西**：修好被 Trellis 顶掉的主安装路径，把讲反了的分发关系纠正过来，补上英文入口 —— 并让这几件事从此有 CI 守着。
+
 ### 新增
+
 
 - **补上英文入口：非中文用户现在能自己装起来、用上**（[#26](https://github.com/nicholyx/ai-skills/pull/26)）。此前 `README.en.md` 只有开头两行命令就没了下文，`docs/` 四件套又全是中文 —— 非中文用户点进英文 README 之后就断了。技能本身是语言无关的（模型读得懂中文技能），**被挡住的是人，不是模型**。
   - `README.en.md` 补成一条完整可跑的链路：装什么、两条安装命令与实测输出、装到哪、怎么确认生效、怎么触发、怎么更新与卸载，以及如何自己写一个新技能
@@ -17,14 +22,8 @@
   - **边界写进文档，而不是留成隐含约定**：英文只覆盖「不翻就完全用不起来」的部分（这是什么 / 装 / 用 / 自己写一个），架构原理、完整排错、维护者手册一律指向中文原版并注明是中文 —— 全量翻译会变成两份需要同步维护的文档，必然漂移，而漂移的排错手册比没有更糟
   - 顺带把安装落点写准了：`npx skills add` **默认是项目级**（`./.agents/skills/` + 软链进 `./.claude/skills/`），`-g` 才是用户级（`~/.claude/skills/`）。这两条都实测过
 
-### 修复
-
-- **安装说明此前把分发关系讲反了**（[#23](https://github.com/nicholyx/ai-skills/pull/23)）。多处文档写着「默认命令装 `.agents/skills` 里的技能」，并据此给出「只要上游那 31 个就装默认」「不想要上游就装 `/custom`」的选型建议 —— **两个方向都是反的**。实测：`npx skills add nicholyx/ai-skills` 装到的是 `custom/` 下的 15 个技能，`.agents/skills/` 那 31 个一个都装不到。
-  - 同时修正一个更细的错误：`custom/projects/` 下的项目专用技能**会被默认命令装到**，而多处文档声称「三条命令都不含它」——那也是反的。现在文档写明「不想要它就用 `.../custom/daily`」
-  - 补充「那 31 个上游技能到底怎么装」：`.agents/skills/` 是 `npx skills` 的**安装目标目录**（工具的工作区），不是本仓库分发的产品。要用就从各自的源仓库装，来源记在 `skills-lock.json` 里。这条已实测验证（`npx skills add vercel-labs/agent-browser` 可装）
-  - 顺带清掉三处过时计数：`AGENTS.md` 的「13 个技能」（实为 15）、「10 项检查」（实为 11），以及它把 `.claude/` 描述为「由 trellis update 管理」（实为已 gitignore、不在仓库里）
-
 ### 变更
+
 
 - **仓库设置对齐：社区标准从 85% 提到 100%**（[#12](https://github.com/nicholyx/ai-skills/pull/12)）。缺口是**仓库描述为空** —— 实测对照证明了这一点：`community/profile` 在有描述时返回 100%，无描述时 85%，其余六项（README / LICENSE / CONTRIBUTING / 行为准则 / SECURITY / PR 模板）都齐全也一样扣。同时补上了 10 个 topics。
   - **描述与 topics 是最容易被漏掉的一类配置**：它们随时可改、不进代码、不开 PR，因此不会在任何 diff 里留下痕迹。已写进 `MAINTAINER_GUIDE` 的配置清单，并注明「上表是当下值，改了记得回来同步」
@@ -34,17 +33,21 @@
 - **修正里程碑模型：Roadmap Issue 不再挂在版本里程碑下**（[#12](https://github.com/nicholyx/ai-skills/pull/12)）。Roadmap 是**持续维护的活文档**，不是某个版本的交付物；挂在 v1.0.0 下会让那个已发布的版本永远显示「未完成 1」。已将其移出并关闭 v1.0.0 里程碑。
 
 
-### 变更
 
 - **`maintain-loop` 新增一条判断：「先分清行为问题与配置问题」**（[#11](https://github.com/nicholyx/ai-skills/pull/11)）。起因是对另一个项目做仓库设置审计时发现，它的维护手册把 `gh pr merge --auto` 报的 `Auto merge is not allowed` 当作「已知故障」记了绕过办法 —— 而 `allow_auto_merge` 只是仓库设置里一个能勾的选项，打开它那条「故障」就消失了。
   - 由此提炼出判断方法：报错里出现 `is not allowed` / `not enabled` / `permission denied` 这类措辞时先去看设置的对应位置；一条「故障」如果每次都以同样方式出现、且绕法每次都有效，它多半是配置；**在文档里写下绕法时，同时写下「为什么不能直接改配置」—— 写不出来就说明该去改配置**
   - 同时改掉了 skill 里同源的那条表述：原先写「仓库未开启该功能，改为等待检查完成后再合并」，现在写明「先去确认那个开关，而不是找绕过办法」
 
-
 ### 修复
 
-- **`release.yml` 提取的发布说明会把 CHANGELOG 的维护者样板段带进去**（[#10](https://github.com/nicholyx/ai-skills/pull/10)）。提取用的 awk 只在 `^## [` 处停止，而 CHANGELOG 尾部的 `## 版本说明`（写给维护者的格式约定）没有方括号 —— 于是提取一路跑到文件末尾，把那段样板和底部的链接引用一起塞进了**公开的**发布说明。v1.0.0 首发时实测：提取 64 行，正确的只有 55 行。改为在下一个 `^## ` 二级标题处停止，已发布页面的内容一并订正。
 
+- **安装说明此前把分发关系讲反了**（[#23](https://github.com/nicholyx/ai-skills/pull/23)）。多处文档写着「默认命令装 `.agents/skills` 里的技能」，并据此给出「只要上游那 31 个就装默认」「不想要上游就装 `/custom`」的选型建议 —— **两个方向都是反的**。实测：`npx skills add nicholyx/ai-skills` 装到的是 `custom/` 下的 15 个技能，`.agents/skills/` 那 31 个一个都装不到。
+  - 同时修正一个更细的错误：`custom/projects/` 下的项目专用技能**会被默认命令装到**，而多处文档声称「三条命令都不含它」——那也是反的。现在文档写明「不想要它就用 `.../custom/daily`」
+  - 补充「那 31 个上游技能到底怎么装」：`.agents/skills/` 是 `npx skills` 的**安装目标目录**（工具的工作区），不是本仓库分发的产品。要用就从各自的源仓库装，来源记在 `skills-lock.json` 里。这条已实测验证（`npx skills add vercel-labs/agent-browser` 可装）
+  - 顺带清掉三处过时计数：`AGENTS.md` 的「13 个技能」（实为 15）、「10 项检查」（实为 11），以及它把 `.claude/` 描述为「由 trellis update 管理」（实为已 gitignore、不在仓库里）
+
+
+- **`release.yml` 提取的发布说明会把 CHANGELOG 的维护者样板段带进去**（[#10](https://github.com/nicholyx/ai-skills/pull/10)）。提取用的 awk 只在 `^## [` 处停止，而 CHANGELOG 尾部的 `## 版本说明`（写给维护者的格式约定）没有方括号 —— 于是提取一路跑到文件末尾，把那段样板和底部的链接引用一起塞进了**公开的**发布说明。v1.0.0 首发时实测：提取 64 行，正确的只有 55 行。改为在下一个 `^## ` 二级标题处停止，已发布页面的内容一并订正。
 
 ## [1.0.0] - 2026-09-24
 
@@ -109,5 +112,6 @@
 - 破坏性变更在条目里用 **BREAKING** 标出。对这个仓库来说，「技能的行为变了」算破坏性变更 —— 使用者依赖的是技能的行为，不是它的文件名
 - 已发布的版本按 `[X.Y.Z] - 日期` 归档，`[Unreleased]` 恢复为空壳
 
-[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.1.0
 [1.0.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.0.0
