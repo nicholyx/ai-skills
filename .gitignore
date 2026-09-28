@@ -26,3 +26,23 @@ venv/
 
 # Claude Code 的 subagent worktree（并行 agent 各占一个）
 .claude/worktrees/
+
+# ---------------------------------------------------------------------------
+# Trellis 的平台层（.claude/）不进仓库 —— 这是「分发面」的决定，不只是习惯
+#
+# 本仓库有两个身份：**分发的产品**（custom/ 下的技能，别人用 npx skills add 装）
+# 与**维护它的工具**（Trellis 等）。Trellis 会在仓库根生成 .claude/skills/trellis-*
+# 这 9 个 meta-skill，而 `skills` CLI 发现技能时**优先读 .claude/skills/** ——
+# 于是它把本该被发现的 custom/ 顶掉了：`npx skills add nicholyx/ai-skills`
+# 装出来的是 9 个 Trellis 内部技能，一个本仓库的技能都没有。
+#
+# 实测对照（--list 只列不装）：
+#   .claude/ 存在  → 发现 9 个 trellis-*          ✗
+#   .claude/ 移走  → 发现 15 个 custom/ 下的技能  ✓
+#
+# 所以 .claude/ 必须留在仓库外。贡献者克隆之后跑一次 `trellis init --claude -y`
+# 就能拿到自己的那一份（见 CONTRIBUTING.md）。
+#
+# .trellis/ 继续提交：它装的是 spec / 任务 / 会话记忆这些**该共享的知识**，
+# 且其中不含任何 SKILL.md，不会污染技能发现。
+.claude/

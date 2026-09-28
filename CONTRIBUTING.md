@@ -292,6 +292,33 @@ brew install actionlint shellcheck yamllint    # macOS
 # zizmor 走 docker 镜像，装了 Docker 就与 CI 完全同源
 ```
 
+### 初始化 Trellis（你的本地工具层）
+
+本仓库用 [Trellis](https://github.com/mindfold-ai/Trellis) 管理编码规范与会话记忆。
+它的平台层（`.claude/`）**不在仓库里** —— 克隆之后要自己跑一次：
+
+```bash
+npx @mindfoldhq/trellis init --claude -y
+```
+
+跑完你会得到 `.claude/hooks/`、`.claude/agents/`、`.claude/skills/` 等文件，
+它们**不会被提交**（已 gitignore），只服务你本机的会话。
+
+> **为什么 `.claude/` 不进仓库？** 因为这会让本仓库**分发出错误的东西**。
+> `.claude/skills/` 下有 9 个 Trellis 自己的 meta-skill，而 `skills` CLI 发现技能时
+> 优先读这个目录 —— 于是 `npx skills add nicholyx/ai-skills` 装出来的是那 9 个
+> Trellis 内部技能，而不是本仓库 `custom/` 下的技能。
+>
+> 本仓库有两个身份：**分发的产品**（`custom/`，别人装它）与**维护它的工具**
+> （`.claude/`、`.trellis/`）。工具层不能混进产品面。详见
+> [维护者手册](docs/MAINTAINER_GUIDE.md)。
+
+`.trellis/` 则**是**提交进仓库的 —— 它装的是 spec、任务与会话记忆这些该共享的知识，
+且其中不含任何 `SKILL.md`，不会影响技能发现。
+
+> 不装 Trellis 也能正常贡献（改技能、提 PR、跑 `./scripts/lint.sh` 都不受影响）。
+> 它会给你带来的是会话开始时自动注入的编码规范，以及 `/trellis:continue` 这类命令。
+
 克隆并设置：
 
 ```bash
