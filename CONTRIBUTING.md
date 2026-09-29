@@ -378,7 +378,7 @@ uv run --directory ~/.agents/skills/skills-sync python sync.py \
 ./scripts/lint.sh
 ```
 
-它依次执行 13 项检查：技能 frontmatter、evals.json 结构、上游 lock 一致性、
+它依次执行 14 项检查：技能 frontmatter、evals.json 结构、上游 lock 一致性、
 编码与 JSON、相对链接、脚本语法、shellcheck、actionlint、yamllint、zizmor。
 任何一项失败都会以非零码退出，并告诉你具体是哪个文件哪一行。**提交前跑一次，
 能省掉一轮 CI 返工** —— 提交信息与 PR 标题那一项除外，见下。
@@ -457,7 +457,7 @@ uv run --directory ~/.agents/skills/skills-sync python sync.py \
 
 ### 提交 PR 之后
 
-1. **CI 自动跑**（约 1 分钟内）—— 13 项静态检查 + 提交信息校验
+1. **CI 自动跑**（约 1 分钟内）—— 14 项静态检查 + 提交信息校验
 2. **维护者 review** —— 通常几天内；如果一周没动静，欢迎在 PR 里 @ 维护者催一下
 3. **合并** —— 维护者会使用 squash merge
 

@@ -64,8 +64,13 @@ function stripQuotes(value) {
  * @returns {{ok: true, keys: string[], values: Map<string, string|undefined>,
  *            nested: Map<string, Map<string, string>>,
  *            duplicates: string[], bom: boolean, crlf: boolean,
- *            startLine: number, endLine: number, body: string}
+ *            startLine: number, endLine: number, body: string, docBody: string}
  *          | {ok: false, reason: string, line: number}}
+ *
+ *   `body` 是 **frontmatter 内部**的行（两个 `---` 之间），不是文档正文 ——
+ *   这个命名有歧义，已有一次被误用：想校验「正文里有没有某句话」时取了 `body`，
+ *   而那句话正好写在 frontmatter 里，于是断言恒真、变异测试才发现。
+ *   **文档正文用 `docBody`**（闭合 `---` 之后的内容）。
  *
  *   `nested` 只解析**一层**子键的标量值（如 `metadata:` 下的 `category` / `tagline`）。
  *   更深的结构仍然跳过 —— 边界没有变，只是从「顶层」放宽到「顶层 + 一层」。
@@ -179,6 +184,8 @@ function parseFrontmatter(text) {
     startLine: 1,
     endLine: endLine + 1,
     body: body.join("\n"),
+    // 闭合 `---` 之后的全部内容。局部变量 endLine 是 0 基下标，取其下一行即为正文首行。
+    docBody: lines.slice(endLine + 1).join("\n"),
   };
 }
 
