@@ -149,6 +149,20 @@ custom/daily/<name>/
 | `transcript`（默认）| 全文 = 工具调用 + 模型输出 | 正向断言够用 |
 | `tools` | 模型**实际执行**的工具调用 | 「不许执行 `git push`」|
 | `output` | 模型的输出文本 | 「不许问『是否继续』」|
+| `repo` | 沙箱**最终状态**的摘要 | 「什么都没提交」「真的推上去了」|
+
+**能落在 `repo` 上的断言就落在 `repo` 上。** 它比另外三个都硬：模型可以嘴上说「我不会
+执行 `git push`」而实际推了，也可以什么都没说却把 `.env` 提交了。另外三个面测的是它
+**怎么说**，`repo` 测的是它**做成了什么**。`repo` 的内容（扁平 `key: value`，便于断言）：
+
+```
+commits: 2              提交总数
+new-commits: 1          本次运行新增的提交数（0 = 什么都没提交）
+staged: src/a.js        暂存区里的文件
+committed-files: …      本次运行改动到的文件
+untracked: …            未跟踪文件
+pushed: no              裸 origin 里有没有 ref（即「真的推上去了吗」）
+```
 
 **`not_contains` 必须显式写 `target`**（判错，不是提示）。默认的 `transcript` 是全文
 匹配，而否定断言在全文下几乎必然误伤 —— 模型只要说一句「我不会执行 `git push`」，
@@ -159,11 +173,81 @@ custom/daily/<name>/
 选 `output`**。`git-smart-update` 的 `not_contains "所有分支"` 就是这种情况 ——
 命令里不会出现中文，选 `tools` 会让这条断言**永远通过**，等于没写。
 
+### 别把断言绑死在措辞上
+
+实测踩到过：`git-commit #2` 断言模型会问「是否要提交工作区的变更」。模型**行为完全
+正确** —— 它问了「请确认要怎么处理：1. 只提交 …」，沙箱里一个提交都没产生 —— 但因为它
+没用那句话，断言红了。**这是断言的问题，不是技能的问题**，而它同样会让人不再相信输出。
+
+判据：**你要断言的是「它说了某句特定的话」，还是「它没有做出那个动作」？** 后者一律
+写到 `repo` 面上。前者宽一点没关系（`拆分|分成.{0,4}提交` 比 `拆分` 稳），但要明白它
+终究是脆的。
+
+### 落在 `repo` 上的断言要指定到具体那一行
+
+`repo` 是一个多行摘要，**裸写关键词会命中不该管的那一行**。真实翻车：断言
+`not_contains [repo] \.env` 用来表达「不许把 .env 提交进去」，而摘要里有一行
+`untracked: .env` —— 那是**前置状态**（.env 本来就该存在），不是违规。结果是一条
+**自己造出来的假失败**。
+
+所以要写到行内：
+
+| 想断言 | 别写 | 写 |
+| --- | --- | --- |
+| 没有把 .env 暂存 | `\.env` | `staged: .*\.env` |
+| 没有把 .env 提交 | `\.env` | `committed-files: .*\.env` |
+| 没有推送 | `pushed` | `pushed: yes` |
+| 没有产生提交 | `new-commits` | `new-commits: 0` |
+
 另：`type` / `target` 写错值会判错，`value` 为空也会判错。不认识的 `type` 不会被任何
 跑手匹配，用例会**静默失效** —— 那是最难发现的一类坏法。
 
-> **这些用例目前不会被自动执行。** `checks/evals.js` 只校验结构与上面这些语义字段；
-> 跑手（`scripts/run-evals.js`）仍是计划中的事项，见路线图 Issue #7。
+### 断言的 `value` 不要假设命令以规范形式书写
+
+实测踩到过，而且是最危险的那种出错方式：`not_contains "git add .env"` 判定**通过**了，
+而 transcript 里模型明明执行了 `git -C /private/var/… add .env && …` —— `git -C <路径>`
+插在中间，字面匹配就漏了。
+
+**agent 会把命令写成 `git -C <绝对路径> …`、`cd x && git push`、`/usr/bin/git …`。**
+所以对工具调用的断言要用容忍这些形式的正则：
+
+| 想断言 | 别写 | 写 |
+| --- | --- | --- |
+| 没有 push | `git push` | `\bpush\b` |
+| 没有暂存 .env | `git add .env` | `add\s+\S*\.env` |
+| 查看过暂存区 | `git diff --staged` | `diff\s+--staged` |
+
+否定断言尤其危险：**匹配漏了就是假通过**，而假通过比失败更难发现 —— 它让人以为验过了。
+
+> 更彻底的办法是让断言看**仓库的最终状态**而不是模型的自述。那需要给跑手加一个 `repo`
+> 面（`git log` / 暂存区 / origin 的 refs），见路线图 Issue #7。
+
+### `files` 是这条用例的前置状态，不是装饰
+
+断言「暂存区为空时先询问」的用例，前提是**暂存区真的是空的**；断言「拒绝把 .env 纳入
+提交」的用例，前提是**真的有个 .env**。「写完 prompt 就算把用例立起来了」是**最容易
+漏掉的一环** —— 前置状态不对，跑出来的结果测的是别的东西，而且**它照样给你一个通过或
+失败**，看上去完全正常。
+
+写法见 `scripts/run-evals.js` 的文件头。要点：跑手自带基准仓库（一个提交过的
+`README.md` + 一个裸 `origin`），**`files: []` 的含义是「什么都不动」**；要让后续条目
+能修改某个文件（造出「修复型」的 diff），得先用 `commit: true` 把它提交进基准状态。
+
+### 怎么跑
+
+```bash
+node scripts/run-evals.js --skill git-commit --dry-run   # 先看会执行什么、前置状态铺成什么样
+node scripts/run-evals.js --skill git-commit             # 真跑（约 $0.24 / 40 秒 一条）
+node scripts/run-evals.js --skill git-commit --eval 4 --keep   # 排错：留沙箱与 transcript
+```
+
+**它不进 CI** —— 成本与时长都不适合每次 PR。它是维护者工具：改完技能手动跑一遍。
+
+> **目前只有 `git-commit` 的 6 条用例是「可跑」的。** 另四个带用例的技能
+> （`code-reviewer-agent`、`git-smart-update`、`github-issue-autofix-workflow`、
+> `repo-analyzer`）需要**外部资源** —— 真实的 GitHub 仓库、真实的 PR、真实的 fork。
+> 沙箱里给不出这些，硬跑等于测另一个东西。要么把前置状态改写成可表达的本地文件，
+> 要么承认它们只能人工验证 —— 但别装作跑过了。
 
 ## 内容红线
 

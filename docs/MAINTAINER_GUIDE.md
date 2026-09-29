@@ -275,6 +275,36 @@ gh api repos/nicholyx/ai-skills/private-vulnerability-reporting
 
 ---
 
+## 技能评测跑手（刻意不进 CI）
+
+```bash
+node scripts/run-evals.js --skill git-commit --dry-run          # 先看会执行什么、前置状态铺成什么样
+node scripts/run-evals.js --skill git-commit                    # 真跑（约 $0.24 / 40 秒 一条）
+node scripts/run-evals.js --skill git-commit --eval 4 --keep    # 排错：留沙箱与 transcript
+```
+
+它跑 `custom/**/evals/evals.json` 里的用例，也就是 `docs/SKILLS.md` 里 ✅ 指的那批。
+**这是目前唯一能回答「这个技能真的照说明干活吗」的手段** —— `lint.sh` 管的是格式与自洽，
+管不了行为。
+
+**为什么不进 CI**：单条约 $0.24 / 40 秒，一轮十几条就是几美元、十几分钟；而且模型的输出
+有波动，那会让它变成一种**随机变红的检查** —— 比没有更糟，因为它会训练人忽略红色。
+
+**三条设计别动**：
+
+- **每条用例在一次性沙箱里跑**（`mktemp -d` + 自成 git 仓库 + 自带裸 `origin`）。用例的
+  prompt 是「帮我提交一下」「帮我 push 到远程」这类 —— 在真仓库里跑会**真的产生提交、
+  真的推送**。这是 `.trellis/spec/maintenance/index.md`「验证会写文件的命令时，先隔离环境」
+  的直接应用
+- **不用 `--dangerously-skip-permissions`**，工具白名单显式给出，靠沙箱兜底
+- **必须显式 `--skill`**，不做「一键全跑」—— 那等于一次几十次模型调用
+
+**什么时候跑**：改动 `custom/**` 的技能内容之后。它是发布前的最后一关。
+
+写用例的约定（断言的 `target`、前置状态 `files`）见 `.trellis/spec/skills/index.md`。
+
+---
+
 ## 项目红线
 
 这几条不是风格偏好，是「破了会出事」。每条都附了原因和正确做法。

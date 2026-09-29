@@ -57,11 +57,12 @@ ai-skills/
 ├── scripts/
 │   ├── lint.sh              # 本地统一校验入口
 │   ├── check-commit-msg.sh  # 约定式提交校验
-│   ├── checks/*.js          # 九个检查器
+│   ├── checks/*.js          # 10 个检查器
 │   ├── lib/*.js             # 检查器共用层
 │   ├── gen-local-skills.js  # local-skills.json 生成器
 │   ├── gen-catalogue.js     # docs/SKILLS.md 生成器
-│   └── new-skill.js         # 新技能脚手架
+│   ├── new-skill.js         # 新技能脚手架
+│   └── run-evals.js         # 技能评测跑手（调模型，刻意不进 CI）
 ├── skills-lock.json         # 上游技能的来源与版本
 └── local-skills.json        # 上游技能的人读清单（生成物）
 ```
@@ -401,6 +402,7 @@ scripts/
 ├── gen-local-skills.js       # 生成 local-skills.json
 ├── gen-catalogue.js          # 生成 docs/SKILLS.md（技能目录）
 ├── new-skill.js              # 新技能脚手架（按仓库约定生成骨架）
+├── run-evals.js              # 技能评测跑手（调模型，刻意不进 CI）
 ├── checks/
 │   ├── frontmatter.js        # 技能 frontmatter 校验
 │   ├── evals.js              # evals/evals.json 结构校验
@@ -428,8 +430,9 @@ scripts/
 ./scripts/lint.sh --commits origin/main..HEAD   # 追加提交信息校验
 ```
 
-它管的十项检查：`frontmatter` `evals` `vendor-lock` `hygiene` `links` `scripts`
-（以上六项纯 Node）+ `shellcheck` `actionlint` `yamllint` `zizmor`（四项外部工具）。
+它管的 14 项检查：`frontmatter` `evals` `vendor-lock` `hygiene` `links` `scripts`
+`distribution` `catalogue` `doc-counts` `skill-integrity`（以上 10 项纯 Node）
++ `shellcheck` `actionlint` `yamllint` `zizmor`（4 项外部工具）。
 
 几条刻意的设计：
 
@@ -467,7 +470,7 @@ scripts/
 
 退出码：0 = 全部合规（区间内没有提交也算 0），1 = 存在不合规的提交信息或区间无法解析。
 
-### `checks/*.js` —— 六个检查器
+### `checks/*.js` —— 10 个检查器
 
 每个都是独立的可执行入口（CI 里就是直接 `node scripts/checks/<name>.js`），
 共用 `lib/report.js` 的输出与退出码语义。
@@ -487,7 +490,7 @@ scripts/
 示例、以及零安装试用命令。
 
 **为什么需要单独一份目录？** 因为 `SKILL.md` 的 `description` 是写给**模型**的 ——
-塞满触发词，本仓库实测 44～482 字符。人浏览时读不下去，而「这仓库里有什么、我该装哪个」
+塞满触发词，本仓库实测 47～292 字符。人浏览时读不下去，而「这仓库里有什么、我该装哪个」
 正是陌生人最先问的问题。所以用 `metadata` 补一层给人看的（见
 [`.trellis/spec/skills/index.md`](../.trellis/spec/skills/index.md)）。
 

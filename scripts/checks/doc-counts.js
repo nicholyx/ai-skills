@@ -44,7 +44,7 @@ const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
 const { Report } = require("../lib/report");
-const { REPO_ROOT, skillDirs } = require("../lib/gitfiles");
+const { REPO_ROOT, skillDirs, trackedFiles } = require("../lib/gitfiles");
 
 const report = new Report("文档计数校验");
 
@@ -70,6 +70,17 @@ function checkCount() {
   return out.split("\n").filter((l) => l.trim()).length;
 }
 
+/**
+ * `scripts/checks/` 下的检查器个数。
+ *
+ * 它与 `checkCount()` **不是一回事**：后者是 `lint.sh` 的项数（含 shellcheck 等外部工具），
+ * 这里是纯 Node 检查器的个数。两者混用会把文档里的数字改成错的。
+ * 目标集仍是 git 索引（见 AGENTS.md 红线）。
+ */
+function checkerCount() {
+  return trackedFiles().filter((p) => /^scripts\/checks\/.+\.js$/.test(p)).length;
+}
+
 /** `ci.yml` 的 job 总数。 */
 function jobCount() {
   const t = fs.readFileSync(path.join(REPO_ROOT, ".github/workflows/ci.yml"), "utf8");
@@ -88,6 +99,10 @@ const RULES = [
   { re: /(\d+)\s*(?:项静态检查|项检查)/g, want: checkCount, name: "检查项数" },
   // 「N 个检查项」是「N 项检查」的另一种语序 —— 只收一种会漏（真实踩过）
   { re: /(\d+)\s*个检查项/g, want: checkCount, name: "检查项数" },
+  // 「N 个检查器」是第三种语序，而且指的是**纯 Node 检查器**的个数，不是 lint.sh 的项数。
+  // 真实踩过：docs/ARCHITECTURE.md 用**中文数字**写着「九个检查器」（实际 10 个），
+  // 中文数字逃过了这套只匹配阿拉伯数字的规则 —— 改写成数字后由本条接住。
+  { re: /(\d+)\s*个检查器/g, want: checkerCount, name: "检查器数" },
   { re: /(\d+)\s*个静态(?:检查)?\s*job/g, want: checkCount, name: "静态检查 job 数" },
   { re: /(\d+)\s*个\s*job/g, want: jobCount, name: "CI job 总数" },
   { re: /(\d+)\s*个自建通用技能/g, want: () => dailyCount, name: "自建通用技能数" },
