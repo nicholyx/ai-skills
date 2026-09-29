@@ -9,6 +9,10 @@
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-29
+
+**为什么是 2.0.0 而不是 1.4.0。** 按本文件末尾写下的规则，「技能的行为变了」算破坏性变更 —— 使用者依赖的是技能的行为。这一版里 `git-commit` 有两处行为变更（下方标 **BREAKING**），所以走主版本号。
+
 这一版的主线是**让评测用例真的能跑，并且用它们真的跑出东西**。跑起来之后，它立刻抓出三个此前完全看不见的问题 —— 其中一个还是**假通过**。
 
 ### 新增
@@ -209,7 +213,8 @@
 - 破坏性变更在条目里用 **BREAKING** 标出。对这个仓库来说，「技能的行为变了」算破坏性变更 —— 使用者依赖的是技能的行为，不是它的文件名
 - 已发布的版本按 `[X.Y.Z] - 日期` 归档，`[Unreleased]` 恢复为空壳
 
-[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v1.3.2...HEAD
+[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/nicholyx/ai-skills/releases/tag/v2.0.0
 [1.3.2]: https://github.com/nicholyx/ai-skills/releases/tag/v1.3.2
 [1.3.1]: https://github.com/nicholyx/ai-skills/releases/tag/v1.3.1
 [1.3.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.3.0
