@@ -9,6 +9,23 @@
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-09-29
+
+这一版收掉**两处没实测过就被写进文档的声明** —— 都属于同一类：话是对的读者会照着做判断，但没人真去验过。
+
+### 修复
+
+- **「`npx skills use` 试完没有任何残留」不成立**（[#36](https://github.com/nicholyx/ai-skills/pull/36)）。README 与 USAGE 都写着它「**不写文件**、不动配置、试完不满意没有任何残留」。实测：它会把技能文件下载到 `$TMPDIR/skills-use-*/<技能名>/`，**而且不自行清理** —— 连跑两次，临时目录从 2 个变成 3 个，旧的一个没删。
+  - 声明里成立的那半（四项都实测确认过）：**不安装、不改配置、不动 `~/.claude/skills`、不动任何配置文件**。所以「试完随时走开」是对的，「什么都没写到磁盘」不对
+  - 此前没人验它，是因为**「零残留试用」是个好卖点 —— 正因为好，没人去验**
+- **目录图例把 ✅ 说成了「已有证据」**（[#36](https://github.com/nicholyx/ai-skills/pull/36)）。`docs/SKILLS.md` 原文说「没有 ✅ 只表示『它能干活』这件事还没有机器可验证的证据」，这反推出 ✅ 代表已有证据。实际 `checks/evals.js` 只校验结构，**没有任何东西会执行这些用例**。图例已改成如实描述：✅ = 有用例、结构受 CI 校验、**但不会被执行**。
+  - 顺带实测发现这些用例**当前无法被忠实执行**：断言没有定义语义面 —— 同一个用例里 `git diff --staged` 指工具调用、`是否要提交工作区` 指模型的话，没有哪个单一文本面能同时满足。已列入路线图，**顺序是先补语义面再写跑手**
+
+### 变更
+
+- **`.trellis/spec/maintenance/index.md` 新增「描述外部工具的行为前，先实测」**。这是同一类错误第二次出现（前一次是 v1.3.1 的「不随本仓库分发」）。规则里写明那条最容易踩的分界：**「不安装」与「不写文件」不是一回事** —— 前者容易成立，后者常常不成立。
+- 顺带把「`npx skills add` 装不到上游技能」这条**从假设变成实测**：默认命令 15 个、`/custom/daily` 14 个，两条都没有上游混入 —— 这条是成立的。
+
 ## [1.3.1] - 2026-09-29
 
 这一版只做一件事：**把文档里讲反了的地方收掉**，顺带把一条从没验证过的安装断言变成实测。
@@ -157,7 +174,8 @@
 - 破坏性变更在条目里用 **BREAKING** 标出。对这个仓库来说，「技能的行为变了」算破坏性变更 —— 使用者依赖的是技能的行为，不是它的文件名
 - 已发布的版本按 `[X.Y.Z] - 日期` 归档，`[Unreleased]` 恢复为空壳
 
-[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v1.3.2...HEAD
+[1.3.2]: https://github.com/nicholyx/ai-skills/releases/tag/v1.3.2
 [1.3.1]: https://github.com/nicholyx/ai-skills/releases/tag/v1.3.1
 [1.3.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.3.0
 [1.2.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.2.0
