@@ -9,14 +9,38 @@
  * 契约：
  *   { "skill_name": "<技能目录名>",
  *     "evals": [ { "id": 1, "prompt": "...", "expected_output": "...",
- *                  "files": [], "assertions": [ {"type": "...", "value": "..."} ] } ] }
+ *                  "files": [],
+ *                  "assertions": [ {"type": "...", "target": "...", "value": "..."} ] } ] }
  *
  * `skill_name` 必须等于所在技能目录名：技能改名后这里最容易漏改，
  * 而它一旦不符，按名字索引 eval 用例的工具就会找不到它们。
+ *
+ * ## 断言的 `target`：它在看什么
+ *
+ * 一条断言必须说清它检查的是**模型说了什么**还是**模型做了什么** —— 否则无法执行：
+ *
+ * | target | 看的是 | 例 |
+ * | --- | --- | --- |
+ * | `transcript`（默认）| 全文（工具调用 + 模型输出），最宽松 | 正向断言用它够用 |
+ * | `tools` | 模型实际执行的工具调用 | 「不许执行 `git push`」|
+ * | `output` | 模型的输出文本 | 「不许问『是否继续』」|
+ *
+ * **`not_contains` 必须显式给 `target`**（判错，不是提示）。因为默认的 `transcript`
+ * 是全文匹配，而否定断言在全文下几乎必然误伤：模型只要说一句「我不会执行 `git push`」，
+ * 就会命中 `not_contains "git push"` —— 行为完全正确，断言却红了。这类**假失败**比漏检
+ * 更糟：它会让人不再相信这套用例。
+ *
+ * 正向断言（`contains`）不强制：`transcript` 是超集，最坏只是约束偏松，不会误伤。
  */
 
 const { Report } = require("../lib/report");
 const { skillDirs, trackedFiles, readTracked } = require("../lib/gitfiles");
+
+/** 断言的比较方式。写错的类型不会被任何跑手匹配 —— 用例会静默失效。 */
+const ASSERTION_TYPES = ["contains", "not_contains"];
+
+/** 断言的作用面。见文件头。 */
+const ASSERTION_TARGETS = ["transcript", "output", "tools"];
 
 const report = new Report("evals.json 结构校验");
 
@@ -113,6 +137,51 @@ for (const skill of skills) {
           ? typeof value === "string" && value.trim() !== ""
           : Array.isArray(value);
       if (!present) missing.set(field, missing.get(field) + 1);
+    }
+
+    // 断言的内容校验：只管「写错了会静默失效或假失败」的几项，
+    // 不管「该断言什么」—— 那是人的判断。
+    if (Array.isArray(item.assertions)) {
+      item.assertions.forEach((a, ai) => {
+        const at = `${where}.assertions[${ai}]`;
+        if (typeof a !== "object" || a === null) {
+          report.at(skill.tier, evalsPath, 0, `${at} 应为对象`);
+          return;
+        }
+        if (!ASSERTION_TYPES.includes(a.type)) {
+          report.at(
+            skill.tier,
+            evalsPath,
+            0,
+            `${at} 的 type「${a.type}」不认识（允许：${ASSERTION_TYPES.join("、")}）` +
+              " —— 不认识的类型不会被任何跑手匹配，用例会静默失效"
+          );
+          return;
+        }
+        if (typeof a.value !== "string" || a.value === "") {
+          report.at(skill.tier, evalsPath, 0, `${at} 缺少非空的 value`);
+          return;
+        }
+        if (a.target !== undefined && !ASSERTION_TARGETS.includes(a.target)) {
+          report.at(
+            skill.tier,
+            evalsPath,
+            0,
+            `${at} 的 target「${a.target}」不认识（允许：${ASSERTION_TARGETS.join("、")}）`
+          );
+          return;
+        }
+        if (a.type === "not_contains" && a.target === undefined) {
+          report.at(
+            skill.tier,
+            evalsPath,
+            0,
+            `${at} 是否定断言但没写 target —— 默认的 transcript 是全文匹配，` +
+              "模型只要说一句「我不会执行它」就会命中、假失败。" +
+              "请显式写 tools（不该做的动作）或 output（不该说的话）"
+          );
+        }
+      });
     }
   });
 

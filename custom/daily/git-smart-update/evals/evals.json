@@ -52,6 +52,7 @@
       "assertions": [
         {
           "type": "not_contains",
+          "target": "output",
           "value": "所有分支"
         }
       ]
