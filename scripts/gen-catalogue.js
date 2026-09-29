@@ -193,7 +193,7 @@ function render(skills) {
   );
   out.push("");
   out.push(
-    "> `.agents/skills/` 下那 31 个上游技能**不在这张表里** —— 它们不随本仓库分发，" +
+    "> `.agents/skills/` 下那 31 个上游技能**不在这张表里** —— 它们不在安装面内，" +
       "要用请从各自的源仓库装（来源记在 `skills-lock.json`）。"
   );
   out.push("");

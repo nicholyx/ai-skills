@@ -91,5 +91,5 @@ npx skills add nicholyx/ai-skills/custom/daily   # 只装通用技能
 - **「你可以这样说」不是编的。** 它取自技能的 `metadata.example`，且 CI 的「技能自洽校验」会断言**这句话原样出现在该技能的 `description` 里** —— 模型正是靠 `description` 决定要不要唤起一个技能。所以照着这句话说，它会起来。
 - 每个技能的完整触发条件与执行流程，在它自己的 `SKILL.md` 里（点技能名即可）。
 
-> `.agents/skills/` 下那 31 个上游技能**不在这张表里** —— 它们不随本仓库分发，要用请从各自的源仓库装（来源记在 `skills-lock.json`）。
+> `.agents/skills/` 下那 31 个上游技能**不在这张表里** —— 它们不在安装面内，要用请从各自的源仓库装（来源记在 `skills-lock.json`）。
 
