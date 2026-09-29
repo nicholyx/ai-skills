@@ -14,6 +14,7 @@
         },
         {
           "type": "not_contains",
+          "target": "tools",
           "value": "git push"
         }
       ]
@@ -69,6 +70,7 @@
         },
         {
           "type": "not_contains",
+          "target": "tools",
           "value": "git add .env"
         }
       ]
@@ -95,6 +97,7 @@
       "assertions": [
         {
           "type": "not_contains",
+          "target": "tools",
           "value": "--amend"
         },
         {

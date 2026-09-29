@@ -129,7 +129,7 @@ custom/daily/<name>/
       "prompt": "...",
       "expected_output": "...",
       "files": [],
-      "assertions": [{ "type": "...", "value": "..." }]
+      "assertions": [{ "type": "contains", "target": "tools", "value": "..." }]
     }
   ]
 }
@@ -141,6 +141,29 @@ custom/daily/<name>/
 - `evals[]` 不能为空；每条必须有数字 `id` 与非空 `prompt`
 - `name`、`expected_output`、`files`、`assertions` 缺失只 warn 不 fail ——
   「这个用例该断言什么」是人的判断，机器不该替他决定
+
+### 断言必须说清它在看什么（`target`）
+
+| `target` | 看的是 | 典型用途 |
+| --- | --- | --- |
+| `transcript`（默认）| 全文 = 工具调用 + 模型输出 | 正向断言够用 |
+| `tools` | 模型**实际执行**的工具调用 | 「不许执行 `git push`」|
+| `output` | 模型的输出文本 | 「不许问『是否继续』」|
+
+**`not_contains` 必须显式写 `target`**（判错，不是提示）。默认的 `transcript` 是全文
+匹配，而否定断言在全文下几乎必然误伤 —— 模型只要说一句「我不会执行 `git push`」，
+行为完全正确，`not_contains "git push"` 却红了。这类**假失败**比漏检更糟：它让人不再
+相信这套用例。正向断言不强制，因为 `transcript` 是超集，最坏只是约束偏松。
+
+选 `tools` 还是 `output` 有个实用的判据：**如果断言值只可能出现在模型的话里，
+选 `output`**。`git-smart-update` 的 `not_contains "所有分支"` 就是这种情况 ——
+命令里不会出现中文，选 `tools` 会让这条断言**永远通过**，等于没写。
+
+另：`type` / `target` 写错值会判错，`value` 为空也会判错。不认识的 `type` 不会被任何
+跑手匹配，用例会**静默失效** —— 那是最难发现的一类坏法。
+
+> **这些用例目前不会被自动执行。** `checks/evals.js` 只校验结构与上面这些语义字段；
+> 跑手（`scripts/run-evals.js`）仍是计划中的事项，见路线图 Issue #7。
 
 ## 内容红线
 

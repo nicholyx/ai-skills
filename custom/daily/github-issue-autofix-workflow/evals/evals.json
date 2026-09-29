@@ -60,6 +60,7 @@
         },
         {
           "type": "not_contains",
+          "target": "tools",
           "value": "gh pr create"
         }
       ]
@@ -77,10 +78,12 @@
         },
         {
           "type": "not_contains",
+          "target": "tools",
           "value": "gh pr create"
         },
         {
           "type": "not_contains",
+          "target": "output",
           "value": "请确认|是否继续|需要你确认"
         }
       ]
