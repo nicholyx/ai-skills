@@ -77,7 +77,7 @@ npx skills add nicholyx/ai-skills/custom/daily
 
 ### `.agents/skills/` 里的 31 个上游技能怎么办
 
-**它们不随本仓库分发**，上面两条命令都装不到。
+**它们不在安装面内**，上面两条命令都装不到。
 
 `.agents/skills/` 是 `npx skills` 的**安装目标目录** —— 你自己跑
 `npx skills add <上游仓库>` 装进来的东西会落在这里。本仓库把它们提交进去，只是为了让
@@ -93,7 +93,7 @@ jq -r '.skills | to_entries[] | "\(.key)\t\(.value.source)"' skills-lock.json
 npx skills add vercel-labs/agent-browser
 ```
 
-**为什么本仓库不转发它们？** 那些是第三方内容：我们无权修改（改了会在
+**为什么本仓库不把它们算作自己的产品？** 那些是第三方内容：我们无权修改（改了会在
 `npx skills update` 时丢失），出了问题也修不了。转发一份「看起来像本仓库提供的」第三方
 技能，风险远大于便利。详见[架构与原理](ARCHITECTURE.md)。
 
@@ -347,7 +347,7 @@ npx skills add nicholyx/ai-skills
 不需要加 `--full-depth`：实测它装到的东西与默认命令**完全相同**。
 
 > ⚠️ `.agents/skills/` 下那 31 个**上游技能不会被装上** —— 无论用哪条命令。
-> 它们是 `npx skills` 的安装目标目录，不随本仓库分发。要用就从各自的源仓库装，
+> 它们是 `npx skills` 的安装目标目录，不在安装面内。要用就从各自的源仓库装，
 > 来源记在 `skills-lock.json` 里（见[第一步](#第一步安装技能)）。
 
 ### 我改了 `custom/` 里的技能，怎么让它在我本机生效

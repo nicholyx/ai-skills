@@ -84,7 +84,7 @@ npx skills add nicholyx/ai-skills/custom/daily
 > npx skills add vercel-labs/agent-browser        # 例：装 agent-browser
 > ```
 >
-> 本仓库不转发它们，是因为那些是第三方内容：我们无权修，出了问题也改不了。
+> 本仓库不把它们算作自己的产品 —— 那是第三方内容：我们无权修，出了问题也改不了。
 > 详见[为什么 `.agents/` 不在安装面](docs/ARCHITECTURE.md)。
 
 装完之后：
@@ -145,7 +145,7 @@ npx skills update
 
 ### 上游（`.agents/skills/`）
 
-31 个第三方技能，**不随本仓库分发**。它们是 `npx skills` 的安装目标目录 ——
+31 个第三方技能，**不在安装面内**。它们是 `npx skills` 的安装目标目录 ——
 你自己用 `npx skills add <上游仓库>` 装进来的东西会落在这里，提交进仓库只是为了让
 这套环境可复现。
 
