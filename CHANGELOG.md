@@ -9,6 +9,8 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-29
+
 这一版的主线是**让两类无声故障变得有声**：装了技能却唤不起来、技能里的文件改名后静默失效 —— 这两件事此前都不在任何检查的覆盖范围内。
 
 ### 新增
@@ -146,7 +148,8 @@
 - 破坏性变更在条目里用 **BREAKING** 标出。对这个仓库来说，「技能的行为变了」算破坏性变更 —— 使用者依赖的是技能的行为，不是它的文件名
 - 已发布的版本按 `[X.Y.Z] - 日期` 归档，`[Unreleased]` 恢复为空壳
 
-[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.3.0
 [1.2.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.2.0
 [1.1.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.1.0
 [1.0.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.0.0
