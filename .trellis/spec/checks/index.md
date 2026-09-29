@@ -186,6 +186,51 @@ print(bad if bad else 'OK')
 > **`.gitignore` 不是断言。** 它挡住的是常规操作，挡不住 `git add -f`、
 > 也挡不住「另一个工具往别处写技能目录」。所以两层都要有。
 
+## 技能自洽校验：断言「技能自己说的和有的对得上」
+
+其余的检查器查的是**格式**（frontmatter 合不合规、目录与源头是否一致）。`skill-integrity.js`
+查的是另一件事：**这个技能装上以后，能不能按说明用起来**。下列三类故障都看不出格式问题：
+
+| 规则 | 症状 | 谁会撞上 |
+| --- | --- | --- |
+| A 指向本技能目录的路径必须存在 | 把 `reference/x.md` 改名，技能**静默失效** | 维护者 |
+| B `metadata.example` 必须在 `description` 里 | 目录里教用户说的那句话，模型根本看不到 | 使用者 |
+| C `description` 不得留脚手架占位符 | 技能带着一句「【待补】…」上线 | 使用者 |
+
+### 规则 A 的判据：怎么区分「本技能的文件」和「别的仓库的文件」
+
+不能把所有相对路径都当本地 —— 实测会误报。仓库里就有反例：`maintain-loop` 引用的
+`./scripts/lint.sh` 是**目标仓库**的脚本（它是通用技能），`obsidian-note-workflow` 引用的
+`_metadata_/tag-rules.md` 是**用户 vault** 的结构。
+
+判据取路径的**第一段**：那一段在技能目录里存在 → 本技能的文件，整条路径必须解析得到；
+不存在 → 外部引用，跳过。引入时对全仓零误报（`repo-analyzer` 的 11 处 `reference/**`
+判为本地，5 处外部引用判为跳过）。
+
+**已知的漏网**：不含 `/` 的裸文件名（`package.json`、`bug-analyzer.md`）不检查 —— 无法
+可靠区分本地与目标仓库。`repo-analyzer` 提的 `package.json` 是被分析仓库的，
+`bug-analyzer-agent` 提的 `bug-analyzer.md` 却是自己的。放宽就会立刻误报，所以宁可漏。
+
+### 规则 B 为什么盯的是 `description` 而不是正文
+
+第一版写的是「示例必须出现在正文里」。实测把它推翻了，两处都值得记下来：
+
+1. **正文管不了触发。** 模型先读 `description` 决定唤不唤起，正文是唤起**之后**才加载的。
+2. **第一版的度量是恒真的。** 它取的是 `parseFrontmatter()` 的 `body` 字段 —— 那是
+   **frontmatter 内部**的行，而 `metadata.example` 恰恰就写在那里，于是断言永远成立
+   （15/15）。**是变异测试把它揭出来的**：真正的正文命中率只有 2/15。
+
+这条教训写进了 `lib/frontmatter.js`：**文档正文用 `docBody`，别用 `body`**。
+
+### 变异验证（每条都实际跑过）
+
+| 变异 | 结果 |
+| --- | --- |
+| 改名 `repo-analyzer/reference/quality-standards.md` | 抓到（2 处，带行号）|
+| 把 `metadata.example` 换成描述里没有的话 | 抓到 |
+| 从 `description` 里删掉触发说法 | 抓到 |
+| 隔离副本里跑 `new-skill.js` 后不补描述 | 抓到（规则 C）|
+
 ## 供应链基线
 
 `zizmor` 基线 0 findings，豁免集中在 `.github/zizmor.yml`，**每条豁免必须写明可

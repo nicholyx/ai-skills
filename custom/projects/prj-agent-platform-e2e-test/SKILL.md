@@ -1,6 +1,6 @@
 ---
 name: prj-agent-platform-e2e-test
-description: 使用 agent-browser 对 Agent 平台核心功能进行端到端验证
+description: 使用 agent-browser 对 Agent 平台核心功能进行端到端验证。当用户说「跑一遍 Agent 平台的端到端测试」「验证一下 Agent 平台的核心功能」时使用。
 metadata:
   category: 项目专用
   tagline: "用 agent-browser 对 Agent 平台核心功能做端到端验证"

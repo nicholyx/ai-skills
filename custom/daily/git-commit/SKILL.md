@@ -1,6 +1,6 @@
 ---
 name: git-commit
-description: 使用约定式提交规范执行 git commit
+description: 使用约定式提交规范执行 git commit。当用户说「帮我提交」「提交一下这些改动」时使用。
 license: MIT
 allowed-tools: Bash
 metadata:

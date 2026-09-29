@@ -1,6 +1,6 @@
 ---
 name: code-reviewer-agent
-description: 代码审查专家，使用独立上下文的 subagent 执行深度代码审查，覆盖安全漏洞、性能优化和生产可靠性
+description: 代码审查专家，使用独立上下文的 subagent 执行深度代码审查，覆盖安全漏洞、性能优化和生产可靠性。当用户说「审查一下我暂存区的改动」「帮我 review 这版代码」时使用。
 metadata:
   category: 代码质量
   tagline: "独立上下文的深度代码审查，覆盖安全、性能与生产可靠性"

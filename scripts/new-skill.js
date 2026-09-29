@@ -114,7 +114,9 @@ const esc = (s) => s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 const description =
   args.desc ||
   "【待补】一句话说明这个技能做什么、什么时候触发。描述是**给模型看的**，" +
-    "要写清触发词 —— 它决定技能何时被唤起。";
+    "要写清触发词 —— 它决定技能何时被唤起。" +
+    `其中必须原样包含「${args.example}」：目录会把它当作「你可以这样说」展示给访客，` +
+    "不写进描述就等于这个承诺没有触发锚点（`skill-integrity` 会拦）。";
 
 const skill = `---
 name: ${name}
@@ -153,6 +155,7 @@ process.stdout.write(
     "",
     "接下来：",
     "  1. 补 frontmatter 的 description（写清触发词 —— 它决定技能何时被唤起）",
+    `     注意：里面要**原样包含**「${args.example}」，否则 skill-integrity 会拦`,
     "  2. 补 SKILL.md 正文：做什么、怎么做、边界在哪",
     "  3. node scripts/gen-catalogue.js --write   # 让它进 docs/SKILLS.md",
     "  4. ./scripts/lint.sh                        # 提交前自查",
