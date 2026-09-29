@@ -9,6 +9,15 @@
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-09-29
+
+这一版只做一件事：**把文档里讲反了的地方收掉**，顺带把一条从没验证过的安装断言变成实测。
+
+### 修复
+
+- **收掉「不随本仓库分发」这句与自身上下文矛盾的话**（[#34](https://github.com/nicholyx/ai-skills/pull/34)）。六处文档（README ×2、AGENTS.md、USAGE ×3）说 `.agents/skills/` 的 31 个上游技能「不随本仓库分发」，而**紧邻的下一句**就是「本仓库把它们提交进仓库，只是为了让这套环境可复现」—— 同一段里两句对不上。字面读起来是「不在仓库里」，而 clone 一次就会拿到全部 31 个、占仓库 97% 体积。已统一为仓库里本就正确的说法「**不在安装面内**」。
+- **把「`npx skills add` 装不到上游技能」从假设变成实测**。这条断言一直写在文档里，却从没被验证过。实测：默认命令 **Found 15 skills**（全为自建），`/custom/daily` 子路径 **Found 14 skills**（全为通用），两条都没有上游混入 —— 与文档写的一致，**安装面是健康的**。
+
 ## [1.3.0] - 2026-09-29
 
 这一版的主线是**让两类无声故障变得有声**：装了技能却唤不起来、技能里的文件改名后静默失效 —— 这两件事此前都不在任何检查的覆盖范围内。
@@ -148,7 +157,8 @@
 - 破坏性变更在条目里用 **BREAKING** 标出。对这个仓库来说，「技能的行为变了」算破坏性变更 —— 使用者依赖的是技能的行为，不是它的文件名
 - 已发布的版本按 `[X.Y.Z] - 日期` 归档，`[Unreleased]` 恢复为空壳
 
-[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/nicholyx/ai-skills/releases/tag/v1.3.1
 [1.3.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.3.0
 [1.2.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.2.0
 [1.1.0]: https://github.com/nicholyx/ai-skills/releases/tag/v1.1.0
