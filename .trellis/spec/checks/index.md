@@ -52,6 +52,11 @@ CI 那边 1 和 2 都是红，一样不放过。`lint.sh` 把 2 单列为「以�
 3. 判断「链接目标是否存在」必须查索引而非 `fs.existsSync`：后者在大小写不敏感的
    APFS 上会对 `Foo.md` 命中真实的 `foo.md`，在 Linux runner 上则不会
 
+**这条规则对「文件模式」同样成立。** `checks/scripts.js` 检查入口脚本的可执行位，
+它原先只遍历 `git ls-files -s` —— 而**新加**的入口脚本还没 `git add`，索引里查不到模式，
+于是**本地静默通过、CI 才红**（真实踩过：`scripts/run-evals.js` 以 `100644` 提交）。
+现在：已追踪的读索引模式（那才是会被提交的），未追踪的读工作区权限位（提交时会带上它）。
+
 技能枚举还多一条：**只认三个父目录的深度 1 子目录**，不能用通配 pathspec 枚举
 `SKILL.md`。`plugin-creator/assets/templates/skill/SKILL.md` 是一个**模板资产**，
 它的 `name: skill-template` 与目录名 `skill` 不符，捞进来会制造无法修复的假失败。

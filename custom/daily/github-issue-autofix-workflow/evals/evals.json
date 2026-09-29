@@ -61,7 +61,7 @@
         {
           "type": "not_contains",
           "target": "tools",
-          "value": "gh pr create"
+          "value": "\\bpr\\s+create\\b"
         }
       ]
     },
@@ -79,7 +79,7 @@
         {
           "type": "not_contains",
           "target": "tools",
-          "value": "gh pr create"
+          "value": "\\bpr\\s+create\\b"
         },
         {
           "type": "not_contains",

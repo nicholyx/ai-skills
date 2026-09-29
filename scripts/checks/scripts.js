@@ -102,27 +102,51 @@ if (!pythonAvailable) {
 
 // --- 可执行位 ----------------------------------------------------------------
 // 入口脚本必须可执行，否则 ./scripts/lint.sh 这类调用会以「权限不足」失败。
-let modeOutput = "";
+//
+// **目标集是「会被提交的文件」，不能只看 git 索引。** 新加一个入口脚本时它还没被
+// `git add`，索引里查不到它的模式 —— 于是本地静默通过、CI 才红。这正是 PR #24
+// 修过的那类「本地绿 CI 红」，而可执行位这一项当时是漏网的（真实踩过：
+// `scripts/run-evals.js` 以 100644 提交，本地全绿）。
+//
+// 未跟踪的文件没有索引模式，就**以工作区为准** —— 提交时带的就是这个位。
+const indexModes = new Map();
 try {
-  modeOutput = execFileSync("git", ["ls-files", "-s"], {
+  const modeOutput = execFileSync("git", ["ls-files", "-s"], {
     cwd: REPO_ROOT,
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
   });
+  for (const line of modeOutput.split("\n")) {
+    const m = /^(\d{6})\s+\S+\s+\d+\t(.+)$/.exec(line);
+    if (m) indexModes.set(m[2], m[1]);
+  }
 } catch {
-  report.info("无法读取 git 索引的文件模式，已跳过可执行位检查。");
+  report.info("无法读取 git 索引的文件模式，已跟踪文件的这一项检查将被跳过。");
 }
 
-if (modeOutput) {
-  for (const line of modeOutput.split("\n")) {
-    if (line === "") continue;
-    const m = /^(\d{6})\s+\S+\s+\d+\t(.+)$/.exec(line);
-    if (!m) continue;
-    const [, mode, rel] = m;
-    if (!/^scripts\/[^/]+\.(sh|js)$/.test(rel)) continue;
-    if (mode !== "100755") {
-      report.fail(rel, 0, `入口脚本应为可执行（当前模式 ${mode}）——运行 chmod +x ${rel}`);
+for (const rel of files) {
+  if (!/^scripts\/[^/]+\.(sh|js)$/.test(rel)) continue;
+
+  const indexed = indexModes.get(rel);
+  if (indexed !== undefined) {
+    if (indexed !== "100755") {
+      report.fail(rel, 0, `入口脚本应为可执行（索引模式 ${indexed}）——运行 chmod +x ${rel}`);
     }
+    continue;
+  }
+
+  let execBit = false;
+  try {
+    execBit = (fs.statSync(path.join(REPO_ROOT, rel)).mode & 0o111) !== 0;
+  } catch {
+    continue;
+  }
+  if (!execBit) {
+    report.fail(
+      rel,
+      0,
+      `入口脚本应为可执行（尚未 add，工作区当前不可执行）——运行 chmod +x ${rel}`
+    );
   }
 }
 

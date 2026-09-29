@@ -24,6 +24,11 @@
  * | `transcript`（默认）| 全文（工具调用 + 模型输出），最宽松 | 正向断言用它够用 |
  * | `tools` | 模型实际执行的工具调用 | 「不许执行 `git push`」|
  * | `output` | 模型的输出文本 | 「不许问『是否继续』」|
+ * | `repo` | 沙箱**最终状态**的摘要（提交数、暂存区、已提交文件、origin 有没有 ref）| 「什么都没提交」「真的推上去了」|
+ *
+ * **能落在 `repo` 上的断言就落在 `repo` 上** —— 它比前三个都硬。模型可以嘴上说
+ * 「我不会执行 git push」而实际推了，也可以什么都没说却把 `.env` 提交了。
+ * 前三个面测的是它**怎么说**，`repo` 测的是它**做成了什么**。
  *
  * **`not_contains` 必须显式给 `target`**（判错，不是提示）。因为默认的 `transcript`
  * 是全文匹配，而否定断言在全文下几乎必然误伤：模型只要说一句「我不会执行 `git push`」，
@@ -40,7 +45,7 @@ const { skillDirs, trackedFiles, readTracked } = require("../lib/gitfiles");
 const ASSERTION_TYPES = ["contains", "not_contains"];
 
 /** 断言的作用面。见文件头。 */
-const ASSERTION_TARGETS = ["transcript", "output", "tools"];
+const ASSERTION_TARGETS = ["transcript", "output", "tools", "repo"];
 
 const report = new Report("evals.json 结构校验");
 
