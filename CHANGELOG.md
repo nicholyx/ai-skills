@@ -9,6 +9,8 @@
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-10-01
+
 这一版的主线是**补上测试**与**把规范沉淀下来**。此前仓库有一套不错的静态检查，但
 「怎么验、验到什么程度算够、哪些坑已经踩过」**只存在于维护者脑子里** —— 同事克隆
 代码后无从遵循。
@@ -344,7 +346,8 @@
 - 破坏性变更在条目里用 **BREAKING** 标出。对这个仓库来说，「技能的行为变了」算破坏性变更 —— 使用者依赖的是技能的行为，不是它的文件名
 - 已发布的版本按 `[X.Y.Z] - 日期` 归档，`[Unreleased]` 恢复为空壳
 
-[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v2.1.2...HEAD
+[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/nicholyx/ai-skills/releases/tag/v2.2.0
 [2.1.2]: https://github.com/nicholyx/ai-skills/releases/tag/v2.1.2
 [2.1.1]: https://github.com/nicholyx/ai-skills/releases/tag/v2.1.1
 [2.1.0]: https://github.com/nicholyx/ai-skills/releases/tag/v2.1.0
