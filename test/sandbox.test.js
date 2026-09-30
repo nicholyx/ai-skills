@@ -39,9 +39,15 @@ function tmpRepo() {
   return { box, baseHead };
 }
 
-/** 跑一条必须成功的 git 命令。 */
+/**
+ * 跑一条必须成功的 git 命令。
+ *
+ * 与 `lib/sandbox.js` 的 `git()` 一样带 `-c core.quotepath=false`：不带的话，
+ * 非 ASCII 文件名在 Linux 上被输出成八进制转义、macOS 上不会 —— 同一份测试两个平台
+ * 两种结果（真实踩过：本地绿、CI 红）。
+ */
 function runGit(cwd, args) {
-  const r = spawnSync("git", args, { cwd, encoding: "utf8" });
+  const r = spawnSync("git", ["-c", "core.quotepath=false", ...args], { cwd, encoding: "utf8" });
   assert.equal(r.status, 0, `git ${args.join(" ")} 失败：${r.stderr}`);
   return r.stdout;
 }
