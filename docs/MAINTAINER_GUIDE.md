@@ -61,7 +61,7 @@
 
 要保护的是 `main`，且**只勾选 `CI 总览` 这一个 check**。
 
-CI 有 17 个 job，但 `CI 总览`（`ci-summary`）是唯一挂了分支保护的那个 ——
+CI 有 18 个 job，但 `CI 总览`（`ci-summary`）是唯一挂了分支保护的那个 ——
 它汇总其余 13 个的结果。所以增删检查项时**不必回头改仓库设置**，
 这是刻意的设计，见[架构与原理](ARCHITECTURE.md#为什么-ci-汇总表是派生出来的而不是手写三份)。
 
@@ -561,7 +561,7 @@ git push origin v1.0.0
 
 ```bash
 # ---- 日常检查 ----
-./scripts/lint.sh                          # 本地 14 项静态检查
+./scripts/lint.sh                          # 本地 15 项静态检查
 ./scripts/lint.sh --list                   # 列出检查项 id 与显示名
 ./scripts/lint.sh --only links,hygiene     # 只跑某几项
 ./scripts/lint.sh --skip zizmor            # 本机没 docker 时
