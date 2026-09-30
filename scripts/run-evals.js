@@ -16,7 +16,9 @@
  *   --keep            保留沙箱目录，并把原始 transcript 写进 <沙箱>/transcript.jsonl
  *                     （排错用 —— 用法例通过与否去反推原因，等于猜）
  *   --no-isolate-home 不隔离 HOME（默认隔离：用例不该依赖运行者的机器状态）
- *   --ablate          同时跑「不装技能」的**消融基线**。见文件头「一个通过不等于有用」
+ *   --ablate          同时跑「不装技能」的**消融基线**。见文件头「一个通过不等于有用」。
+ *                     基线不是全挂时会逐条列出「不装技能也过了」的断言 —— 只报
+ *                     「无区分度」的话，没人知道是哪一条在漏
  *   --ablate-repeats <n>  基线跑 n 轮（默认 1）。**基线结果会翻**，单次不足以下结论 ——
  *                     要写进用例的「有没有区分度」时，至少 3 轮
  *   --json            机器可读输出
@@ -40,6 +42,11 @@
  * | ✓ | ✗ | **有区分度** —— 技能确实带来了东西 |
  * | ✓ | ✓ | **无区分度** —— 用例在测模型，不在测技能 |
  * | ✗ | ✗ | 用例本身有问题（或技能确实没用）|
+ *
+ * 「无区分度」只说明**有问题**，不说明**问题在哪**。所以基线只要不是全挂，跑手就把
+ * 「不装技能也通过了」的**断言**逐条列出来（每轮的逐条结果存在 `baselineResults` 里）。
+ * 一条用例里只要有一条断言在基线里恒过，这条用例就在那一条上测模型、而不是测技能 ——
+ * 要收紧的正是它。
  *
  * **它只报不判红**：无区分度是「用例写得不够具体」，是待改进项，不是技能坏了。
  * 设成失败会让工具长期红着，而那正是「训练人忽略输出」。
@@ -86,7 +93,7 @@ const { spawnSync } = require("child_process");
 const { skillDirs, readTracked } = require("./lib/gitfiles");
 const { Report } = require("./lib/report");
 // 沙箱与作用面的实现只有一份，两个跑手共用 —— 见该文件的说明
-const { makeSandbox, repoSurface, collectSurfaces } = require("./lib/sandbox");
+const { makeSandbox, repoSurface, collectSurfaces, baselineHits } = require("./lib/sandbox");
 
 const DEFAULT_ALLOWED = "Bash,Read,Write,Edit,Grep,Glob";
 
@@ -318,6 +325,18 @@ function printOutcome(o) {
           "下「有没有区分度」的结论 —— 加 --ablate-repeats 多跑几轮再定\n"
       );
     }
+    // 基线只要不是全挂，就逐条列出「不装技能也通过了的断言」。
+    // 上面那句只说了「基线有问题」，说不出**是哪一条断言在漏** —— 而「哪一条」直接
+    // 决定了下一步：是这条断言写得太笼统（模型本来就会做），还是用例整体没区分度。
+    if (o.baselinePassed > 0) {
+      for (const h of baselineHits(o.baselineResults)) {
+        process.stdout.write(
+          `      · 不装技能也过：${h.key}` +
+            (o.baselineRuns > 1 ? `（${h.passed}/${h.total} 轮）` : "") +
+            "\n"
+        );
+      }
+    }
   }
 }
 
@@ -340,14 +359,18 @@ for (const item of picked) {
           `      ↳ 消融基线（不装技能）${args.ablateRepeats > 1 ? ` ${k + 1}/${args.ablateRepeats}` : ""}…\n`
         );
         const base = runOne(item, false);
-        runs.push(base.ok);
+        // 留**整份**结果而不是一个布尔：基线不是全挂时要能说出「是哪条断言在漏」，
+        // 而一个布尔值只能告诉你「有事发生」。判定语义不受影响 —— 下面仍按 ok 计数。
+        runs.push(base);
         o.costUsd = (o.costUsd || 0) + (base.costUsd || 0);
       }
       o.baselineRuns = runs.length;
-      o.baselinePassed = runs.filter(Boolean).length;
+      o.baselinePassed = runs.filter((b) => b.ok).length;
       // 只有「装了过」才谈得上区分度：装了都不过，说明用例或技能本身有问题
       o.discriminating = o.ok && o.baselinePassed < runs.length;
       o.baselineStable = o.baselinePassed === 0 || o.baselinePassed === runs.length;
+      // 基线**每轮**的逐条断言结果（轮 × 断言）。加信息，不参与上面两个判定。
+      o.baselineResults = runs.map((b) => b.results);
     }
   } catch (err) {
     report.fail(`${skill.dir}/evals/evals.json`, 0, `用例 #${item.id} 未能执行：${err.message}`);
@@ -383,6 +406,18 @@ if (args.ablate && !args.json) {
     report.info(
       `⚠ ${unstable} 条的**基线结果会翻** —— 单次观测不足以给它们下结论，` +
         "加 --ablate-repeats 多跑几轮再写进数据。"
+    );
+  }
+  // 摘要里也要看得见**是哪几条断言**在「不装技能」时照样过：只报「N 条无区分度」
+  // 的话，读者还得回头翻每一条用例的逐行输出才知道该改哪里。
+  for (const o of probed) {
+    const hits = baselineHits(o.baselineResults || []);
+    if (hits.length === 0) continue;
+    report.info(
+      `#${o.id} 不装技能也过的断言：` +
+        hits
+          .map((h) => `${h.key}${o.baselineRuns > 1 ? `（${h.passed}/${h.total} 轮）` : ""}`)
+          .join("；")
     );
   }
 }

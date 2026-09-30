@@ -89,12 +89,19 @@ function makeSandbox({ skill, files = [], withOrigin = true, withSkill = true,
     });
   }
 
-  // 把跑手自己铺的东西挡在 `git status` 之外。
-  // 否则「暂存区为空」这类用例会变成「有两个未跟踪目录该怎么办」—— 实测模型就被带偏了，
-  // 开始讨论要不要提交 `.claude/`，而那与这条用例要测的东西毫无关系。
+  // 把「不属于被测场景」的文件挡在 `git status` 之外：跑手自己铺的那些，**以及 HOME
+  // 隔离带来的副产物**。两类都会以 `untracked:` 出现在结果面上，把模型引到
+  // 「这两个文件要不要一起提交」上去 —— 实测跑 `git-commit` 用例时模型**真的**开始
+  // 讨论要不要把 `.claude.json` 提交进去，而那与用例要测的东西毫无关系。
+  //
+  // `.claude.json` 不是跑手铺的，是 `claude` 自己写的：它把配置放在 `$HOME/.claude.json`
+  // （已实测：把 HOME 指到一个空目录后跑一次 `claude -p`，那里会多出 `~/.claude/` 与
+  // `~/.claude.json`）。而沙箱里 HOME 就是沙箱根（见 run-evals.js 的 `--no-isolate-home`），
+  // 于是它落在仓库根、变成一个未跟踪文件。`/.claude/` 那条只匹配同名目录，挡不住它。
   fs.appendFileSync(
     path.join(box, ".git", "info", "exclude"),
-    `\n# 跑手自己铺的，不属于被测场景\n/.claude/\n/${ORIGIN_REL}/\n`
+    `\n# 跑手自己铺的，以及隔离 HOME 的副产物，都不属于被测场景\n` +
+      `/.claude/\n/.claude.json\n/${ORIGIN_REL}/\n`
   );
 
   // 前置状态
@@ -212,4 +219,34 @@ function collectSurfaces(stdout, repoText = "(未采集)") {
   return surfaces;
 }
 
-module.exports = { git, makeSandbox, repoSurface, collectSurfaces, BASE_README };
+/**
+ * 汇总**消融基线**每轮的逐条断言结果 —— 回答「不装技能时，究竟是哪几条断言照样过」。
+ *
+ * 为什么需要它：只留一个「这轮过没过」的布尔值时，基线一旦不是全挂，读者只知道
+ * 「有问题」，不知道**是哪一条断言在漏** —— 而那才是下一步要改的东西。一条用例里
+ * 只要有一条断言在「不装技能」时恒过，这条用例就在那一条上测模型而不是测技能。
+ *
+ * 计数按「轮」不按「用例」：`--ablate-repeats` 大于 1 时同一个断言会在多轮里出现，
+ * `passed / total` 正好把「基线会翻」这件事如实带出来（见测试规范「消融结果本身有噪声」）。
+ *
+ * @param {Array<Array<{type: string, target: string, value: any, ok: boolean}>>} baselineResults
+ *        基线**每轮**的断言结果（外层是轮，内层是断言）
+ * @returns {Array<{key: string, passed: number, total: number}>}
+ *        至少通过过一轮的断言，按首次出现顺序；`total` 是它出现过的轮数
+ */
+function baselineHits(baselineResults) {
+  const byKey = new Map();
+  for (const results of baselineResults || []) {
+    for (const r of results || []) {
+      const key = `${r.type} [${r.target || "transcript"}] ${r.value}`;
+      const entry = byKey.get(key) || { key, passed: 0, total: 0 };
+      entry.total += 1;
+      if (r.ok) entry.passed += 1;
+      byKey.set(key, entry);
+    }
+  }
+  // 只留下真的命中过的：全挂的断言列出来只会淹没信号
+  return [...byKey.values()].filter((e) => e.passed > 0);
+}
+
+module.exports = { git, makeSandbox, repoSurface, collectSurfaces, baselineHits, BASE_README };
