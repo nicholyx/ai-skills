@@ -5,7 +5,7 @@
  * `scripts/lib/frontmatter.js` 的单元测试。
  *
  * 断言的是**代码当前的行为**，包括几处刻意不做完整 YAML 的宽松处理
- * （块标量保留换行与缩进、行内 `#` 不当注释、带点的键整行忽略）。
+ * （块标量保留换行与缩进、行内 `#` 不当注释）。
  * 这些不是 bug —— 文件头写明了「这里不实现 YAML」，只做官方 validator
  * 需要的那些事；把它们钉住是为了**先于读者发现行为变了**。
  *
@@ -149,12 +149,36 @@ test("注释行、空行、缩进行都不算顶层键", () => {
   assert.deepEqual(p.keys, ["name", "description"]);
 });
 
-test("带 `.` 的键整行被忽略（不做额外键校验）", () => {
-  const p = parseFrontmatter(doc("---", "name: a", "description: b", "foo.bar: 1", "---"));
+test("带 `.` 或其它标点的键进 keys，并被白名单拦下（回归）", () => {
+  // 曾经 TOP_KEY_RE 是 [A-Za-z0-9_-]+，这类键**整行匹配失败**，连 keys 都进不去 ——
+  // 白名单看不见它，「只允许六个键」静默失效。下面按标点逐类钉住。
+  for (const key of ["foo.bar", "a/b", "foo@bar", "foo+bar", "foo*bar", "foo~bar"]) {
+    const p = parseFrontmatter(doc("---", "name: a", "description: b", `${key}: 1`, "---"));
+
+    assert.ok(p.keys.includes(key), `键「${key}」没进 keys：${JSON.stringify(p.keys)}`);
+    // 白名单随之看见它 —— 这正是修复的目的
+    mustFind(validateFrontmatter(p, { dirName: "a" }), `额外键：${key}`);
+  }
+});
+
+test("键名里出现冒号时，键停在第一个冒号上（`foo:bar: 1` → 键 `foo`）", () => {
+  const p = parseFrontmatter(doc("---", "name: a", "description: b", "foo:bar: 1", "---"));
+
+  assert.deepEqual(p.keys, ["name", "description", "foo"]);
+  assert.equal(p.values.get("foo"), "bar: 1");
+});
+
+test("键名里出现空格时不算顶层键（不是合法的 YAML 键）", () => {
+  const p = parseFrontmatter(doc("---", "name: a", "description: b", "foo bar: 1", "---"));
 
   assert.deepEqual(p.keys, ["name", "description"]);
-  // 它连 keys 都进不去，因此也不会触发「额外的键」那条结论 —— 已知的漏网
-  assert.deepEqual(validateFrontmatter(p, { dirName: "a" }), []);
+});
+
+test("值里有冒号不影响键的解析（`description: 用法: 说明`）", () => {
+  const p = parseFrontmatter(doc("---", "name: a", "description: 用法: 说明", "---"));
+
+  assert.deepEqual(p.keys, ["name", "description"]);
+  assert.equal(p.values.get("description"), "用法: 说明");
 });
 
 test("重复顶层键被记录下来，值取后者", () => {

@@ -18,6 +18,10 @@ const { execFileSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
+// 退出码的真源在 lib/report.js（那是「检查器输出契约」所在处）。这里只是转出，
+// 让 `require("./gitfiles").EXIT_ABORT` 这类既有写法继续可用。
+const { EXIT_OK, EXIT_FAIL, EXIT_ABORT } = require("./report");
+
 const REPO_ROOT = path.resolve(__dirname, "..", "..");
 
 /** 技能目录的三个父目录。只认这三处的**深度 1** 子目录。 */
@@ -25,10 +29,6 @@ const SKILL_PARENTS = [".agents/skills", "custom/daily", "custom/projects"];
 
 /** 上游 vendored 区。这里的违规一律只 warn，见各检查器的分级说明。 */
 const VENDOR_PREFIX = ".agents/";
-
-const EXIT_OK = 0;
-const EXIT_FAIL = 1;
-const EXIT_ABORT = 2;
 
 /** 不在 git 仓库里时，所有检查都无从谈起。明确报错退出 2，而不是崩栈。 */
 function requireRepo() {
