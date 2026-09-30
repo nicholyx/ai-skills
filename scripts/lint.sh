@@ -91,6 +91,7 @@ done
 
 # 检查项注册表：id:显示名。顺序即执行顺序。
 CHECKS=(
+  "unit:单元测试（scripts/lib）"
   "frontmatter:技能 frontmatter 校验"
   "evals:evals.json 结构校验"
   "vendor-lock:上游技能 lock 一致性"
@@ -355,6 +356,7 @@ check_zizmor() {
 dispatch() {
   local id="$1" name="$2"
   case "$id" in
+    unit)        run_check "$name" node --test test/*.test.js ;;
     frontmatter) run_check "$name" node scripts/checks/frontmatter.js ;;
     evals)       run_check "$name" node scripts/checks/evals.js ;;
     vendor-lock) run_check "$name" node scripts/checks/vendor-lock.js ;;

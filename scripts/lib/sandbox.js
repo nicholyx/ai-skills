@@ -27,9 +27,19 @@ const BASE_README =
 /** 沙箱里那个裸 origin 的相对路径。 */
 const ORIGIN_REL = ".origin.git";
 
-/** 跑 `git`，失败就抛。沙箱里的 git 不该失败 —— 失败意味着沙箱没铺对。 */
+/**
+ * 跑 `git`，失败就抛。沙箱里的 git 不该失败 —— 失败意味着沙箱没铺对。
+ *
+ * **一律带 `-c core.quotepath=false`。** 不设它的话，非 ASCII 文件名在 Linux 上会被
+ * 输出成八进制转义（`"\345\267\262..."`），而 macOS 上不会 —— 同一份代码在两个平台上
+ * 给出**不同的面**，断言就没法跨平台写，评测跑手的结果也不可复现。
+ * 真实踩过：同一条单元测试本地（macOS）绿、CI（Ubuntu）红。
+ */
 function git(cwd, argvArgs) {
-  const r = spawnSync("git", argvArgs, { cwd, encoding: "utf8" });
+  const r = spawnSync("git", ["-c", "core.quotepath=false", ...argvArgs], {
+    cwd,
+    encoding: "utf8",
+  });
   if (r.status !== 0) {
     throw new Error(`git ${argvArgs.join(" ")} 失败：${(r.stderr || "").trim()}`);
   }

@@ -7,7 +7,7 @@
 
 一句话：**一个 Claude Code Skills 仓库 —— 自建技能在这里维护，上游技能在这里分发。**
 
-- `custom/`（13 个技能）是**自建内容**，我们维护
+- `custom/`（16 个自建技能）是**自建内容**，我们维护
 - `.agents/`（31 个技能，占仓库 97% 体积）是 `npx skills add` 装来的**上游 vendored 内容**，只读
 - `custom/daily/skills-sync/` 用软链接把技能同步到 `~/.claude/skills` 与 `~/.codebuddy/skills`，
   **在使用者的全局 AI 环境里生效** —— 这是本仓库最重要的一条性质，也是多数红线的由来
@@ -23,6 +23,7 @@
 | `.github/workflows/**` | [checks/index.md](checks/index.md) + [maintenance/index.md](maintenance/index.md) |
 | 发版 / PR / CHANGELOG / Issue | [maintenance/index.md](maintenance/index.md) |
 | 设计新功能（判断「该不该做」） | [guides/index.md](guides/index.md) |
+| **写测试 / 加检查 / 判断「验够了没有」** | [testing/index.md](testing/index.md) —— **必读**，四层测试与验收标准 |
 
 ## Pre-Development Checklist（任何任务动手前）
 
@@ -32,9 +33,10 @@
 
 ## Quality Check（任何任务收尾前）
 
-- [ ] `./scripts/lint.sh` 全绿（10 项）
+- [ ] `./scripts/lint.sh` 全绿（17 项）—— 它已包含单元测试与端到端验证
 - [ ] 全仓无 U+FFFD 乱码（扫描命令见 [checks/index.md](checks/index.md)）
 - [ ] 改了行为 → `docs/` 与 `README.md` 同步更新
 - [ ] 用户可感知的改动 → 记入 `CHANGELOG.md` 的 `[Unreleased]`
 - [ ] 新增/修改技能 → 确认 `name` 与目录名一致、`description` 无尖括号
 - [ ] CI 全绿才合并；提交与分支规范见 [maintenance/index.md](maintenance/index.md)
+- [ ] **新加的断言/检查/测试，先证明它能失败**（变异测试）—— 见 [testing/index.md](testing/index.md)

@@ -46,15 +46,16 @@ Managed by Trellis. Edits outside this block are preserved; edits inside may be 
 
 ### 动手前必读
 
-- 改技能（`custom/**`）→ `.trellis/spec/skills/index.md` —— frontmatter 契约与内容红线
-- 改检查器或 `scripts/` → `.trellis/spec/checks/index.md` —— 退出码语义与分级原则
-- 改工作流、发版、PR → `.trellis/spec/maintenance/index.md`
-- 总导航见 `.trellis/spec/index.md`
+- 改技能（`custom/**`）→ [`.trellis/spec/skills/index.md`](.trellis/spec/skills/index.md) —— frontmatter 契约与内容红线
+- 改检查器或 `scripts/` → [`.trellis/spec/checks/index.md`](.trellis/spec/checks/index.md) —— 退出码语义与分级原则
+- 改工作流、发版、PR → [`.trellis/spec/maintenance/index.md`](.trellis/spec/maintenance/index.md)
+- **写测试、加检查、判断「验够了没有」→ [`.trellis/spec/testing/index.md`](.trellis/spec/testing/index.md)** —— 四层测试、验收标准、踩过的坑
+- 总导航见 [`.trellis/spec/index.md`](.trellis/spec/index.md)
 
 ### 本地检查入口
 
 ```bash
-./scripts/lint.sh          # 17 项静态检查，目标是「本地绿 == CI 绿」
+./scripts/lint.sh          # 18 项静态检查，目标是「本地绿 == CI 绿」
 ./scripts/lint.sh --list   # 看有哪些检查项
 ```
 
@@ -96,7 +97,7 @@ Commits 写。
 
 | 层 | 工具 | 现状 |
 | --- | --- | --- |
-| 静态 | `./scripts/lint.sh`（17 项检查）| 进 CI，每次 PR 都跑 |
+| 静态 | `./scripts/lint.sh`（18 项检查）| 进 CI，每次 PR 都跑 |
 | 行为 | [`scripts/run-evals.js`](scripts/run-evals.js) | 只对 `git-commit` 可跑，且通过**不等于**有效 |
 | 触发 | 无 | 试过，**造不出来**（见下）|
 
