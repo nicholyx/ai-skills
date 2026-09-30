@@ -9,6 +9,8 @@
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-09-30
+
 这一版有两件东西：一个**能分发的诊断技能**，以及一个**证明评测可能什么都没测**的机制。
 
 ### 新增
@@ -259,7 +261,8 @@
 - 破坏性变更在条目里用 **BREAKING** 标出。对这个仓库来说，「技能的行为变了」算破坏性变更 —— 使用者依赖的是技能的行为，不是它的文件名
 - 已发布的版本按 `[X.Y.Z] - 日期` 归档，`[Unreleased]` 恢复为空壳
 
-[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v2.0.1...HEAD
+[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/nicholyx/ai-skills/releases/tag/v2.1.0
 [2.0.1]: https://github.com/nicholyx/ai-skills/releases/tag/v2.0.1
 [2.0.0]: https://github.com/nicholyx/ai-skills/releases/tag/v2.0.0
 [1.3.2]: https://github.com/nicholyx/ai-skills/releases/tag/v1.3.2
