@@ -46,6 +46,8 @@
 
 ```text
 ai-skills/
+├── AGENTS.md                # ← 规则与开发流程的唯一来源（Claude Code 读 CLAUDE.md，
+│                            #   而它只是转发到这里的指针 —— 规则不维护两份）
 ├── .agents/skills/          # ← 上游 vendor 区，31 个技能，只读
 │   └── <skill>/SKILL.md
 ├── custom/

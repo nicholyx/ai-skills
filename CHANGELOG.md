@@ -9,6 +9,29 @@
 
 ## [Unreleased]
 
+这一版把**开发流程搬进了 `AGENTS.md`**，并加上 `CLAUDE.md` 转发 —— 新会话不必先去读技能，就知道该怎么做。
+
+### 新增
+
+- **`CLAUDE.md`**（[#46](https://github.com/nicholyx/ai-skills/pull/46)）。Claude Code 读 `CLAUDE.md`，另一些 agent 工具读 `AGENTS.md`；两边各写一份必然漂移，而**漂移的规则文件比没有更糟** —— 它让不同会话按不同规矩办事，且**没有任何检查能发现**。所以 `CLAUDE.md` **只做转发**，规则全部写在 `AGENTS.md`；顺带用 markdown 链接把这条路也纳入 `links.js` 的校验。
+- **`AGENTS.md` 新增三节**（[#46](https://github.com/nicholyx/ai-skills/pull/46)）：
+  - **开发流程** —— 七步，带本仓库的实际命令（探测现状 → 读规范 → 静态检查 → 行为评测 → PR → 合并 → 发布），并指明**路线图 Issue 是「下一步做什么」的单一事实来源**
+  - **三层验证，以及「通过不等于有效」** —— 静态 / 行为 / 触发各层的**真实现状**（哪层可靠、哪层只对 `git-commit` 可跑、哪层造不出来），以及「任何断言先证明它能失败」
+  - **常见任务从哪开始** —— 一张入口表
+
+### 变更
+
+- **`README.md` 的贡献入口改指向 `AGENTS.md`**（[#46](https://github.com/nicholyx/ai-skills/pull/46)）：规则与流程在那里；`ARCHITECTURE.md` 保留「每条设计规则的理由」。文档表里也补上了这一行。
+- **`docs/ARCHITECTURE.md` 的仓库树补上根目录的规则文件**（[#46](https://github.com/nicholyx/ai-skills/pull/46)）。
+
+### 修复
+
+- **`README.md` 的检查项数过期**（[#46](https://github.com/nicholyx/ai-skills/pull/46))：写着「10 项，其中 6 项纯 Node」，实际 14 / 10。**`doc-counts` 没抓到它** —— 原文是「10 项，」，「项」后面不是「检查」，措辞不在规则的匹配范围内。已改成能受检的形式，并做变异验证（改成 10 时会被抓到）。
+
+### 说明
+
+`AGENTS.md` 里新写的路径**全部用 markdown 链接**，于是它自动受两个已有检查器保护：`links.js` 管路径腐烂（技能或 spec 改名会立刻报红），`doc-counts.js` 管计数腐烂。**没有为它新写生成器** —— 能复用已有检查就不新增。
+
 ## [2.1.0] - 2026-09-30
 
 这一版有两件东西：一个**能分发的诊断技能**，以及一个**证明评测可能什么都没测**的机制。
