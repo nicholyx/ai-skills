@@ -142,12 +142,20 @@ custom/projects/<技能名>/SKILL.md    # 自建项目专用，1 个
 
 ## 第二步：确认技能生效
 
-技能装到工具自己的技能目录里。以 Claude Code 为例：
+技能装到**哪个目录**取决于第一步你怎么装的 —— **默认是项目级**（当前目录这一层），
+只有加了 `-g` / `--global` 才是用户级。以 Claude Code 为例：
 
 ```bash
-# 看装进来了哪些技能
+# 默认（项目级）：技能落在当前项目里
+ls .claude/skills/
+
+# 加 -g 装的（用户级）：看这里
 ls ~/.claude/skills/
 ```
+
+**先确认你看的是对的那个目录** —— 装错层级是「装了没反应」最常见的原因之一。
+其余工具各自的目录见
+[README 的兼容矩阵](../README.md#兼容矩阵技能装到哪用户级还是项目级)。
 
 然后**用一句话触发它**。技能的触发靠的是 `SKILL.md` frontmatter 里的 `description`，
 所以最直接的验证是照着 description 的措辞说一遍：
@@ -234,8 +242,8 @@ uv run --directory ~/.agents/skills/skills-sync python sync.py --target claude,c
 ```
 
 `--directory` 让 `uv` 在技能目录下执行，从而用该目录的 `pyproject.toml` 准备环境；
-`sync.py` 本身只用标准库。路径按你实际的安装位置调整 —— 如果技能是通过
-`npx skills add` 装进 `~/.claude/skills/` 的，那就是
+`sync.py` 本身只用标准库。路径按你实际的安装位置调整 —— **注意默认装的是项目级**：
+不加 `-g` 时技能在 `./.claude/skills/`，只有加了 `-g` 才在 `~/.claude/skills/`，那时才是
 `uv run --directory ~/.claude/skills/skills-sync python sync.py ...`。
 
 ### 输出怎么读
@@ -378,10 +386,11 @@ npx skills add nicholyx/ai-skills
 
 ### 我改了 `custom/` 里的技能，怎么让它在我本机生效
 
-取决于你是**怎么装的**：
+取决于你是**怎么装的** —— 先确认装到了哪一层：
 
-- 如果是 `npx skills add` 装进 `~/.claude/skills/` 的，重新跑一次安装（或直接改
-  `~/.claude/skills/<技能名>/` 里的副本，但那份副本不会回到仓库）
+- 如果是 `npx skills add` 装的（**默认项目级**，技能在 `./.claude/skills/`；加 `-g`
+  才是 `~/.claude/skills/`），重新跑一次安装最省事；直接改那个目录里的副本也行，
+  但那份副本不会回到仓库
 - 如果你想改一处、所有工具立刻生效，用 `skills-sync` 从 `~/.agents/skills/` 软链过去
 
 ### 我想同时用 Claude Code 和 CodeBuddy

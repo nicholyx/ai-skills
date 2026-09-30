@@ -2,10 +2,12 @@
 
 # ai-skills
 
-A personal Claude Code skills repository: 14 self-maintained general-purpose skills,
+A personal Claude Code skills repository: 15 self-maintained general-purpose skills,
 1 project-specific skill, plus 31 upstream skills that are tracked here but **not** shipped.
 
+[![skills.sh](https://skills.sh/b/nicholyx/ai-skills)](https://skills.sh/nicholyx/ai-skills)
 [![CI](https://github.com/nicholyx/ai-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/nicholyx/ai-skills/actions/workflows/ci.yml)
+[![静态检查](https://img.shields.io/badge/%E9%9D%99%E6%80%81%E6%A3%80%E6%9F%A5-18%20%E9%A1%B9-brightgreen)](https://github.com/nicholyx/ai-skills/blob/main/scripts/lint.sh)
 [![License](https://img.shields.io/github/license/nicholyx/ai-skills)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/nicholyx/ai-skills?style=social)](https://github.com/nicholyx/ai-skills/stargazers)
 
@@ -77,13 +79,28 @@ This repository ships **no third-party dependencies**: the checkers under `scrip
 the Node standard library, and `custom/daily/skills-sync/pyproject.toml` declares an empty
 dependency list. You never need `npm install` or `pip install`.
 
-### 2. Install
+### 2. Try one before you install it
+
+**Not sure whether you want it? Any skill can be tried without installing it.** Put a skill
+name from the [skill catalogue](docs/SKILLS.md) in place of `<skill>`:
 
 ```bash
-# Install everything this repository ships (15 skills)
+npx skills use nicholyx/ai-skills@<skill>
+```
+
+It prints a prompt you can paste straight to your AI — **no install, no config change**, and
+you can walk away afterwards. The only thing that lands on disk is the skill file it downloads
+to a system temp directory for the AI to read (see
+[the usage guide](docs/USAGE.en.md#step-0-try-one-first-optional-recommended) for the exact
+path). Carry on below once you like what you see.
+
+### 3. Install
+
+```bash
+# Install everything this repository ships (16 skills)
 npx skills add nicholyx/ai-skills
 
-# Install only the general-purpose ones, skipping the single project-specific skill (14)
+# Install only the general-purpose ones, skipping the single project-specific skill (15)
 npx skills add nicholyx/ai-skills/custom/daily
 ```
 
@@ -92,8 +109,8 @@ That is the whole install surface; the CLI confirms the count before it does any
 
 ```text
 ◇  Source: https://github.com/nicholyx/ai-skills.git
-◇  Found 15 skills
-●  Installing all 15 skills
+◇  Found 16 skills
+●  Installing all 16 skills
 ◇  79 agents
 ●  Installing to: Antigravity, Claude Code, OpenClaw, Cline, CodeBuddy, Codex, Cursor, …
 ◇  Installation Summary
@@ -102,19 +119,46 @@ That is the whole install surface; the CLI confirms the count before it does any
 └  Done!  Review skills before use; they run with full agent permissions.
 ```
 
-(Abridged from a real run. `custom/daily` prints `Found 14 skills` instead. Each skill gets
+(Abridged from a real run. `custom/daily` prints `Found 15 skills` instead. Each skill gets
 one block listing which agents receive a copy and which receive a symlink.)
 
 > ⚠️ **The project-specific skill under `custom/projects/` IS installed by the default command**
-> (15 = 14 general-purpose + 1 project-specific). It assumes you are working inside that
+> (16 = 15 general-purpose + 1 project-specific). It assumes you are working inside that
 > specific project — specific pages, specific endpoints, specific startup steps — so anywhere
 > else it is just noise. Use the second command to skip it.
 
-> 💡 `--full-depth` installs **exactly the same 15 skills**. It only changes how deep the CLI
+> 💡 `--full-depth` installs **exactly the same 16 skills**. It only changes how deep the CLI
 > searches for `SKILL.md` files, which makes no difference to this repository's layout.
 > There is no reason to reach for it.
 
-### 3. Where it landed, and how to confirm it works
+#### The third channel: the Claude Code plugin marketplace
+
+If Claude Code is the only tool you use, you can also go through its own plugin channel. The
+repository's [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) is what it
+reads, and it lists exactly the 16 skills this repository ships:
+
+```bash
+claude plugin marketplace add nicholyx/ai-skills
+claude plugin install ai-skills@ai-skills
+```
+
+| | `npx skills add nicholyx/ai-skills` | `claude plugin …` |
+| --- | --- | --- |
+| Lands in | Each AI tool's skill directory (see the matrix below) | The plugin location Claude Code manages (`~/.claude/plugins/`) |
+| Skill name | The original, e.g. `daily-report` | Prefixed with the plugin: `ai-skills:daily-report` |
+| When to use it | You also want to sync to tools other than Claude Code | Claude Code only, managed from the `/plugin` panel |
+
+> **Measured** (Claude Code 2.1.283): `claude plugin validate .` passes; once installed,
+> `claude plugin details ai-skills` lists `Skills (16)`. The manifest is a **generated file** —
+> re-run `node scripts/gen-catalogue.js --write` after adding or removing a skill, and CI
+> asserts it matches the skills themselves.
+
+> 💡 It also **pins the discovery surface to the 16 declared skills**. Without it, `npx skills`
+> falls back to scanning the tree, and a stray copy of a skill lying around in the working
+> directory (a backup snapshot, a worktree copy) can be picked up as if it were installable.
+> With it, what the repository declares is what gets found.
+
+### 4. Where it landed, and how to confirm it works
 
 By default `skills` installs at **project level**: a copy lands in `./.agents/skills/<name>/`
 and is symlinked into the detected agents' directories in the same project, e.g.
@@ -127,24 +171,60 @@ npx skills list
 
 # Or just look (project-level install shown here)
 ls .claude/skills/
+
+# A user-level install (-g) is here instead
+ls ~/.claude/skills/
 ```
 
-Then **trigger a skill with one sentence**. A skill is selected by the `description` field in
-its `SKILL.md` frontmatter, so the most direct check is to say something that matches it:
+#### Compatibility matrix: where skills land, and at which level
 
-```text
-# git-commit's description is "使用约定式提交规范执行 git commit"
-> commit my changes
-```
+`npx skills` installs at **project level** by default (the current directory); `-g` /
+`--global` is what makes it **user level** (available in every project). There is only ever one
+copy of a skill's real files — each tool directory holds a symlink to it, so editing one place
+updates them all.
 
-The skill descriptions in this repository are mostly written in Chinese. That is not a
-blocker — the model reads the description directly, and skill *names* are English, so naming
-the skill (`use git-commit`) always works.
+| AI tool | Project level (default) | User level (`-g`) |
+| --- | --- | --- |
+| Claude Code | `./.claude/skills/<name>/` | `~/.claude/skills/<name>/` |
+| CodeBuddy | `./.codebuddy/skills/<name>/` | `~/.codebuddy/skills/<name>/` |
+| Other tools that read `SKILL.md` (Codex, Cursor, …) | Decided by the CLI from the tools it detects; `-a '*'` installs to all of them | Same |
+
+Everything in that table is sourced from the repository rather than from memory:
+
+- "Project level by default, `-g` for user level": the exact wording of `npx skills add --help`
+  (CLI 1.7.0) — `-g, --global  Install skill globally (user-level) instead of project-level` —
+  **measured**
+- `./.claude/skills/`: the "Where the skills land" section of
+  [docs/USAGE.en.md](docs/USAGE.en.md)
+- `~/.claude/skills/` and `~/.codebuddy/skills/`: the `skills-sync` parameter table in
+  [docs/USAGE.md](docs/USAGE.md) — these two are the directories this repository has
+  **actually verified**
+- The tool directory *names* (`.claude/skills`, `.codebuddy/skills`, `.codex/skills`,
+  `.cursor/skills`, …): the `skills` CLI's built-in agent list (v1.7.0 locally). Apart from the
+  two above, this repository has **not** verified the rest one by one
+
+#### Say one sentence to confirm the skill fires
+
+**Trigger a skill with one sentence.** A skill is selected by the `description` field in its
+`SKILL.md` frontmatter, so the most direct check is to say something that matches it. These
+three are taken from the skills' own `metadata.example` — the **original wording** of the
+"You can say this" column in the [skill catalogue](docs/SKILLS.md), not invented here:
+
+| Say this | Skill | What you should see |
+| --- | --- | --- |
+| `生成今天的日报` | `daily-report` | It first shows the default report template and asks whether to change it; only after you confirm does it run `git log` and group the result by module |
+| `审查一下我暂存区的改动` | `code-reviewer-agent` | It reads `code-reviewer.md` from the skill directory and **opens a subagent with its own context** to review `git diff --cached`, then returns the result verbatim |
+| `技能装了但用不了，帮我看看` | `skills-doctor` | It starts a four-step diagnosis: which directory the skill is in, whether the symlink is broken, whether `SKILL.md` loads, and whether another directory is shadowing it |
+
+**If the skill fires, you are done; no reaction means the install is wrong.** The skill
+descriptions in this repository are mostly written in Chinese. That is not a blocker — the
+model reads the description directly, and skill *names* are English, so naming the skill
+(`use git-commit`) always works.
 
 If the AI does not follow the skill's process, see
 [When something breaks](#when-something-breaks).
 
-### 4. Update and remove
+### 5. Update and remove
 
 ```bash
 npx skills update          # update installed skills to their latest versions
@@ -156,7 +236,7 @@ npx skills remove --all    # remove every installed skill
 > a file under `.agents/skills/` disappears on the next run. That is not a bug, it is what a
 > vendor area means. Changes you want to keep belong in `custom/`.
 
-### 5. The 31 upstream skills are *not* installed by any of this
+### 6. The 31 upstream skills are *not* installed by any of this
 
 The 31 skills under `.agents/skills/` are **not part of the install surface** and neither
 command above will fetch them. That directory is `npx skills`'s *install target* — the place
@@ -185,40 +265,50 @@ fix them, and any edit we made would be wiped by `npx skills update`. Shipping a
 
 ## Skills
 
-### General-purpose (`custom/daily/`, 14)
+### General-purpose (`custom/daily/`, 15)
 
-These are project-agnostic and are the bulk of what `npx skills add nicholyx/ai-skills` installs.
+These 15 are project-agnostic and are the bulk of what `npx skills add nicholyx/ai-skills`
+installs.
 
 The authoritative one-line description of each skill lives in its `SKILL.md` frontmatter
 (mostly Chinese — that is the canonical text; the boundary is described at the top of this
-page).
+page). **The "You can say this" column is not invented here** — each sentence is copied from
+that skill's own `metadata.example`, which is the field the generated Chinese catalogue is
+asserted against.
 
-| Skill | What it does |
-| --- | --- |
-| `bug-analyzer-agent` | Bug root-cause analysis via a dedicated-context subagent that traces deep execution flow |
-| `code-reviewer-agent` | Code review via a dedicated-context subagent, covering security holes, performance and production reliability |
-| `daily-report` | Generates a work daily report from git history, with date filtering and automatic categorisation |
-| `git-commit` | Runs `git commit` following the Conventional Commits specification |
-| `git-smart-update` | Smart git update: auto-stash, conflict resolution and local commit handling. Handles the stash-update-restore cycle, resolves conflicts (preferring remote improvements while keeping local debug code), and supports both rebase and merge modes |
-| `git-sync-upstream` | Syncs a fork with upstream using rebase to keep history clean. Stashes uncommitted changes, fetches upstream, rebases and force-pushes the PR branch. Specifically for fork-syncing, not for ordinary `git pull` |
-| `github-issue-autofix-workflow` | Fixes GitHub issues through the superpowers workflow (brainstorming, TDD, verification, code review), with an unattended mode |
-| `maintain-loop` | The maintenance loop for an open-source project — plan, implement, release, plan again — plus the hard-won rules that go with it. Use it to keep iterating on a project (features, fixes, docs), cut a release, or take stock of what is unfinished |
-| `obsidian-note-workflow` | Creates, queries and manages Obsidian notes with a preview-first workflow, automatic classification and vault initialisation |
-| `oss-bootstrap` | Turns a new project (or a bare repository with nothing but code) into a standards-compliant open-source project: CI, governance files, issue/PR templates, repository automation, docs, project board and release flow. Once the scaffolding is in place, use `maintain-loop` for day-to-day iteration |
-| `repo-analyzer` | Deep-dives into a codebase from a first-time contributor's angle — structure, startup flow, core business flows, module responsibilities — and writes a report. Accepts a local path or a GitHub URL |
-| `skills-sync` | Symlinks commands and skills from `~/.agents/` into AI tool directories such as Claude or CodeBuddy |
-| `update-claude-code` | Updates Claude Code / checks its version |
-| `update-opencode` | Updates the OpenCode CLI or the oh-my-opencode plugin, checks versions, and troubleshoots version-related errors |
+| Skill | What it does | You can say this |
+| --- | --- | --- |
+| `bug-analyzer-agent` | Bug root-cause analysis via a dedicated-context subagent that traces deep execution flow | 「这个接口偶尔返回 500，帮我查根因」 |
+| `code-reviewer-agent` | Code review via a dedicated-context subagent, covering security holes, performance and production reliability | 「审查一下我暂存区的改动」 |
+| `daily-report` | Generates a work daily report from git history, with date filtering and automatic categorisation | 「生成今天的日报」 |
+| `git-commit` | Runs `git commit` following the Conventional Commits specification | 「帮我提交」 |
+| `git-smart-update` | Smart git update: auto-stash, conflict resolution and local commit handling. Handles the stash-update-restore cycle, resolves conflicts (preferring remote improvements while keeping local debug code), and supports both rebase and merge modes | 「更新代码」 |
+| `git-sync-upstream` | Syncs a fork with upstream using rebase to keep history clean. Stashes uncommitted changes, fetches upstream, rebases and force-pushes the PR branch. Specifically for fork-syncing, not for ordinary `git pull` | 「同步 upstream」 |
+| `github-issue-autofix-workflow` | Fixes GitHub issues through the superpowers workflow (brainstorming, TDD, verification, code review), with an unattended mode | 「帮我修一下 issue 42」 |
+| `maintain-loop` | The maintenance loop for an open-source project — plan, implement, release, plan again — plus the hard-won rules that go with it. Use it to keep iterating on a project (features, fixes, docs), cut a release, or take stock of what is unfinished | 「继续走维护流程」 |
+| `obsidian-note-workflow` | Creates, queries and manages Obsidian notes with a preview-first workflow, automatic classification and vault initialisation | 「把这段内容记到我的 Obsidian 里」 |
+| `oss-bootstrap` | Turns a new project (or a bare repository with nothing but code) into a standards-compliant open-source project: CI, governance files, issue/PR templates, repository automation, docs, project board and release flow. Once the scaffolding is in place, use `maintain-loop` for day-to-day iteration | 「给这个项目加上开源规范」 |
+| `repo-analyzer` | Deep-dives into a codebase from a first-time contributor's angle — structure, startup flow, core business flows, module responsibilities — and writes a report. Accepts a local path or a GitHub URL | 「深入研究一下这个项目」 |
+| `skills-doctor` | Diagnoses "I installed it but the skill never fires": which directory it is in, broken symlinks, load failures, shadowing | 「技能装了但用不了，帮我看看」 |
+| `skills-sync` | Symlinks commands and skills from `~/.agents/` into AI tool directories such as Claude or CodeBuddy | 「把我的技能同步到 Claude」 |
+| `update-claude-code` | Updates Claude Code / checks its version | 「更新 claude」 |
+| `update-opencode` | Updates the OpenCode CLI or the oh-my-opencode plugin, checks versions, and troubleshoots version-related errors | 「更新 opencode」 |
 
 > 📖 The full trigger conditions and execution flow of each skill are in its own `SKILL.md`.
 > For `skills-sync`'s parameters see
 > [the usage guide](docs/USAGE.en.md#skills-sync-sharing-one-local-copy-across-tools).
+>
+> ℹ️ The two tables in the [Chinese README](README.md) are **generated** from the skills'
+> `metadata` (`<!-- SKILLS-TABLE:START … -->` markers, written by
+> `scripts/gen-catalogue.js`), and CI asserts they match. The copies here are hand-maintained
+> English equivalents and are **not** covered by that check — the generated
+> [skill catalogue](docs/SKILLS.md) (Chinese) is the canonical list.
 
 ### Project-specific (`custom/projects/`, 1)
 
-| Skill | What it does |
-| --- | --- |
-| `prj-agent-platform-e2e-test` | End-to-end verification of the Agent platform's core features using `agent-browser` |
+| Skill | What it does | You can say this |
+| --- | --- | --- |
+| `prj-agent-platform-e2e-test` | End-to-end verification of the Agent platform's core features using `agent-browser` | 「跑一遍 Agent 平台的端到端测试」 |
 
 > ⚠️ **Not suitable for a general install.** These skills assume you are working on that
 > specific project — specific pages, specific endpoints, specific startup steps. Run them
@@ -232,8 +322,9 @@ page).
 ```text
 ai-skills/
 ├── .agents/skills/         # Upstream vendored skills (31, read-only, ~97% of repo size)
+├── .claude-plugin/         # Claude Code plugin marketplace manifest (generated, see "The third channel")
 ├── custom/
-│   ├── daily/              # Self-maintained general skills (14)
+│   ├── daily/              # Self-maintained general skills (15)
 │   └── projects/           # Self-maintained project skills (1, prj- prefix)
 ├── docs/                   # Repository documentation (Chinese, plus USAGE.en.md)
 ├── scripts/                # Static checks and generators
@@ -269,7 +360,7 @@ A skill is a **depth-1** subdirectory of one of the three parent directories abo
 
 ```text
 .agents/skills/<name>/SKILL.md     # upstream vendored, 31
-custom/daily/<name>/SKILL.md       # self-maintained general, 14
+custom/daily/<name>/SKILL.md       # self-maintained general, 15
 custom/projects/<name>/SKILL.md    # self-maintained project-specific, 1
 ```
 
@@ -396,7 +487,7 @@ records the reasoning behind every rule and the alternatives that were rejected,
 have to rediscover them. [CONTRIBUTING.md](CONTRIBUTING.md) (Chinese) covers the process.
 
 ```bash
-# Run the local checks before committing (11 checks)
+# Run the local checks before committing (18 checks)
 ./scripts/lint.sh
 
 # Run only some of them

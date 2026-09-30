@@ -13,6 +13,7 @@ Get the skills in this repository into your AI tool, and make them actually take
 ## Table of contents
 
 - [Prerequisites](#prerequisites)
+- [Step 0: Try one first (optional, recommended)](#step-0-try-one-first-optional-recommended)
 - [Step 1: Install the skills](#step-1-install-the-skills)
 - [Step 2: Confirm they work](#step-2-confirm-they-work)
 - [Step 3: Update and remove](#step-3-update-and-remove)
@@ -38,13 +39,35 @@ dependency list (`dependencies = []`). So there is nothing to `npm install` or `
 
 ---
 
+## Step 0: Try one first (optional, recommended)
+
+**Any skill can be tried without installing it.** Put the skill's name in place of `<skill>`
+(take it from the [skill catalogue](SKILLS.md)):
+
+```bash
+npx skills use nicholyx/ai-skills@repo-analyzer
+```
+
+It prints a prompt — **paste it to your AI and it just works**. No install, no configuration
+change, nothing added to your agent.
+
+> **One thing worth stating precisely:** it downloads the skill file into the system temp
+> directory (`$TMPDIR/skills-use-*/<skill>/`) for the AI to read, **and does not delete it
+> afterwards** — those small directories are reclaimed when the OS cleans temp. Measured: the
+> repository, `~/.claude/skills` and every config file are left untouched, so "walk away
+> afterwards" holds; but "nothing was written to disk at all" does not.
+
+If you like it, carry on below.
+
+---
+
 ## Step 1: Install the skills
 
 ```bash
-# Everything (15 skills)
+# Everything (16 skills)
 npx skills add nicholyx/ai-skills
 
-# Only the general-purpose ones, skipping the single project-specific skill (14)
+# Only the general-purpose ones, skipping the single project-specific skill (15)
 npx skills add nicholyx/ai-skills/custom/daily
 ```
 
@@ -52,18 +75,18 @@ npx skills add nicholyx/ai-skills/custom/daily
 
 | Command | What you get | When to use it |
 | --- | --- | --- |
-| `npx skills add nicholyx/ai-skills` | Everything under `custom/` (14 general-purpose + 1 project-specific) | **The usual choice** |
-| `npx skills add nicholyx/ai-skills/custom/daily` | Only the general-purpose skills (14) | You don't want the project-specific one |
+| `npx skills add nicholyx/ai-skills` | Everything under `custom/` (15 general-purpose + 1 project-specific) | **The usual choice** |
+| `npx skills add nicholyx/ai-skills/custom/daily` | Only the general-purpose skills (15) | You don't want the project-specific one |
 
 **The install surface is `custom/`** — the skills this repository maintains and ships. The CLI
-tells you the count up front: the first command prints `Found 15 skills`, the second
-`Found 14 skills`.
+tells you the count up front: the first command prints `Found 16 skills`, the second
+`Found 15 skills`.
 
 > ⚠️ **The project-specific skill under `custom/projects/` IS installed by the default command.**
 > It assumes you are working inside that specific project (specific pages, specific endpoints,
 > specific startup steps), so anywhere else it is just noise — use the second command to skip it.
 
-> `--full-depth` installs **exactly the same 15 skills** as the default command. It only
+> `--full-depth` installs **exactly the same 16 skills** as the default command. It only
 > controls how deeply the CLI searches for `SKILL.md` files ("search all subdirectories even
 > when a root SKILL.md exists"), which makes no difference to this repository's layout. There
 > is no reason to use it.
@@ -83,6 +106,31 @@ npx skills add nicholyx/ai-skills -g     # user-level instead of project-level
 
 One skill directory holds the real files; every agent directory holds a symlink to it. That is
 why editing a skill in one place is enough.
+
+### The third channel: the Claude Code plugin marketplace
+
+If Claude Code is the only tool you use, you can go through its own plugin channel instead. The
+repository's [`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json) is what it
+reads:
+
+```bash
+claude plugin marketplace add nicholyx/ai-skills
+claude plugin install ai-skills@ai-skills
+```
+
+| | `npx skills add` | `claude plugin …` |
+| --- | --- | --- |
+| Lands in | Each AI tool's skill directory (see [the compatibility matrix](../README.en.md#compatibility-matrix-where-skills-land-and-at-which-level)) | The plugin location Claude Code manages |
+| Skill name | The original, e.g. `daily-report` | Prefixed with the plugin: `ai-skills:daily-report` |
+| Manifest comes from | The repository's directory structure | `.claude-plugin/marketplace.json` (**generated** — re-run `node scripts/gen-catalogue.js --write` after adding or removing a skill) |
+
+Inspect and remove it with `claude plugin list`, `claude plugin details ai-skills` and
+`claude plugin uninstall ai-skills`.
+
+> 💡 That manifest also **pins the discovery surface to the 16 declared skills**. Without it,
+> the CLI falls back to scanning the tree, and any stray copy of a skill lying around in the
+> working directory (a backup snapshot, a worktree copy) can be picked up as if it were
+> installable. With it, what the repository declares is what gets found.
 
 ### What about the 31 upstream skills under `.agents/skills/`?
 
@@ -114,7 +162,7 @@ One skill = a **depth-1** subdirectory of one of the three parent directories be
 
 ```text
 .agents/skills/<name>/SKILL.md     # upstream vendored, 31
-custom/daily/<name>/SKILL.md       # self-maintained general, 14
+custom/daily/<name>/SKILL.md       # self-maintained general, 15
 custom/projects/<name>/SKILL.md    # self-maintained project-specific, 1
 ```
 
@@ -396,7 +444,8 @@ That is not data loss, it is how a vendor area behaves. See
 npx skills add nicholyx/ai-skills
 ```
 
-That installs all 15 skills this repository ships. The 31 upstream skills under
+That installs all 16 skills this repository ships — no `--full-depth` needed, it installs
+exactly the same set. The 31 upstream skills under
 `.agents/skills/` are **not** included — install those from their own source repositories, as
 described in [Step 1](#what-about-the-31-upstream-skills-under-agentsskills).
 
@@ -411,7 +460,8 @@ in English — everything past that points at the canonical Chinese page.
 In English, here and in [README.en.md](../README.en.md):
 
 - What this repository is, and what it does and does not install.
-- Both install commands, where the skills land, and how to confirm they took effect.
+- Trying a skill before installing it, both install commands, the third channel (the Claude
+  Code plugin marketplace), where the skills land, and how to confirm they took effect.
 - How to trigger a skill, and how to update or remove it.
 - `skills-sync`: parameters and the output symbols.
 - How to write a new skill: where it goes, the frontmatter contract, the checks to run.
