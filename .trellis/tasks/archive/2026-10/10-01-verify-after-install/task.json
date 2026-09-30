@@ -3,7 +3,7 @@
   "name": "verify-after-install",
   "title": "装完先验证：三条粘贴即用提示词 + 兼容矩阵",
   "description": "砍掉最高频的支持问题。交付：README 增加「装完先验证」三步块（三条可直接粘贴的话 + 预期现象）与一张兼容矩阵表（支持哪些工具、技能装到哪个目录）。验收：三条提示词取自真实技能的 metadata.example，与目录页不矛盾。",
-  "status": "planning",
+  "status": "completed",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "liangyuxiang",
   "assignee": "liangyuxiang",
   "createdAt": "2026-10-01",
-  "completedAt": null,
+  "completedAt": "2026-10-01",
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -22,5 +22,7 @@
   "parent": null,
   "relatedFiles": [],
   "notes": "",
-  "meta": {}
+  "meta": {
+    "pr_url": "https://github.com/nicholyx/ai-skills/pull/57"
+  }
 }
