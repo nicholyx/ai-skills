@@ -3,7 +3,7 @@
 > 🤖 **本文件由 [`scripts/gen-catalogue.js`](../scripts/gen-catalogue.js) 生成，不要手改。**
 > 它从每个技能的 `SKILL.md` 里读 `metadata`，改技能后重跑生成器即可 ——CI 会断言这里与源头一致。
 
-共 **15** 个自建技能，分布在 6 个场景。其中 **5** 个附带可验证的评测用例（`evals/evals.json`）。
+共 **16** 个自建技能，分布在 6 个场景。其中 **5** 个附带可验证的评测用例（`evals/evals.json`）。
 
 ## 先试再装
 
@@ -30,7 +30,7 @@ npx skills add nicholyx/ai-skills/custom/daily   # 只装通用技能
 | **Git 与协作** | `git-commit` · `git-smart-update` · `git-sync-upstream` · `github-issue-autofix-workflow` |
 | **仓库与开源** | `maintain-loop` · `oss-bootstrap` · `repo-analyzer` |
 | **知识与记录** | `daily-report` · `obsidian-note-workflow` |
-| **环境与工具** | `skills-sync` · `update-claude-code` · `update-opencode` |
+| **环境与工具** | `skills-doctor` · `skills-sync` · `update-claude-code` · `update-opencode` |
 | **项目专用** | `prj-agent-platform-e2e-test` |
 
 ---
@@ -66,10 +66,11 @@ npx skills add nicholyx/ai-skills/custom/daily   # 只装通用技能
 | [`daily-report`](../custom/daily/daily-report/SKILL.md) | 从 git 提交记录生成工作日报，按项目自动归类 | 「生成今天的日报」 |
 | [`obsidian-note-workflow`](../custom/daily/obsidian-note-workflow/SKILL.md) | 预览优先的 Obsidian 笔记创建、分类与整库初始化 | 「把这段内容记到我的 Obsidian 里」 |
 
-## 环境与工具（3）
+## 环境与工具（4）
 
 | 技能 | 它能做什么 | 你可以这样说 |
 | --- | --- | --- |
+| [`skills-doctor`](../custom/daily/skills-doctor/SKILL.md) | 排查「技能装了没反应」：装在哪、断链、加载失败、被顶掉 | 「技能装了但用不了，帮我看看」 |
 | [`skills-sync`](../custom/daily/skills-sync/SKILL.md) | 用软链接把技能与命令同步到 Claude / CodeBuddy | 「把我的技能同步到 Claude」 |
 | [`update-claude-code`](../custom/daily/update-claude-code/SKILL.md) | 检查并升级 Claude Code 到最新版本 | 「更新 claude」 |
 | [`update-opencode`](../custom/daily/update-opencode/SKILL.md) | 检查并升级 OpenCode 与 oh-my-opencode 插件 | 「更新 opencode」 |
@@ -87,7 +88,7 @@ npx skills add nicholyx/ai-skills/custom/daily   # 只装通用技能
 ## 关于这张表
 
 - **技能名后的 ✅** 表示它附带评测用例（`evals/evals.json`），其**结构**由 CI 校验（字段齐不齐、`skill_name` 与目录名是否一致）。
-  ⚠️ 它们**不会自动执行**（跑一轮要调用模型），所以 ✅ **不等于**「已经验过它能干活」——它只代表这套用例**可以跑**：`node scripts/run-evals.js --skill <技能名>`。没有 ✅ 的技能更不代表不能用，它只说明连用例都还没写。
+  ⚠️ 它们**不会自动执行**（跑一轮要调用模型），所以 ✅ **不等于**「已经验过它能干活」——它只代表这套用例**可以跑**：`node scripts/run-evals.js --skill <技能名>`。没有 ✅ 的技能更不代表不能用 —— 它只说明还没有**能说明问题**的用例：要么没写，要么写了但实测「不装技能也能过」。
 - **「你可以这样说」不是编的。** 它取自技能的 `metadata.example`，且 CI 的「技能自洽校验」会断言**这句话原样出现在该技能的 `description` 里** —— 两者对不上就说明目录里这句话是另编的，不是技能自己的说法。
 - 每个技能的完整触发条件与执行流程，在它自己的 `SKILL.md` 里（点技能名即可）。
 
