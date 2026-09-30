@@ -109,7 +109,9 @@ for (const rel of files) {
     buf[1] === 0xbb &&
     buf[2] === 0xbf
   ) {
-    report.warn(rel, 1, "文件带 UTF-8 BOM，建议去掉");
+    // 传 tier：这个分支当前只对 self 生效（上面的 `tier === "self"` 守卫），
+    // 但把归属显式写出来，免得守卫哪天放宽后 BOM 提示被静默算成自建的问题。
+    report.warn(rel, 1, "文件带 UTF-8 BOM，建议去掉", tier);
   }
 
   let text;

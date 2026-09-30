@@ -20,7 +20,14 @@ const assert = require("node:assert/strict");
 const path = require("path");
 const { spawnSync } = require("node:child_process");
 
-const { Report, useColor, C } = require("../scripts/lib/report");
+const {
+  Report,
+  useColor,
+  C,
+  EXIT_OK,
+  EXIT_FAIL,
+  EXIT_ABORT,
+} = require("../scripts/lib/report");
 
 const REPORT_PATH = path.resolve(__dirname, "..", "scripts", "lib", "report.js");
 
@@ -52,6 +59,25 @@ function mustHave(out, line) {
 }
 
 // ── 退出码 ────────────────────────────────────────────────────────────────
+
+test("退出码常量就是 finish()/abort() 实际退出的值（不是两份各写一遍）", () => {
+  // 这三种场景分别覆盖 EXIT_OK / EXIT_FAIL / EXIT_ABORT 三个常量。断言里用常量
+  // 而不是字面量 —— 谁把 finish() 的返回码改成别的数、或把某个常量的值改了，
+  // 这里就会红。此前 finish()/abort() 写的是字面量，常量没有任何使用者，
+  // 「0/1/2 的语义」在代码里没有一处耦合。
+  assert.equal(EXIT_OK, 0);
+  assert.equal(EXIT_FAIL, 1);
+  assert.equal(EXIT_ABORT, 2);
+
+  const ok = run('new Report("x").finish();');
+  const failed = run('const q = new Report("x"); q.fail("a", 0, "m"); q.finish();');
+  const aborted = run('new Report("x").abort("boom");');
+
+  assert.equal(ok.status, EXIT_OK);
+  assert.equal(failed.status, EXIT_FAIL);
+  assert.equal(aborted.status, EXIT_ABORT);
+  assert.equal(new Set([ok.status, failed.status, aborted.status]).size, 3, "三个码必须互不相同");
+});
 
 test("没有结论时退出 0，打「✓ 通过」", () => {
   const r = run('new Report("用例检查项").finish();');
@@ -98,6 +124,19 @@ test("self 的 warn：退出 0，措辞是「待处理」而不是「上游遗�
   mustHave(r.stdout, "  ⚠ doc.md:2  BOM 提示");
   mustHave(r.stdout, "  ✓ 通过（1 处提示（待处理））");
   assert.ok(!r.stdout.includes("上游 vendored 技能的问题不计入退出码"), r.stdout);
+});
+
+test("warn() 带上游 tier：算「上游遗留」而不是「待处理」（回归）", () => {
+  // 曾经 warn() 把 tier 写死成 "self"，于是 `.agents/**` 里一个 CRLF 文件会以
+  // 「自建内容的待办」出现在汇总里 —— 分类是错的（我们无权修上游）。
+  const r = run(
+    'const q = new Report("x"); q.warn(".agents/skills/a/SKILL.md", 1, "CRLF 提示", "vendor"); q.finish();'
+  );
+
+  assert.equal(r.status, 0, "上游的风格提示不该影响退出码");
+  mustHave(r.stdout, "  ⚠ .agents/skills/a/SKILL.md:1  CRLF 提示（上游 vendored，不阻塞）");
+  mustHave(r.stdout, "  ✓ 通过（1 处上游遗留（不计入退出码））");
+  assert.ok(!r.stdout.includes("待处理"), `上游的提示不该说「待处理」：\n${r.stdout}`);
 });
 
 test("VENDOR_STRICT=1 把 vendor 的 warn 提升为 fail（退出 1）", () => {
@@ -219,14 +258,16 @@ test("VENDOR_STRICT=1 时构造函数就把它读进来，vendor 变 fail", () =
   }
 });
 
-test("warn() 与 fail() 与 tier 无关：tier 记 self，级别固定", () => {
+test("warn() / fail() 的级别固定，tier 只决定分类（默认 self）", () => {
   const q = new Report("x");
   q.warn("a", 1, "w");
   q.fail("b", 2, "f");
+  q.warn("c", 3, "w", "vendor");
 
   assert.deepEqual(q.findings.map((f) => [f.tier, f.level]), [
     ["self", "warn"],
     ["self", "fail"],
+    ["vendor", "warn"],
   ]);
 });
 
