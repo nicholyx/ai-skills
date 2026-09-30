@@ -57,14 +57,14 @@
  */
 
 const fs = require("fs");
-const os = require("os");
 const path = require("path");
 const { spawnSync } = require("child_process");
-const { REPO_ROOT, skillDirs, readTracked } = require("./lib/gitfiles");
+const { skillDirs, readTracked } = require("./lib/gitfiles");
 const { Report } = require("./lib/report");
+// 沙箱与作用面的实现只有一份，两个跑手共用 —— 见该文件的说明
+const { makeSandbox, repoSurface, collectSurfaces } = require("./lib/sandbox");
 
 const DEFAULT_ALLOWED = "Bash,Read,Write,Edit,Grep,Glob";
-const BASE_README = "# 演示仓库\n\n这个仓库由 scripts/run-evals.js 创建，只在一次评测期间存在。\n";
 
 // ── 参数 ──────────────────────────────────────────────────────────────────
 
@@ -131,156 +131,8 @@ const picked = (suite.evals || []).filter(
 );
 if (picked.length === 0) fatal(`没有匹配的用例（--eval ${args.evals}）`);
 
-// ── 沙箱 ──────────────────────────────────────────────────────────────────
-
-function git(cwd, argvArgs) {
-  const r = spawnSync("git", argvArgs, { cwd, encoding: "utf8" });
-  if (r.status !== 0) {
-    throw new Error(`git ${argvArgs.join(" ")} 失败：${(r.stderr || "").trim()}`);
-  }
-  return r.stdout;
-}
-
-/**
- * 铺一个一次性沙箱：基准仓库 + 技能本体 + 该用例声明的前置状态。
- * 返回沙箱路径。
- */
-function makeSandbox(item) {
-  const box = fs.mkdtempSync(path.join(os.tmpdir(), `skill-eval-${skill.name}-`));
-
-  // 基准仓库
-  git(box, ["init", "-q"]);
-  git(box, ["config", "user.email", "eval@example.invalid"]);
-  git(box, ["config", "user.name", "eval"]);
-  fs.writeFileSync(path.join(box, "README.md"), BASE_README, "utf8");
-  git(box, ["add", "README.md"]);
-  git(box, ["commit", "-qm", "初始提交"]);
-
-  // 裸的 origin：否则「push 到远程」这类用例无从谈起
-  const originRel = ".origin.git";
-  const origin = path.join(box, originRel);
-  spawnSync("git", ["init", "-q", "--bare", origin], { encoding: "utf8" });
-  git(box, ["remote", "add", "origin", origin]);
-
-  // 技能本体：放到项目级技能目录，正是 Claude Code 会发现的位置
-  const dest = path.join(box, ".claude", "skills", skill.name);
-  fs.cpSync(path.join(REPO_ROOT, skill.dir), dest, {
-    recursive: true,
-    // evals/ 不进沙箱：模型不需要看到判分标准
-    filter: (src) => path.basename(src) !== "evals",
-  });
-  // 把跑手自己铺的东西挡在 `git status` 之外。
-  // 否则「暂存区为空」这类用例会变成「有两个未跟踪目录该怎么办」—— 实测模型就被带偏了，
-  // 开始讨论要不要提交 `.claude/`，而那与这条用例要测的东西毫无关系。
-  fs.appendFileSync(
-    path.join(box, ".git", "info", "exclude"),
-    `\n# 跑手自己铺的，不属于被测场景\n/.claude/\n/${originRel}/\n`
-  );
-
-  // 前置状态
-  for (const f of item.files || []) {
-    if (!f || typeof f.path !== "string" || typeof f.content !== "string") {
-      throw new Error("files 里的每一项必须有 path 与 content");
-    }
-    const abs = path.join(box, f.path);
-    fs.mkdirSync(path.dirname(abs), { recursive: true });
-    fs.writeFileSync(abs, f.content, "utf8");
-    if (f.executable) fs.chmodSync(abs, 0o755);
-    if (f.commit) {
-      git(box, ["add", "--", f.path]);
-      git(box, ["commit", "-qm", `前置状态：${f.path}`]);
-    } else if (f.stage) {
-      git(box, ["add", "--", f.path]);
-    }
-  }
-
-  // 记下铺完前置状态时的 HEAD：跑完之后据此算「模型新增了几个提交、动了哪些文件」
-  return { box, baseHead: git(box, ["rev-parse", "HEAD"]).trim() };
-}
-
-// ── 执行 ──────────────────────────────────────────────────────────────────
-
-/**
- * 把沙箱的**最终状态**摘要成一个可断言的面。
- *
- * 这是对「模型说了什么」的补充，而且是更硬的那种证据：模型可以嘴上说「我不会执行
- * git push」而实际推了，也可以什么都没说却把 .env 提交了。**断言应当尽量落在结果上。**
- *
- * 格式是扁平的 `key: value` 行，便于用 contains / not_contains 断言：
- *
- *   commits: 2              提交总数
- *   new-commits: 1          本次运行新增的提交数（0 = 什么都没提交）
- *   staged: src/a.js        暂存区里的文件（空则 `(空)`）
- *   committed-files: …      本次运行改动到的文件（相对基准 HEAD）
- *   untracked: …            未跟踪文件
- *   pushed: no              裸 origin 里有没有 ref（即「真的推上去了吗」）
- */
-function repoSurface(box, baseHead) {
-  const log = git(box, ["log", "--oneline"]).trim();
-  const staged = git(box, ["diff", "--cached", "--name-only"]).trim();
-  const committed = git(box, ["diff", "--name-only", baseHead, "HEAD"]).trim();
-  const untracked = git(box, ["status", "--porcelain"])
-    .split("\n")
-    .filter((l) => l.startsWith("??"))
-    .map((l) => l.slice(3).trim())
-    .filter(Boolean)
-    .join(" ");
-
-  // 基准状态时 origin 是空的，所以「有没有 ref」就等于「有没有推过」
-  let pushed = "no";
-  try {
-    if (git(box, ["ls-remote", "origin"]).trim() !== "") pushed = "yes";
-  } catch {
-    pushed = "(origin 不可达)";
-  }
-
-  const list = (s) => (s === "" ? "(空)" : s.split("\n").join(" "));
-
-  return [
-    `commits: ${log === "" ? 0 : log.split("\n").length}`,
-    `new-commits: ${git(box, ["rev-list", "--count", `${baseHead}..HEAD`]).trim()}`,
-    `staged: ${list(staged)}`,
-    `committed-files: ${list(committed)}`,
-    `untracked: ${untracked === "" ? "(空)" : untracked}`,
-    `pushed: ${pushed}`,
-  ].join("\n");
-}
-
-/** 把 stream-json 的每一行归类成各个作用面。见 evals.json 的 `target` 文档。 */
-function collectSurfaces(stdout, repoText) {
-  const surfaces = { tools: [], output: [], transcript: [], repo: [repoText] };
-
-  for (const line of stdout.split("\n")) {
-    const s = line.trim();
-    if (!s.startsWith("{")) continue;
-    let ev;
-    try {
-      ev = JSON.parse(s);
-    } catch {
-      continue;
-    }
-    // 这个跑手的前提就是「它会花钱」，所以把真实花费报出来，而不是只给个预估值
-    if (ev.type === "result" && typeof ev.total_cost_usd === "number") {
-      surfaces.costUsd = (surfaces.costUsd || 0) + ev.total_cost_usd;
-    }
-    if (ev.type !== "assistant") continue;
-    for (const block of ev.message?.content || []) {
-      if (block.type === "text" && typeof block.text === "string") {
-        surfaces.output.push(block.text);
-      } else if (block.type === "tool_use") {
-        // 工具名 + 入参一起进：命令在入参里，名字本身也是信号
-        surfaces.tools.push(`${block.name} ${JSON.stringify(block.input ?? {})}`);
-      }
-    }
-  }
-
-  // 全文 = 工具调用 + 模型输出。顺序无关紧要，断言只做包含判断。
-  surfaces.transcript = [...surfaces.tools, ...surfaces.output];
-  return surfaces;
-}
-
 function runOne(item) {
-  const { box, baseHead } = makeSandbox(item);
+  const { box, baseHead } = makeSandbox({ skill, files: item.files });
 
   const argvArgs = ["-p", item.prompt, "--output-format", "stream-json", "--verbose",
                     "--allowedTools", args.allowed];
