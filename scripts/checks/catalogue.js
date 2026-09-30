@@ -2,10 +2,11 @@
 "use strict";
 
 /**
- * 断言两处技能展示面与技能源头一致：
+ * 断言三处技能展示面与技能源头一致：
  *
  * 1. `docs/SKILLS.md`（全文生成）
  * 2. `README.md` 里标记围出的两块技能表（只有标记之间是生成物）
+ * 3. `.claude-plugin/marketplace.json`（全文生成，`claude plugin` 的安装通道读它）
  *
  * ## 为什么需要它
  *
@@ -30,10 +31,12 @@ const { readTracked } = require("../lib/gitfiles");
 const {
   collect,
   render,
+  renderMarketplace,
   applyReadmeBlocks,
   README_BLOCKS,
   OUT_REL,
   README_REL,
+  MARKETPLACE_REL,
 } = require("../gen-catalogue");
 
 const report = new Report("技能目录校验");
@@ -90,6 +93,34 @@ if (readme === null) {
   }
 }
 
+// ── Claude Code 插件市场的清单 ────────────────────────────────────────────
+//
+// 它和上面两处是同一种东西：**技能清单的生成物**。只是读的人不是访客而是
+// `claude plugin marketplace add` —— 清单里少一个技能，那条安装通道就少装一个，
+// 而 JSON 仍然合法、市场仍然能用，没有别的东西会发现。
+
+const actualMarketplace = readTracked(MARKETPLACE_REL);
+if (actualMarketplace === null) {
+  report.fail(
+    MARKETPLACE_REL,
+    0,
+    "插件市场清单不存在 —— 它就是 `claude plugin marketplace add` 读的那个文件，" +
+      "删掉等于少一条安装通道。运行 node scripts/gen-catalogue.js --write 生成。"
+  );
+} else {
+  const expectedMarketplace = renderMarketplace(skills);
+  if (actualMarketplace !== expectedMarketplace) {
+    report.fail(
+      MARKETPLACE_REL,
+      0,
+      "插件市场清单与技能源头不一致 —— 运行 node scripts/gen-catalogue.js --write 重新生成"
+    );
+    for (const line of describeFirstDiff(actualMarketplace, expectedMarketplace)) {
+      report.info(line);
+    }
+  }
+}
+
 const missing = skills.filter((s) => !s.tagline || !s.example);
 if (missing.length > 0) {
   // 只提示不判错：补齐元数据是人的工作，机器只负责把它摆在明处。
@@ -108,7 +139,7 @@ report.info(
 // 写成「已与源头一致」会在失败的运行里读成「它们是对的」，正好相反。
 report.info(
   `比对范围：${OUT_REL} 全文 + ${README_REL} 里 ${README_BLOCKS.length} 块生成区` +
-    `（${README_BLOCKS.map((b) => b.key).join("、")}）。`
+    `（${README_BLOCKS.map((b) => b.key).join("、")}）+ ${MARKETPLACE_REL} 全文。`
 );
 
 report.finish();

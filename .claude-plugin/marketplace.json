@@ -1,0 +1,46 @@
+{
+  "name": "ai-skills",
+  "description": "16 个自建 Claude Code 技能：git 操作、代码审查、Bug 分析、仓库分析、日报与 Obsidian 笔记等日常场景。",
+  "owner": {
+    "name": "nicholyx",
+    "url": "https://github.com/nicholyx"
+  },
+  "plugins": [
+    {
+      "name": "ai-skills",
+      "source": "./",
+      "description": "本仓库分发的全部 16 个自建技能（通用 15 个、项目专用 1 个）。",
+      "homepage": "https://github.com/nicholyx/ai-skills",
+      "repository": "https://github.com/nicholyx/ai-skills",
+      "license": "Apache-2.0",
+      "keywords": [
+        "claude-code",
+        "agent-skills",
+        "Git 与协作",
+        "仓库与开源",
+        "代码质量",
+        "环境与工具",
+        "知识与记录",
+        "项目专用"
+      ],
+      "skills": [
+        "./custom/daily/bug-analyzer-agent",
+        "./custom/daily/code-reviewer-agent",
+        "./custom/daily/daily-report",
+        "./custom/daily/git-commit",
+        "./custom/daily/git-smart-update",
+        "./custom/daily/git-sync-upstream",
+        "./custom/daily/github-issue-autofix-workflow",
+        "./custom/daily/maintain-loop",
+        "./custom/daily/obsidian-note-workflow",
+        "./custom/daily/oss-bootstrap",
+        "./custom/daily/repo-analyzer",
+        "./custom/daily/skills-doctor",
+        "./custom/daily/skills-sync",
+        "./custom/daily/update-claude-code",
+        "./custom/daily/update-opencode",
+        "./custom/projects/prj-agent-platform-e2e-test"
+      ]
+    }
+  ]
+}

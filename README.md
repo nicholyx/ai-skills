@@ -5,7 +5,9 @@
 个人 Claude Code Skills 仓库：15 个自建通用技能 + 1 个项目专用技能，
 另附 31 个由 `skills-lock.json` 追踪的上游技能。
 
+[![skills.sh](https://skills.sh/b/nicholyx/ai-skills)](https://skills.sh/nicholyx/ai-skills)
 [![CI](https://github.com/nicholyx/ai-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/nicholyx/ai-skills/actions/workflows/ci.yml)
+[![静态检查](https://img.shields.io/badge/%E9%9D%99%E6%80%81%E6%A3%80%E6%9F%A5-18%20%E9%A1%B9-brightgreen)](https://github.com/nicholyx/ai-skills/blob/main/scripts/lint.sh)
 [![License](https://img.shields.io/github/license/nicholyx/ai-skills)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/nicholyx/ai-skills?style=social)](https://github.com/nicholyx/ai-skills/stargazers)
 
@@ -68,10 +70,10 @@ npx skills use nicholyx/ai-skills@<技能名>
 ### 装到本地
 
 ```bash
-# 装本仓库的全部技能（15 个）
+# 装本仓库的全部技能（16 个）
 npx skills add nicholyx/ai-skills
 
-# 只装通用技能，跳过项目专用的那 1 个（14 个）
+# 只装通用技能，跳过项目专用的那 1 个（15 个）
 npx skills add nicholyx/ai-skills/custom/daily
 ```
 
@@ -91,7 +93,10 @@ npx skills add nicholyx/ai-skills/custom/daily
 装完之后：
 
 ```bash
-# 看装进来的技能（以 Claude Code 为例）
+# 看装进来的技能。默认装到"当前目录"这一层，所以先看这里：
+ls .claude/skills/
+
+# 如果你是加 -g 装的（用户级），看这里：
 ls ~/.claude/skills/
 
 # 检查上游技能有没有新版本
@@ -100,6 +105,68 @@ npx skills check
 # 更新全部上游技能
 npx skills update
 ```
+
+### 另一条通道：Claude Code 插件市场
+
+只用 Claude Code 的话，还可以走它自己的插件通道。仓库根目录的
+[`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) 就是给它读的，
+列的正是本仓库那 16 个自建技能：
+
+```bash
+claude plugin marketplace add nicholyx/ai-skills
+claude plugin install ai-skills@ai-skills
+```
+
+| | `npx skills add nicholyx/ai-skills` | `claude plugin ...` |
+| --- | --- | --- |
+| 装到哪 | 各 AI 工具的技能目录（见下面的兼容矩阵） | Claude Code 自己管的插件位置（`~/.claude/plugins/`）|
+| 技能名 | 原名，如 `daily-report` | 带插件前缀：`ai-skills:daily-report` |
+| 什么时候用 | 还想同步给 Claude Code 之外的其它工具 | 只用 Claude Code，且想让 `/plugin` 面板统一管 |
+
+> **实测**（Claude Code 2.1.283）：`claude plugin validate .` 通过；
+> 装上之后 `claude plugin details ai-skills` 列出 `Skills (16)`。
+> 这份 `marketplace.json` 是**生成物** —— 技能增删后重跑
+> `node scripts/gen-catalogue.js --write`，CI 会断言它与技能源头一致。
+
+### 装完先验证：说一句话，看技能起不起得来
+
+**装完别急着用。** 技能是靠 `SKILL.md` 里的 `description` 被选中的，所以最快的验证方式是
+**照着技能自己的说法说一句话**，看它有没有按技能描述的流程走。
+
+下面三句都取自技能的 `metadata.example` —— 也就是[技能目录](docs/SKILLS.md)里
+「你可以这样说」那一列的**原话**，不是我另编的：
+
+| 说这句 | 技能 | 你应该看到 |
+| --- | --- | --- |
+| `生成今天的日报` | `daily-report` | 它先贴出默认日报模板（`## {今天日期}-工作日报&明日计划`）问你「是否需要修改」，你确认后才去跑 `git log`，再按模块归类 |
+| `审查一下我暂存区的改动` | `code-reviewer-agent` | 它读取技能目录里的 `code-reviewer.md`，**开一个独立上下文的 subagent** 去审查 `git diff --cached`，然后把结果原样返回 |
+| `技能装了但用不了，帮我看看` | `skills-doctor` | 它开始四步排查：技能装在哪个目录、软链有没有断、`SKILL.md` 能不能被加载、有没有被别的目录顶掉 |
+
+**说这句话，技能会起来；没反应才说明装错了。** 如果 AI 完全没按上面那列的流程走
+（比如日报那句它干脆自己编一份、审查那句它不开 subagent 而是自己扫一眼），别先怀疑技能写得不好
+—— 按[排错手册的「技能装了但不生效」](docs/TROUBLESHOOTING.md#技能装了但不生效)查一遍，
+最常见的两种原因是：**装到了工具不读的目录**，或者**技能目录被别的来源顶掉了，模型根本看不见它**。
+
+### 兼容矩阵：技能装到哪、用户级还是项目级
+
+`npx skills` 默认装**项目级**（当前目录），加 `-g` / `--global` 才是**用户级**（任何项目都能用）。
+技能的本体只有一份，各个工具目录里放的是指向它的软链接，所以改一处、全都跟着变。
+
+| AI 工具 | 项目级（默认） | 用户级（`-g`） |
+| --- | --- | --- |
+| Claude Code | `./.claude/skills/<技能名>/` | `~/.claude/skills/<技能名>/` |
+| CodeBuddy | `./.codebuddy/skills/<技能名>/` | `~/.codebuddy/skills/<技能名>/` |
+| 其它认识 `SKILL.md` 的工具（Codex、Cursor 等） | 由 CLI 按它检测到的工具决定；`-a '*'` 一次装到全部 | 同左 |
+
+上表每一条都能在仓库里找到出处，**不是凭记忆写的**：
+
+- 「默认项目级、`-g` 才是用户级」：`npx skills add --help`（CLI 1.7.0）的原文
+  `-g, --global  Install skill globally (user-level) instead of project-level` —— **实测**
+- `./.claude/skills/`：`docs/USAGE.en.md` 的「Where the skills land」一节
+- `~/.claude/skills/` 与 `~/.codebuddy/skills/`：`docs/USAGE.md` 的 `skills-sync` 参数表
+  —— 这两个是仓库里**被点名验证过**的目录
+- 各工具目录的**名字**（`.claude/skills`、`.codebuddy/skills`、`.codex/skills`、`.cursor/skills` …）：
+  `skills` CLI 内置的工具探测列表（本机 v1.7.0）。除上面两个之外，其余工具本仓库**未逐一实测**
 
 > 💡 技能装了却「不生效」是这份文档里最高频的问题，先看
 > [排错手册的「技能装了不生效」](docs/TROUBLESHOOTING.md#技能装了但不生效)一节。
@@ -173,8 +240,9 @@ jq -r '.skills | to_entries | sort_by(.value.source)[] | "\(.key)\t\(.value.sour
 ```text
 ai-skills/
 ├── .agents/skills/         # 上游 vendored 技能（31 个，只读，占仓库约 97% 体积）
+├── .claude-plugin/         # Claude Code 插件市场清单（生成物，见「另一条通道」）
 ├── custom/
-│   ├── daily/              # 自建通用技能（14 个）
+│   ├── daily/              # 自建通用技能（15 个）
 │   └── projects/           # 自建项目专用技能（1 个，prj- 前缀）
 ├── docs/                   # 本仓库的文档
 ├── scripts/                # 静态检查与生成器

@@ -20,6 +20,9 @@
 - **端到端验证 `scripts/e2e.js`**（[#51](https://github.com/nicholyx/ai-skills/pull/51)）。在 `git archive HEAD` 出来的**干净副本**（自成 git 仓库）里把真实命令全跑一遍：静态检查全绿 / 重新生成目录逐字节一致 / 脚手架路径可用 / 提交信息校验正反两面 / 评测跑手接线 / 分发面 16==16。**验的是提交出去的东西，不是工作区。**
 - **单元测试 `test/`（96 条）**（[#52](https://github.com/nicholyx/ai-skills/pull/52)）。覆盖 `scripts/lib/` 四个共用层：frontmatter 解析与校验（BOM、CRLF、块标量、重复键、长度上限）、tier 分级与目标集语义、清单序列化的确定性、退出码与 VENDOR_STRICT、以及 stream-json 解析与沙箱前置状态。用 Node 内置的 `node:test`，**零依赖**。
 - **测试规范 `.trellis/spec/testing/index.md`**（[#52](https://github.com/nicholyx/ai-skills/pull/52)）。四层测试各能回答什么、验收标准、新检查器的五处接入清单，以及**七条真实的坑**。核心是那条铁律：**任何断言、检查、测试，先证明它能失败** —— 附上本仓库栽过的四次事故。
+- **第二条安装通道 `.claude-plugin/marketplace.json`**（[#57](https://github.com/nicholyx/ai-skills/pull/57)）。除 `npx skills add` 之外，`claude plugin marketplace add nicholyx/ai-skills` 也能装 —— 头部同类项目（vercel / anthropics / grafana / microsoft）都有这条通道，我们没有。纯静态 JSON、零依赖。
+- **README 的「装完先验证」与兼容矩阵**（[#57](https://github.com/nicholyx/ai-skills/pull/57)）。三条**可直接粘贴**的话 + 预期现象，砍掉最高频的支持问题（「装了没反应」）；一张兼容矩阵说明技能装到哪个目录、项目级还是用户级。
+- **两个新徽章**（[#57](https://github.com/nicholyx/ai-skills/pull/57)）：skills.sh 的**安装量**徽章（头部三家唯一的共同徽章），以及一个指向静态检查的徽章。两个 URL 都实测过可达、且确认返回的是**图片**而不是网页。
 - **Trellis 任务立项**（[#54](https://github.com/nicholyx/ai-skills/pull/54)）。把后续工作拆成四个任务（README 采用率改造、安装通道扩展、装完先验证、评测区分度审计），并注入 implement / check 两套 spec 上下文。
 
 ### 变更
@@ -42,6 +45,7 @@
 
 ### 修复
 
+- **`doc-counts.js --fix` 的偏移计算错误**（[#57](https://github.com/nicholyx/ai-skills/pull/57)）。它用「整个匹配的起点 + 捕获组长度」去替换，对「数字在开头」的规则恰好也对 —— 所以这个 bug 藏了很久。徽章那条规则的数字在**结尾**（`%E9…-18%20%E9%A1%B9`），于是修复时把编码串的前半段覆盖掉，**一个好好的徽章被改成了乱码**。改用正则的 `d` 标志取捕获组精确下标。（中途还试过 `m[0].indexOf(m[1])`，也不行 —— 编码串里本来就有别的 `3`。）
 - **`run-evals.js` 的两处报告 bug**（[#56](https://github.com/nicholyx/ai-skills/pull/56)），都是加多轮采样时自己暴露的：汇总行还在按改名前的字段过滤（计数恒为 0）；以及**用例本身没过时也打印「无区分度」** —— 那会把人的注意力引向「去改用例的断言」，而问题根本不在那里。
 - **`lib/sandbox.js` 的 git 调用统一关掉 `quotepath`**（[#52](https://github.com/nicholyx/ai-skills/pull/52)）。git 默认把非 ASCII 文件名输出成八进制转义，而 macOS 上实测不转义 —— 同一份代码在两个平台上给出**不同的结果面**，评测断言无法跨平台写。真实踩过：同一条单元测试本地绿、CI 红。
 - **脚手架的上手路径是断的**（[#51](https://github.com/nicholyx/ai-skills/pull/51)）。端到端验证第一次跑就抓到：跑完脚手架后**同时有两项失败** —— 除预期的占位符外，还有「文档计数校验」：新增技能会让 README / AGENTS.md 里的技能数立即过期，而脚手架的提示里**没提这一步**。新贡献者会撞上一个跟自己技能毫无关系的失败，且不知道该改什么。

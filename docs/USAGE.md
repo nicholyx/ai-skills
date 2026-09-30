@@ -59,10 +59,10 @@ npx skills use nicholyx/ai-skills@repo-analyzer
 ## 第一步：安装技能
 
 ```bash
-# 装全部（15 个）
+# 装全部（16 个）
 npx skills add nicholyx/ai-skills
 
-# 只装通用技能，跳过项目专用的那 1 个（14 个）
+# 只装通用技能，跳过项目专用的那 1 个（15 个）
 npx skills add nicholyx/ai-skills/custom/daily
 ```
 
@@ -70,15 +70,36 @@ npx skills add nicholyx/ai-skills/custom/daily
 
 | 命令 | 装到什么 | 什么时候用 |
 | --- | --- | --- |
-| `npx skills add nicholyx/ai-skills` | `custom/` 下的全部技能（14 个通用 + 1 个项目专用） | **多数情况选它** |
-| `npx skills add nicholyx/ai-skills/custom/daily` | 只有通用技能（14 个） | 不想要项目专用的那个 |
+| `npx skills add nicholyx/ai-skills` | `custom/` 下的全部技能（15 个通用 + 1 个项目专用） | **多数情况选它** |
+| `npx skills add nicholyx/ai-skills/custom/daily` | 只有通用技能（15 个） | 不想要项目专用的那个 |
 
-> `--full-depth` 与默认命令**装到的东西相同**（都是 15 个）。它控制的是搜索深度，
+> `--full-depth` 与默认命令**装到的东西相同**（都是 16 个）。它控制的是搜索深度，
 > 在本仓库的目录结构下不产生差异。
+
+> **默认装到「项目级」（当前目录），不是全局。** 加 `-g` / `--global` 才是用户级 ——
+> 各工具分别落在哪个目录，见 [README 的兼容矩阵](../README.md#兼容矩阵技能装到哪用户级还是项目级)。
 
 > 警告：**`custom/projects/` 下的项目专用技能会被默认装到。** 它假设你手上就是那个项目
 > （特定的页面、特定的接口、特定的启动方式），装在别处只会变成噪音 —— 不想要它就用
 > 上面第二条命令。
+
+### 第三条通道：Claude Code 插件市场
+
+只用 Claude Code 的话，还可以走它自己的插件通道。仓库根目录的
+[`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json) 就是给它读的：
+
+```bash
+claude plugin marketplace add nicholyx/ai-skills
+claude plugin install ai-skills@ai-skills
+```
+
+| | `npx skills add` | `claude plugin ...` |
+| --- | --- | --- |
+| 装到 | 各 AI 工具的技能目录（见 [兼容矩阵](../README.md#兼容矩阵技能装到哪用户级还是项目级)） | Claude Code 自己管的插件位置 |
+| 技能名 | 原名，如 `daily-report` | 带插件前缀：`ai-skills:daily-report` |
+| 清单从哪来 | 仓库的目录结构 | `.claude-plugin/marketplace.json`（**生成物**，技能增删后重跑 `node scripts/gen-catalogue.js --write`） |
+
+查看与卸载：`claude plugin list`、`claude plugin details ai-skills`、`claude plugin uninstall ai-skills`。
 
 ### `.agents/skills/` 里的 31 个上游技能怎么办
 
@@ -109,7 +130,7 @@ npx skills add vercel-labs/agent-browser
 
 ```text
 .agents/skills/<技能名>/SKILL.md     # 上游 vendored，31 个
-custom/daily/<技能名>/SKILL.md       # 自建通用，14 个
+custom/daily/<技能名>/SKILL.md       # 自建通用，15 个
 custom/projects/<技能名>/SKILL.md    # 自建项目专用，1 个
 ```
 
@@ -347,7 +368,7 @@ description: Use when ... （写清楚什么时候该触发，这是 AI 选择�
 npx skills add nicholyx/ai-skills
 ```
 
-这一条就够 —— **它装的是本仓库的全部 15 个技能**（14 个通用 + 1 个项目专用）。
+这一条就够 —— **它装的是本仓库的全部 16 个技能**（15 个通用 + 1 个项目专用）。
 
 不需要加 `--full-depth`：实测它装到的东西与默认命令**完全相同**。
 
