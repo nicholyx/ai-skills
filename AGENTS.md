@@ -52,6 +52,11 @@ Managed by Trellis. Edits outside this block are preserved; edits inside may be 
 - **写测试、加检查、判断「验够了没有」→ [`.trellis/spec/testing/index.md`](.trellis/spec/testing/index.md)** —— 四层测试、验收标准、踩过的坑
 - 总导航见 [`.trellis/spec/index.md`](.trellis/spec/index.md)
 
+**上面这些是「指针」不是「内容」** —— 它们**没有**被加载进你的上下文（每次会话只加载
+本文件与 `CLAUDE.md`）。所以「知道该读哪个文件」不等于「知道里面写了什么」，**动手前
+必须真的把对应文件打开**。实测过：只凭本文件的指针回答「加一个检查器要接几处」，
+答得出「lint.sh 与 ci.yml」，而 spec 里写的是**五处** —— 差的正是没打开文件的那部分。
+
 ### 本地检查入口
 
 ```bash
