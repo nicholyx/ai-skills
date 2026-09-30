@@ -17,6 +17,8 @@
  *                     （排错用 —— 用法例通过与否去反推原因，等于猜）
  *   --no-isolate-home 不隔离 HOME（默认隔离：用例不该依赖运行者的机器状态）
  *   --ablate          同时跑「不装技能」的**消融基线**。见文件头「一个通过不等于有用」
+ *   --ablate-repeats <n>  基线跑 n 轮（默认 1）。**基线结果会翻**，单次不足以下结论 ——
+ *                     要写进用例的「有没有区分度」时，至少 3 轮
  *   --json            机器可读输出
  *
  * ## 为什么它不进 CI
@@ -93,7 +95,7 @@ const DEFAULT_ALLOWED = "Bash,Read,Write,Edit,Grep,Glob";
 function parseArgs(argv) {
   const out = { skill: "", evals: null, keep: false, json: false, dryRun: false,
                 timeout: 300, model: "", allowed: DEFAULT_ALLOWED, isolateHome: true,
-                ablate: false };
+                ablate: false, ablateRepeats: 1 };
   const rest = argv.slice(2);
   for (let i = 0; i < rest.length; i += 1) {
     const a = rest[i];
@@ -112,6 +114,7 @@ function parseArgs(argv) {
       case "--keep": out.keep = true; break;
       case "--no-isolate-home": out.isolateHome = false; break;
       case "--ablate": out.ablate = true; break;
+      case "--ablate-repeats": out.ablateRepeats = Number(next()); break;
       case "--json": out.json = true; break;
       case "--dry-run": out.dryRun = true; break;
       default: fatal(`不认识的参数：${a}`);
@@ -132,6 +135,9 @@ if (!args.skill) {
   fatal("必须用 --skill <名字> 指定一个技能 —— 不做「一键全跑」，那是 22 次模型调用");
 }
 if (!Number.isFinite(args.timeout) || args.timeout <= 0) fatal("--timeout 必须是正数");
+if (!Number.isInteger(args.ablateRepeats) || args.ablateRepeats < 1) {
+  fatal("--ablate-repeats 必须是正整数");
+}
 
 // ── 定位技能与用例 ────────────────────────────────────────────────────────
 
@@ -291,13 +297,27 @@ function printOutcome(o) {
   }
   if (o.empty) process.stdout.write("      ⚠ 这条用例没有断言，跑完也判不了对错\n");
 
-  if (o.baselineOk !== undefined) {
-    process.stdout.write(
-      o.discriminating
-        ? "      ○ 有区分度：不装技能时这条会失败\n"
-        : "      ⚠ **无区分度**：不装技能时它**照样通过** —— " +
-            "这条测的是模型本来就会做，不是技能带来了什么\n"
-    );
+  if (o.baselineRuns !== undefined) {
+    const tally = `不装技能时 ${o.baselineRuns} 轮里过了 ${o.baselinePassed} 轮`;
+    if (!o.ok) {
+      // 装了都不（总是）过，就谈不上「技能有没有带来东西」—— 先修用例。
+      // 把它说成「无区分度」会指向完全错误的方向（去改用例的断言，而问题在别处）。
+      process.stdout.write(
+        `      ⚠ 这一轮**用例本身没过**（${tally}）—— 区分度无从谈起，先看上面的失败原因\n`
+      );
+    } else {
+      process.stdout.write(
+        o.discriminating
+          ? `      ○ 有区分度（${tally}）\n`
+          : `      ⚠ **无区分度**（${tally}）—— 这条测的是模型本来就会做，不是技能带来了什么\n`
+      );
+    }
+    if (!o.baselineStable) {
+      process.stdout.write(
+        "      ⚠ **基线不稳定**：同一条用例的基线结果会翻。单次观测不足以给这条用例" +
+          "下「有没有区分度」的结论 —— 加 --ablate-repeats 多跑几轮再定\n"
+      );
+    }
   }
 }
 
@@ -311,12 +331,23 @@ for (const item of picked) {
     // 消融基线：同一个用例，**不装技能**再跑一遍。
     // 只有「装了过、不装挂」才说明这条用例真的在测技能。
     if (args.ablate && o.results.length > 0) {
-      process.stdout.write("      ↳ 消融基线（不装技能）…\n");
-      const base = runOne(item, false);
-      o.baselineOk = base.ok;
-      o.baselineCostUsd = base.costUsd || 0;
-      o.discriminating = o.ok && !base.ok;
-      o.costUsd = (o.costUsd || 0) + o.baselineCostUsd;
+      // **基线要跑多轮。** 实测：同一条用例的基线结果**会翻**（#2 两轮「不装也过」、
+      // 一轮「不装就挂」；#4 反之）。模型本身有随机性，单次基线不足以下结论 ——
+      // 而「有区分度/无区分度」是个布尔值，用一次观测去填它就是在制造假确定性。
+      const runs = [];
+      for (let k = 0; k < args.ablateRepeats; k += 1) {
+        process.stdout.write(
+          `      ↳ 消融基线（不装技能）${args.ablateRepeats > 1 ? ` ${k + 1}/${args.ablateRepeats}` : ""}…\n`
+        );
+        const base = runOne(item, false);
+        runs.push(base.ok);
+        o.costUsd = (o.costUsd || 0) + (base.costUsd || 0);
+      }
+      o.baselineRuns = runs.length;
+      o.baselinePassed = runs.filter(Boolean).length;
+      // 只有「装了过」才谈得上区分度：装了都不过，说明用例或技能本身有问题
+      o.discriminating = o.ok && o.baselinePassed < runs.length;
+      o.baselineStable = o.baselinePassed === 0 || o.baselinePassed === runs.length;
     }
   } catch (err) {
     report.fail(`${skill.dir}/evals/evals.json`, 0, `用例 #${item.id} 未能执行：${err.message}`);
@@ -339,12 +370,21 @@ const passed = outcomes.filter((o) => o.ok).length;
 // 消融结果**只报不判红**：无区分度说明「这条用例写得不够具体」，是待改进项，
 // 而不是技能坏了。把它设成失败会让这个工具长期红着 —— 那正是「训练人忽略输出」。
 if (args.ablate && !args.json) {
-  const probed = outcomes.filter((o) => o.baselineOk !== undefined);
+  const probed = outcomes.filter((o) => o.baselineRuns !== undefined);
   const good = probed.filter((o) => o.discriminating).length;
-  report.info(
-    `消融基线：${probed.length} 条里 **${good} 条有区分度**（装了过、不装挂）；` +
-      `另 ${probed.length - good} 条**不装技能也能过** —— 它们没在测技能。`
-  );
+  const noSkill = probed.filter((o) => o.ok && !o.discriminating).length;
+  const evalFailed = probed.filter((o) => !o.ok).length;
+  const unstable = probed.filter((o) => !o.baselineStable).length;
+  const parts = [`${probed.length} 条里 **${good} 条有区分度**（装了过、不装挂）`];
+  if (noSkill > 0) parts.push(`${noSkill} 条**不装技能也能过**（没在测技能）`);
+  if (evalFailed > 0) parts.push(`${evalFailed} 条**用例本身没过**（先修用例）`);
+  report.info(`消融基线：${parts.join("；")}。`);
+  if (unstable > 0) {
+    report.info(
+      `⚠ ${unstable} 条的**基线结果会翻** —— 单次观测不足以给它们下结论，` +
+        "加 --ablate-repeats 多跑几轮再写进数据。"
+    );
+  }
 }
 const spent = outcomes.reduce((a, o) => a + (o.costUsd || 0), 0);
 report.info(

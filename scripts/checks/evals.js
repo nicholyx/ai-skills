@@ -188,6 +188,46 @@ for (const skill of skills) {
         }
       });
     }
+
+    // `ablation`：记录「这条用例有没有区分度」的消融观测。可选，但一旦出现就必须
+    // **结构完整且自洽** —— 本仓库吃过「布尔值被单次观测填死」的亏：同一个用例的
+    // 基线结果会翻，写 `discriminating: true/false` 而不记观测轮数就是在制造假确定性。
+    if (item.ablation !== undefined) {
+      const ab = item.ablation;
+      const at = `${where}.ablation`;
+      const bad = (msg) => report.at(skill.tier, evalsPath, 0, `${at} ${msg}`);
+      if (typeof ab !== "object" || ab === null || Array.isArray(ab)) {
+        bad("应为对象");
+      } else if (
+        typeof ab.observations !== "number" ||
+        !Number.isInteger(ab.observations) ||
+        ab.observations < 1
+      ) {
+        bad("缺 `observations`（观测轮数，正整数）—— 单次观测不足以下结论，必须记轮数");
+      } else if (
+        typeof ab.discriminating !== "number" ||
+        ab.discriminating < 0 ||
+        ab.discriminating > ab.observations
+      ) {
+        bad("`discriminating`（有几轮「装了过、不装挂」）必须是 0..observations 的整数");
+      } else if (!["stable", "unstable", "none"].includes(ab.conclusion)) {
+        bad("`conclusion` 必须是 stable / unstable / none");
+      } else {
+        const { conclusion, discriminating: d, observations: n } = ab;
+        const selfConsistent =
+          (conclusion === "stable" && d === n) ||
+          (conclusion === "unstable" && d > 0 && d < n) ||
+          (conclusion === "none" && d === 0);
+        if (!selfConsistent) {
+          bad(
+            `\`conclusion: ${conclusion}\` 与计数对不上（${d}/${n}）—— ` +
+              "stable 要求每轮都有区分度、unstable 要求两种结果都出现过、none 要求一轮都没有"
+          );
+        } else if (typeof ab.note !== "string" || ab.note.trim() === "") {
+          bad("缺 `note` —— 结论必须带理由，否则下一个人无从判断它还算不算数");
+        }
+      }
+    }
   });
 
   const gaps = [...missing.entries()]
