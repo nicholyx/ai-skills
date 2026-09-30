@@ -3,7 +3,7 @@
   "name": "acceptance-closeout",
   "title": "验收收口：修四处静默失效，并同步文档与数字",
   "description": "把 v2.2.0 发布后从子 agent 回流的一批发现收口：评测跑手两处缺陷、README 覆盖缺口、共用层三处隐患、英文文档滞后，以及一处被实测推翻的结论与两个错数字的更正。",
-  "status": "planning",
+  "status": "completed",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "liangyuxiang",
   "assignee": "liangyuxiang",
   "createdAt": "2026-10-01",
-  "completedAt": null,
+  "completedAt": "2026-10-01",
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -22,5 +22,7 @@
   "parent": null,
   "relatedFiles": [],
   "notes": "",
-  "meta": {}
+  "meta": {
+    "pr_url": "https://github.com/nicholyx/ai-skills/pull/59"
+  }
 }

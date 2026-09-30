@@ -3,7 +3,7 @@
   "name": "readme-adoption",
   "title": "README 首屏与技能表改造：让陌生人 10 秒看懂",
   "description": "把 README 的技能清单表从「15 行整段 description 倒进单元格（最长 484 字）」改成三列（技能 / 一句话 / 你可以这样说），数据源改为从技能元数据生成并受 CI 断言，消除与 docs/SKILLS.md 的重复。验收：表格可读、生成物与源头一致、链接与计数检查全绿。",
-  "status": "in_progress",
+  "status": "completed",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "liangyuxiang",
   "assignee": "liangyuxiang",
   "createdAt": "2026-10-01",
-  "completedAt": null,
+  "completedAt": "2026-10-01",
   "branch": "main",
   "base_branch": "main",
   "worktree_path": null,
@@ -22,5 +22,7 @@
   "parent": null,
   "relatedFiles": [],
   "notes": "",
-  "meta": {}
+  "meta": {
+    "pr_url": "https://github.com/nicholyx/ai-skills/pull/67"
+  }
 }
