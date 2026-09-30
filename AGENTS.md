@@ -84,6 +84,10 @@ Commits 写。
    `git tag -a vX.Y.Z` → `git push origin vX.Y.Z`。
    [`release.yml`](.github/workflows/release.yml) 据此生成发布说明。
 
+**分工：主会话是调度者与验收者，不自己写实现。** 每个任务拆好之后派给子 agent 实现，
+主会话负责**独立复核**（复跑它的验证，不要只读报告）与合并。规则见
+[`.trellis/spec/index.md`](.trellis/spec/index.md) 的「角色分工」。
+
 **下一步做什么，看[路线图 Issue](https://github.com/nicholyx/ai-skills/issues/7) —— 那是单一事实来源。**
 每一轮迭代后由维护者更新它，别在别处另起一份计划。
 
