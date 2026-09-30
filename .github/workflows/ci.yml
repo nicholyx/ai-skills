@@ -38,6 +38,21 @@ jobs:
   # lint-selftest 会断言这一点，防止「加了本地检查却忘了接进 CI」。
   # ---------------------------------------------------------------------------
 
+  unit:
+    name: 单元测试（scripts/lib）
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: 设置 Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 运行单元测试
+        run: node --test test/*.test.js
+
   frontmatter:
     name: 技能 frontmatter 校验
     runs-on: ubuntu-latest
@@ -523,7 +538,7 @@ jobs:
   ci-summary:
     name: CI 总览
     runs-on: ubuntu-latest
-    needs: [frontmatter, evals, vendor-lock, hygiene, links, scripts, distribution, catalogue, doc-counts, skill-integrity, agent-rules, skill-commands, e2e, shellcheck, actionlint, yamllint, zizmor, commit-messages, lint-selftest]
+    needs: [unit, frontmatter, evals, vendor-lock, hygiene, links, scripts, distribution, catalogue, doc-counts, skill-integrity, agent-rules, skill-commands, e2e, shellcheck, actionlint, yamllint, zizmor, commit-messages, lint-selftest]
     if: always()
     steps:
       - name: 检出仓库
@@ -532,6 +547,7 @@ jobs:
           persist-credentials: false
       - name: 汇总各检查结果
         env:
+          R_UNIT: ${{ needs.unit.result }}
           R_FRONTMATTER: ${{ needs.frontmatter.result }}
           R_EVALS: ${{ needs.evals.result }}
           R_VENDOR_LOCK: ${{ needs.vendor-lock.result }}
@@ -556,6 +572,7 @@ jobs:
           set -euo pipefail
 
           declare -a jobs=(
+            "unit:单元测试（scripts/lib）"
             "frontmatter:技能 frontmatter 校验"
             "evals:evals.json 结构校验"
             "vendor-lock:上游技能 lock 一致性"

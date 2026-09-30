@@ -87,7 +87,7 @@ ai-skills/
 改技能 / 改脚本
       │
       ▼
-./scripts/lint.sh            ← 本地 17 项静态检查
+./scripts/lint.sh            ← 本地 18 项静态检查
       │                        exit 0 才继续
       ▼
 git commit                   ← 提交信息走约定式提交
@@ -96,7 +96,7 @@ git commit                   ← 提交信息走约定式提交
 git push + 开 PR
       │
       ▼
-CI：17 个静态检查 job
+CI：18 个静态检查 job
     + 提交信息规范（含 PR 标题）
     + lint.sh 自测
       │
@@ -107,7 +107,7 @@ CI 总览（唯一挂了分支保护的那个 check）
 合并
 ```
 
-关键点：CI 里的 17 个静态 job 与 `./scripts/lint.sh` 的 17 个检查项**逐字对应**，
+关键点：CI 里的 18 个静态 job 与 `./scripts/lint.sh` 的 18 个检查项**逐字对应**，
 `lint-selftest` job 会断言这一点。所以「本地过 = CI 过」不是口号，是有断言守着的性质。
 
 ---
@@ -399,7 +399,7 @@ CI 的 `commit-messages` job 校验两件事：PR 里的每个提交信息，**�
 
 ```text
 scripts/
-├── lint.sh                   # 本地统一入口：调度 17 项检查、汇总、给安装提示
+├── lint.sh                   # 本地统一入口：调度 18 项检查、汇总、给安装提示
 ├── check-commit-msg.sh       # 约定式提交校验（CI 与本地 hook 共用）
 ├── gen-local-skills.js       # 生成 local-skills.json
 ├── gen-catalogue.js          # 生成 docs/SKILLS.md（技能目录）
@@ -434,7 +434,7 @@ scripts/
 ./scripts/lint.sh --commits origin/main..HEAD   # 追加提交信息校验
 ```
 
-它管的 17 项检查：`frontmatter` `evals` `vendor-lock` `hygiene` `links` `scripts`
+它管的 18 项检查：`frontmatter` `evals` `vendor-lock` `hygiene` `links` `scripts`
 `distribution` `catalogue` `doc-counts` `skill-integrity` `agent-rules`（以上 11 项纯 Node）
 + `shellcheck` `actionlint` `yamllint` `zizmor`（4 项外部工具）。
 
@@ -524,7 +524,7 @@ node scripts/gen-local-skills.js --out /tmp/x.json
 
 ## CI 结构
 
-`.github/workflows/ci.yml` 共 20 个 job：
+`.github/workflows/ci.yml` 共 21 个 job：
 
 | Job | 名称 | 内容 |
 | --- | --- | --- |
