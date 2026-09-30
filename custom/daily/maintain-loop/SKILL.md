@@ -225,6 +225,7 @@ done
 ### 判断成败：禁止管道接 tail/head
 
 ```bash
+# skill-check: ignore —— 这一段是「✗ 反例」与「✓ 正例」的对照，✗ 那个故意不闭合
 # ✗ 判断的是 tail 的退出码——命令失败了也报成功
 if gh pr merge N --squash | tail -1; then
 

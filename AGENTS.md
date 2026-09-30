@@ -54,7 +54,7 @@ Managed by Trellis. Edits outside this block are preserved; edits inside may be 
 ### 本地检查入口
 
 ```bash
-./scripts/lint.sh          # 15 项静态检查，目标是「本地绿 == CI 绿」
+./scripts/lint.sh          # 16 项静态检查，目标是「本地绿 == CI 绿」
 ./scripts/lint.sh --list   # 看有哪些检查项
 ```
 
@@ -96,7 +96,7 @@ Commits 写。
 
 | 层 | 工具 | 现状 |
 | --- | --- | --- |
-| 静态 | `./scripts/lint.sh`（15 项检查）| 进 CI，每次 PR 都跑 |
+| 静态 | `./scripts/lint.sh`（16 项检查）| 进 CI，每次 PR 都跑 |
 | 行为 | [`scripts/run-evals.js`](scripts/run-evals.js) | 只对 `git-commit` 可跑，且通过**不等于**有效 |
 | 触发 | 无 | 试过，**造不出来**（见下）|
 

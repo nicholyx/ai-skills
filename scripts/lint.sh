@@ -102,6 +102,7 @@ CHECKS=(
   "doc-counts:文档计数校验"
   "skill-integrity:技能自洽校验"
   "agent-rules:规则导入链校验"
+  "skill-commands:技能命令校验"
   "shellcheck:shellcheck（Shell 静态分析）"
   "actionlint:actionlint（工作流静态检查）"
   "yamllint:yamllint（YAML 风格）"
@@ -364,6 +365,7 @@ dispatch() {
     doc-counts)  run_check "$name" node scripts/checks/doc-counts.js ;;
     skill-integrity) run_check "$name" node scripts/checks/skill-integrity.js ;;
     agent-rules) run_check "$name" node scripts/checks/agent-rules.js ;;
+    skill-commands) run_check "$name" node scripts/checks/skill-commands.js ;;
     shellcheck)  check_shellcheck "$name" ;;
     actionlint)  check_actionlint "$name" ;;
     yamllint)    check_yamllint "$name" ;;

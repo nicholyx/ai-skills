@@ -59,7 +59,7 @@ ai-skills/
 ├── scripts/
 │   ├── lint.sh              # 本地统一校验入口
 │   ├── check-commit-msg.sh  # 约定式提交校验
-│   ├── checks/*.js          # 11 个检查器
+│   ├── checks/*.js          # 12 个检查器
 │   ├── lib/*.js             # 检查器共用层
 │   ├── gen-local-skills.js  # local-skills.json 生成器
 │   ├── gen-catalogue.js     # docs/SKILLS.md 生成器
@@ -87,7 +87,7 @@ ai-skills/
 改技能 / 改脚本
       │
       ▼
-./scripts/lint.sh            ← 本地 15 项静态检查
+./scripts/lint.sh            ← 本地 16 项静态检查
       │                        exit 0 才继续
       ▼
 git commit                   ← 提交信息走约定式提交
@@ -96,7 +96,7 @@ git commit                   ← 提交信息走约定式提交
 git push + 开 PR
       │
       ▼
-CI：15 个静态检查 job
+CI：16 个静态检查 job
     + 提交信息规范（含 PR 标题）
     + lint.sh 自测
       │
@@ -107,7 +107,7 @@ CI 总览（唯一挂了分支保护的那个 check）
 合并
 ```
 
-关键点：CI 里的 15 个静态 job 与 `./scripts/lint.sh` 的 15 个检查项**逐字对应**，
+关键点：CI 里的 16 个静态 job 与 `./scripts/lint.sh` 的 16 个检查项**逐字对应**，
 `lint-selftest` job 会断言这一点。所以「本地过 = CI 过」不是口号，是有断言守着的性质。
 
 ---
@@ -399,7 +399,7 @@ CI 的 `commit-messages` job 校验两件事：PR 里的每个提交信息，**�
 
 ```text
 scripts/
-├── lint.sh                   # 本地统一入口：调度 15 项检查、汇总、给安装提示
+├── lint.sh                   # 本地统一入口：调度 16 项检查、汇总、给安装提示
 ├── check-commit-msg.sh       # 约定式提交校验（CI 与本地 hook 共用）
 ├── gen-local-skills.js       # 生成 local-skills.json
 ├── gen-catalogue.js          # 生成 docs/SKILLS.md（技能目录）
@@ -434,7 +434,7 @@ scripts/
 ./scripts/lint.sh --commits origin/main..HEAD   # 追加提交信息校验
 ```
 
-它管的 15 项检查：`frontmatter` `evals` `vendor-lock` `hygiene` `links` `scripts`
+它管的 16 项检查：`frontmatter` `evals` `vendor-lock` `hygiene` `links` `scripts`
 `distribution` `catalogue` `doc-counts` `skill-integrity` `agent-rules`（以上 11 项纯 Node）
 + `shellcheck` `actionlint` `yamllint` `zizmor`（4 项外部工具）。
 
@@ -474,7 +474,7 @@ scripts/
 
 退出码：0 = 全部合规（区间内没有提交也算 0），1 = 存在不合规的提交信息或区间无法解析。
 
-### `checks/*.js` —— 11 个检查器
+### `checks/*.js` —— 12 个检查器
 
 每个都是独立的可执行入口（CI 里就是直接 `node scripts/checks/<name>.js`），
 共用 `lib/report.js` 的输出与退出码语义。
@@ -524,7 +524,7 @@ node scripts/gen-local-skills.js --out /tmp/x.json
 
 ## CI 结构
 
-`.github/workflows/ci.yml` 共 18 个 job：
+`.github/workflows/ci.yml` 共 19 个 job：
 
 | Job | 名称 | 内容 |
 | --- | --- | --- |
