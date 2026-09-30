@@ -15,6 +15,9 @@
 
 ### 修复
 
+- **frontmatter 里带 `.` 的键整行漏网**。解析顶层键的正则只认 `[A-Za-z0-9_-]`，于是 `evil.dotted: 1` 被**整个丢掉** —— `parseFrontmatter` 的 `keys` 里没有它，白名单检查（只允许六个键）**永远看不见它**。契约因此形同虚设。现在这类键会进 `keys` 并被白名单拦下。
+- **`Report.warn()` 把 tier 写死成 `self`**，`.agents/**` 里的 BOM/CRLF 风格提示会被算成「自己的问题」。现在调用方可以传真实 tier，三个调用点（`checks/frontmatter.js`、`checks/evals.js`、`checks/hygiene.js`）已分别传入。
+- **退出码常量与实现之间没有耦合**。`EXIT_OK / EXIT_FAIL / EXIT_ABORT` 定义在 `lib/gitfiles.js`，而 `lib/report.js` 里 `finish()` / `abort()` 用的是字面量 —— spec 里写的「退出码 0/1/2 语义」与代码之间没有约束。现在常量统一到 `report.js`（退出码语义表就在那个文件的头部），`finish()` 与 `abort()` 都用它，并加了断言「退出码必须等于导出的常量」。
 - **评测沙箱漏挡 `.claude.json`**。`run-evals.js` 默认隔离 HOME，而 `claude` 会把配置写到 `$HOME/.claude.json` —— 沙箱里 HOME 就是沙箱根，于是它出现在结果面的 `untracked:` 行里。**真实后果**：一次跑 `git-commit` 用例时，模型被它带偏，开始讨论要不要把 `.claude.json` 提交进去。现在与 `.claude/` 一起挡掉。
 - **消融基线只留了一个布尔值**。基线不是全挂时，读者只知道「有问题」，不知道**是哪条断言在漏**。现在逐条记录并在输出里列出「不装技能也过」的断言 —— 那才是下一步要改的东西。
 - **两处把字节当成字符的数字**。技能 `description` 的长度峰值 **482 是字节**（字符数是 292），而 v1.2.0 的条目把它写成了「482 字符」，并据此说「把 482 字符的说明书变成人能读的目录」。已改为实测区间 **47~292 字符 / 119~482 字节**。

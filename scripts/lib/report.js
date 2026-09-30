@@ -28,6 +28,19 @@
  * 供上游修好之后收紧，不必改代码。
  */
 
+/**
+ * 退出码。**上面那张表的唯一实现** —— `abort()` 与 `finish()` 直接用它，
+ * 不写字面量。写死字面量时，「表里写的」和「代码做的」是两份互不相干的东西，
+ * 改坏哪一份都没有东西会红。
+ *
+ * 定义在本文件（而不是 `gitfiles.js`）：退出码是**检查器的输出契约**，
+ * 而 `gitfiles.js` 只是恰好也要用 `EXIT_ABORT` 的一位消费者 —— 它从这里
+ * 引入并转出，`test/gitfiles.test.js` 因此照旧能断言这三个值。
+ */
+const EXIT_OK = 0;
+const EXIT_FAIL = 1;
+const EXIT_ABORT = 2;
+
 const useColor =
   process.stdout.isTTY === true && !process.env.NO_COLOR && !process.env.CI;
 
@@ -51,9 +64,19 @@ class Report {
     this.findings.push({ tier, file, line, message, level });
   }
 
-  /** 无条件 warn（与 tier 无关，如 BOM、CRLF 这类风格提示）。 */
-  warn(file, line, message) {
-    this.findings.push({ tier: "self", file, line, message, level: "warn" });
+  /**
+   * 级别固定为 warn（与 tier 无关，如 BOM、CRLF 这类风格提示在两侧都不阻塞）。
+   *
+   * `tier` 只决定**分类**，不决定级别 —— `finish()` 的汇总把 warn 拆成
+   * 「上游遗留（无权修）」与「待处理（该改）」两类。默认 `self`；调用点知道
+   * 真实归属时必须传进来，否则 `.agents/**` 的风格提示会被记成自建内容的问题，
+   * 那是在汇总里把「我们无权修的」说成「我们应该改的」。
+   *
+   * 注意与 `at()` 的分工：`at()` 让 tier **决定级别**；`warn()` 的级别是写死的，
+   * tier 只用来分类。想「按 tier 分级」用 `at()`。
+   */
+  warn(file, line, message, tier = "self") {
+    this.findings.push({ tier, file, line, message, level: "warn" });
   }
 
   /** 无条件 fail（与 tier 无关，如 JSON 语法错误 —— 那没有「上游风格」的解释空间）。 */
@@ -69,7 +92,7 @@ class Report {
   abort(message) {
     process.stderr.write(`${C.red}✗ ${this.name}：未能执行${C.reset}\n`);
     process.stderr.write(`  ${message}\n`);
-    process.exit(2);
+    process.exit(EXIT_ABORT);
   }
 
   /** 打印并退出。0 = 无 fail 级问题；1 = 有。 */
@@ -135,8 +158,8 @@ class Report {
       );
     }
 
-    process.exit(fails.length > 0 ? 1 : 0);
+    process.exit(fails.length > 0 ? EXIT_FAIL : EXIT_OK);
   }
 }
 
-module.exports = { Report, useColor, C };
+module.exports = { Report, useColor, C, EXIT_OK, EXIT_FAIL, EXIT_ABORT };

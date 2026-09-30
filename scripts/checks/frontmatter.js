@@ -57,12 +57,14 @@ for (const skill of skills) {
   }
 
   for (const v of violations) {
-    // level 只区分「规则本身有多硬」（BOM/CRLF 是风格提示），
-    // 是否阻塞由 tier 决定 —— 见 lib/report.js 的 at()。
+    // level 只区分「规则本身有多硬」：fail 走 at()（是否阻塞由 tier 决定），
+    // warn 走 warn()（BOM/CRLF 这类风格提示两侧都不阻塞）。
+    // 两条路径都要带上 skill.tier —— warn() 的 tier 决定它被归到
+    // 「上游遗留」还是「待处理」。漏传会把上游的风格提示算成自建内容的待办。
     if (v.level === "fail") {
       report.at(skill.tier, skill.skillMd, v.line, v.message);
     } else {
-      report.warn(skill.skillMd, v.line, v.message);
+      report.warn(skill.skillMd, v.line, v.message, skill.tier);
     }
   }
 }

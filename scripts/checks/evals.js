@@ -235,7 +235,8 @@ for (const skill of skills) {
     .map(([field, n]) => `${field}（${n}/${data.evals.length} 条缺失）`);
 
   if (gaps.length > 0) {
-    report.warn(evalsPath, 0, `用例字段不完整：${gaps.join("、")}`);
+    // 带 skill.tier：上游 evals.json 的字段缺失是「上游遗留」，不是自建的待办。
+    report.warn(evalsPath, 0, `用例字段不完整：${gaps.join("、")}`, skill.tier);
   }
 }
 
