@@ -246,7 +246,7 @@ jq -r '.skills | to_entries | sort_by(.value.source)[] | "\(.key)\t\(.value.sour
 
 ```text
 ai-skills/
-├── .agents/skills/         # 上游 vendored 技能（31 个，只读，占仓库约 97% 体积）
+├── .agents/skills/         # 上游 vendored 技能（31 个，只读，占仓库绝大部分体积）
 ├── .claude-plugin/         # Claude Code 插件市场清单（生成物，见「另一条通道」）
 ├── custom/
 │   ├── daily/              # 自建通用技能（15 个）

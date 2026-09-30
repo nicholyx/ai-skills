@@ -21,7 +21,23 @@
  *                     「无区分度」的话，没人知道是哪一条在漏
  *   --ablate-repeats <n>  基线跑 n 轮（默认 1）。**基线结果会翻**，单次不足以下结论 ——
  *                     要写进用例的「有没有区分度」时，至少 3 轮
- *   --json            机器可读输出
+ *   --json            机器可读输出。**stdout 上只有那一份 JSON** —— 进度、逐条结果与
+ *                     汇总全部改走 stderr，所以 `… --json | jq .` 可以直接用。
+ *                     见下面「`--json` 的输出契约」。
+ *
+ * ## `--json` 的输出契约（曾经不成立）
+ *
+ * 这个旗标原先只把**结果**写成 JSON，进度行（`⏳ #1 …`）与 `report.info` 的汇总仍然
+ * 打在 stdout 上，于是 `JSON.parse(stdout)` 直接抛 `Unexpected token '⏳'` —— 想读那份
+ * 结果只能靠 `raw_decode` 之类的手法把中间那段抠出来。**机器可读输出实际不可直接读**，
+ * 与这个旗标对使用者的承诺相反。
+ *
+ * 现在诊断一律经 `diag()`（`--json` 时是 stderr）。选 stderr 而不是「干脆不打印」：
+ * 一轮评测要几分钟、要花钱，进度是那段时间里唯一的反馈；而 stderr 不参与管道，
+ * `| jq` 照常能用。
+ *
+ * `--dry-run --json` 同样给一份 JSON（列出会跑哪些用例），不留「stdout 上是人读文本」
+ * 的空档 —— 那正是这次要堵的那个洞。
  *
  * ## 为什么它不进 CI
  *
@@ -136,7 +152,20 @@ function fatal(msg) {
 }
 
 const args = parseArgs(process.argv);
-const report = new Report("技能评测");
+
+/**
+ * 诊断输出（进度、逐条结果、汇总）的去向。
+ *
+ * 默认 stdout —— 日常看的就是它，`--json` 缺席时的输出**一个字都不能变**。
+ * `--json` 时改走 **stderr**：那个旗标承诺「stdout 是一份可直接 `JSON.parse` 的文档」，
+ * 混进去任何一行进度都会让 `JSON.parse(stdout)` 当场抛异常（实测过）。选 stderr 而不是
+ * 「干脆不打印」：一轮要几分钟、要花钱，进度是那段时间里唯一的反馈 —— 而且 stderr
+ * 不参与管道，`run-evals.js --json | jq` 照常能用。
+ */
+const diag = (s) => (args.json ? process.stderr : process.stdout).write(s);
+
+// 人读的 findings / infos / 汇总行走同一条路：`--json` 时它们会污染 stdout。
+const report = new Report("技能评测", { stream: args.json ? process.stderr : process.stdout });
 
 if (!args.skill) {
   fatal("必须用 --skill <名字> 指定一个技能 —— 不做「一键全跑」，那是 22 次模型调用");
@@ -250,25 +279,45 @@ if (!args.dryRun) {
   }
 }
 
-if (!args.json) {
-  process.stdout.write(
-    `\n▶ 技能评测：${skill.name}（${picked.length} 条用例）\n` +
-      `  沙箱：每个用例一个一次性 git 仓库，跑完即删\n` +
-      `  工具白名单：${args.allowed}\n` +
-      (args.dryRun ? "" : `  提示：每条约 $0.24 / 40 秒，本轮约 $${(picked.length * 0.24).toFixed(2)}\n`) +
-      "\n"
-  );
-}
+diag(
+  `\n▶ 技能评测：${skill.name}（${picked.length} 条用例）\n` +
+    `  沙箱：每个用例一个一次性 git 仓库，跑完即删\n` +
+    `  工具白名单：${args.allowed}\n` +
+    (args.dryRun ? "" : `  提示：每条约 $0.24 / 40 秒，本轮约 $${(picked.length * 0.24).toFixed(2)}\n`) +
+    "\n"
+);
 
 if (args.dryRun) {
-  for (const item of picked) {
-    process.stdout.write(`  #${item.id}  ${item.name}\n`);
-    process.stdout.write(`        prompt: ${item.prompt}\n`);
+  // `--json` 也给一份 JSON：这个旗标的承诺是「stdout 上只有 JSON」，
+  // 让 --dry-run 成为例外就等于留一个必然踩到的坑（`| jq` 会直接报错）。
+  if (args.json) {
     process.stdout.write(
+      `${JSON.stringify(
+        {
+          skill: skill.name,
+          dryRun: true,
+          evals: picked.map((e) => ({
+            id: e.id,
+            name: e.name || "",
+            prompt: e.prompt,
+            files: e.files || [],
+            assertions: e.assertions || [],
+          })),
+        },
+        null,
+        2
+      )}\n`
+    );
+    process.exit(0);
+  }
+  for (const item of picked) {
+    diag(`  #${item.id}  ${item.name}\n`);
+    diag(`        prompt: ${item.prompt}\n`);
+    diag(
       `        前置状态: ${(item.files || []).length === 0 ? "（无，基准仓库原样）" : ""}\n`
     );
     for (const f of item.files || []) {
-      process.stdout.write(
+      diag(
         `          - ${f.path}` +
           (f.link !== undefined ? `（软链 → ${f.link}）` : "") +
           (f.stage ? "（已暂存）" : "") +
@@ -277,18 +326,17 @@ if (args.dryRun) {
       );
     }
     for (const a of item.assertions || []) {
-      process.stdout.write(`        断言: ${a.type} [${a.target || "transcript"}] ${a.value}\n`);
+      diag(`        断言: ${a.type} [${a.target || "transcript"}] ${a.value}\n`);
     }
   }
-  process.stdout.write("\n");
+  diag("\n");
   process.exit(0);
 }
 
 /** 单条用例的结果**跑完就报**，不要攒到最后 —— 一轮几分钟，攒着等于全程黑箱。 */
 function printOutcome(o) {
-  if (args.json) return;
   const icon = o.ok ? "✓" : "✗";
-  process.stdout.write(
+  diag(
     `  ${icon} #${o.id} ${o.name}` +
       (o.elapsedMs ? `（${(o.elapsedMs / 1000).toFixed(0)}s，$${(o.costUsd || 0).toFixed(3)}）` : "") +
       "\n"
@@ -300,27 +348,27 @@ function printOutcome(o) {
       : r2.hit
         ? `不该命中，但在「${r2.target}」里命中了`
         : `应当在「${r2.target}」里出现，但没找到`;
-    process.stdout.write(`      ✗ ${r2.type} [${r2.target}] ${r2.value}\n          ${why}\n`);
+    diag(`      ✗ ${r2.type} [${r2.target}] ${r2.value}\n          ${why}\n`);
   }
-  if (o.empty) process.stdout.write("      ⚠ 这条用例没有断言，跑完也判不了对错\n");
+  if (o.empty) diag("      ⚠ 这条用例没有断言，跑完也判不了对错\n");
 
   if (o.baselineRuns !== undefined) {
     const tally = `不装技能时 ${o.baselineRuns} 轮里过了 ${o.baselinePassed} 轮`;
     if (!o.ok) {
       // 装了都不（总是）过，就谈不上「技能有没有带来东西」—— 先修用例。
       // 把它说成「无区分度」会指向完全错误的方向（去改用例的断言，而问题在别处）。
-      process.stdout.write(
+      diag(
         `      ⚠ 这一轮**用例本身没过**（${tally}）—— 区分度无从谈起，先看上面的失败原因\n`
       );
     } else {
-      process.stdout.write(
+      diag(
         o.discriminating
           ? `      ○ 有区分度（${tally}）\n`
           : `      ⚠ **无区分度**（${tally}）—— 这条测的是模型本来就会做，不是技能带来了什么\n`
       );
     }
     if (!o.baselineStable) {
-      process.stdout.write(
+      diag(
         "      ⚠ **基线不稳定**：同一条用例的基线结果会翻。单次观测不足以给这条用例" +
           "下「有没有区分度」的结论 —— 加 --ablate-repeats 多跑几轮再定\n"
       );
@@ -330,7 +378,7 @@ function printOutcome(o) {
     // 决定了下一步：是这条断言写得太笼统（模型本来就会做），还是用例整体没区分度。
     if (o.baselinePassed > 0) {
       for (const h of baselineHits(o.baselineResults)) {
-        process.stdout.write(
+        diag(
           `      · 不装技能也过：${h.key}` +
             (o.baselineRuns > 1 ? `（${h.passed}/${h.total} 轮）` : "") +
             "\n"
@@ -342,7 +390,7 @@ function printOutcome(o) {
 
 const outcomes = [];
 for (const item of picked) {
-  process.stdout.write(`  ⏳ #${item.id} ${item.name} …\n`);
+  diag(`  ⏳ #${item.id} ${item.name} …\n`);
   let o;
   try {
     o = runOne(item, true);
@@ -355,7 +403,7 @@ for (const item of picked) {
       // 而「有区分度/无区分度」是个布尔值，用一次观测去填它就是在制造假确定性。
       const runs = [];
       for (let k = 0; k < args.ablateRepeats; k += 1) {
-        process.stdout.write(
+        diag(
           `      ↳ 消融基线（不装技能）${args.ablateRepeats > 1 ? ` ${k + 1}/${args.ablateRepeats}` : ""}…\n`
         );
         const base = runOne(item, false);
@@ -381,6 +429,10 @@ for (const item of picked) {
 }
 
 // ── 输出 ──────────────────────────────────────────────────────────────────
+//
+// `--json` 时**这里就是 stdout 上唯一的那份东西**（其余全部经 `diag()` 去了 stderr）。
+// 上面那条 printOutcome 已经不再对 `--json` 特判 —— 逐条结果照打，只是打到 stderr，
+// 于是「stdout 干净」与「跑的时候看得见进度」不再二选一。
 
 if (args.json) {
   process.stdout.write(`${JSON.stringify({ skill: skill.name, outcomes }, null, 2)}\n`);

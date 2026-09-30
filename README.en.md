@@ -319,10 +319,16 @@ English.
 | `update-claude-code` | Checks for and installs the latest Claude Code | 「更新 claude」 |
 | `update-opencode` | Updates the OpenCode CLI and the oh-my-opencode plugin | 「更新 opencode」 |
 
-> ℹ️ The table above is hand-maintained and is **not** covered by the generator check, so it
-> can fall behind. The two tables in the [Chinese README](README.md) are **generated** from
+> ℹ️ The table above is hand-maintained, so it is **not** byte-compared against the generator
+> the way the Chinese ones are. Two things about it *are* asserted, though: every self-maintained
+> skill must appear in one of these tables (drop a row and CI fails — the skill would be
+> invisible to anyone reading this page), and the counts written here must match the repository.
+> That second check is new: `skills-doctor` was missing from this table for a while and nothing
+> caught it, because a stale count and a missing row look the same.
+>
+> The two tables in the [Chinese README](README.md) are **generated** from
 > each skill's `metadata`, between `<!-- SKILLS-TABLE:START … -->` markers, and CI asserts
-> they match — never hand-edit inside those markers. The generated
+> they match byte for byte — never hand-edit inside those markers. The generated
 > [skill catalogue](docs/SKILLS.md) (Chinese) is the canonical list; when the two disagree,
 > that one is right. Trigger conditions and execution flow for any skill are in its own
 > `SKILL.md`; for `skills-sync`'s parameters see
@@ -345,7 +351,7 @@ English.
 
 ```text
 ai-skills/
-├── .agents/skills/         # Upstream vendored skills (31, read-only, ~97% of repo size)
+├── .agents/skills/         # Upstream vendored skills (31, read-only, the bulk of the repo size)
 ├── .claude-plugin/         # Claude Code plugin marketplace manifest (generated, see "The third channel")
 ├── custom/
 │   ├── daily/              # Self-maintained general skills (15)

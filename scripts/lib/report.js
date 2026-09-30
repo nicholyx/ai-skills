@@ -50,8 +50,20 @@ const C = useColor
   : { red: "", green: "", yellow: "", blue: "", bold: "", dim: "", reset: "" };
 
 class Report {
-  constructor(name) {
+  /**
+   * @param {string} name 检查项显示名
+   * @param {{stream?: {write: Function}}} [opts]
+   *   `stream` 是**正常输出**（findings / infos / 汇总行）的去向，默认 stdout。
+   *   唯一的调用者是 `scripts/run-evals.js --json`：那个旗标承诺「stdout 上只有一份
+   *   可直接 `JSON.parse` 的文档」，于是人读的进度与汇总改走 stderr。默认值保证
+   *   其余调用者的输出**一个字节都不变**。
+   *
+   *   `abort()` 不看这个选项 —— 「检查未能执行」始终走 stderr（退出码 2 的语义
+   *   就是「这不是检查结果」）。
+   */
+  constructor(name, opts = {}) {
     this.name = name;
+    this.out = opts.stream || process.stdout;
     this.findings = []; // {tier, file, line, message, level}
     this.infos = [];
     this.strictVendor =
@@ -103,7 +115,7 @@ class Report {
     // 由 lint.sh 调用时标题与结果行都不打：那边会打自己的。
     // 直接运行检查器（CI 里就是这样）时保留，日志才自解释。
     if (!process.env.LINT_QUIET) {
-      process.stdout.write(`${C.bold}▶ ${this.name}${C.reset}\n`);
+      this.out.write(`${C.bold}▶ ${this.name}${C.reset}\n`);
     }
 
     const fmt = (f, icon, color) => {
@@ -112,12 +124,12 @@ class Report {
         f.tier === "vendor" && !this.strictVendor
           ? `${C.dim}（上游 vendored，不阻塞）${C.reset}`
           : "";
-      process.stdout.write(`  ${color}${icon}${C.reset} ${loc}  ${f.message}${suffix}\n`);
+      this.out.write(`  ${color}${icon}${C.reset} ${loc}  ${f.message}${suffix}\n`);
     };
 
     for (const f of fails) fmt(f, "✗", C.red);
     for (const f of warns) fmt(f, "⚠", C.yellow);
-    for (const i of this.infos) process.stdout.write(`  ${C.blue}ⓘ${C.reset} ${i}\n`);
+    for (const i of this.infos) this.out.write(`  ${C.blue}ⓘ${C.reset} ${i}\n`);
 
     // 结果行同样交给 lint.sh 去打，避免出现两个「✓ 通过」。
     if (!process.env.LINT_QUIET) {
@@ -130,9 +142,9 @@ class Report {
         const parts = [];
         if (selfFails > 0) parts.push(`${selfFails} 处失败`);
         if (vendorFails > 0) parts.push(`${vendorFails} 处上游失败`);
-        process.stdout.write(`  ${C.red}✗ 未通过：${parts.join("，")}${C.reset}\n`);
+        this.out.write(`  ${C.red}✗ 未通过：${parts.join("，")}${C.reset}\n`);
       } else if (warns.length === 0) {
-        process.stdout.write(`  ${C.green}✓ 通过${C.reset}\n`);
+        this.out.write(`  ${C.green}✓ 通过${C.reset}\n`);
       } else {
         // 「上游遗留」与「自建内容的提示」是两回事：前者我们无权修（改了会在
         // npx skills update 时丢失），后者是待办。混成一句话会让读者以为
@@ -142,7 +154,7 @@ class Report {
         const parts = [];
         if (selfWarns > 0) parts.push(`${selfWarns} 处提示（待处理）`);
         if (vendorWarns > 0) parts.push(`${vendorWarns} 处上游遗留（不计入退出码）`);
-        process.stdout.write(
+        this.out.write(
           `  ${C.green}✓ 通过${C.reset}${C.dim}（${parts.join("，")}）${C.reset}\n`
         );
       }
@@ -150,10 +162,10 @@ class Report {
 
     // vendor 的「不阻塞」必须每次都说清楚，否则读者会以为上游那几处已经修好了。
     if (warns.length > 0 && warns.some((w) => w.tier === "vendor")) {
-      process.stdout.write(
+      this.out.write(
         `  ${C.dim}上游 vendored 技能的问题不计入退出码：修复会在 npx skills update 时丢失。${C.reset}\n`
       );
-      process.stdout.write(
+      this.out.write(
         `  ${C.dim}需要严格检查时用 VENDOR_STRICT=1。${C.reset}\n`
       );
     }

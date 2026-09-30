@@ -41,6 +41,28 @@ const report = new Report("端到端验证");
 
 const selfCount = skillDirs().filter((s) => s.tier === "self").length;
 
+/**
+ * 往英文 README 的**第一张**技能表末尾插一行（`node -e` 的源码，技能名走 argv）。
+ *
+ * 为什么要这么一段：`README.en.md` 的技能表是**手写**的 —— 脚手架与生成器都不碰它，
+ * 而 `checks/doc-counts.js` 现在断言「每个自建技能都得住进这张表」。环节 3 造出来的
+ * 探针技能必须补上那一行，否则它会以「英文入口上访客看不到这个技能」的形态失败 ——
+ * 而那跟「骨架能不能用」是两件事，混在一起就说不清是哪条路径坏了。
+ *
+ * 插入点按「第一张技能表的最后一行」算，不按行号、也不拿长句做锚点 —— 后者在文档
+ * 一改就静默失配（见测试规范「批量改中文文档用按行索引」）。
+ */
+const EN_TABLE_ROW_SNIPPET = [
+  'const fs = require("fs");',
+  "const name = process.argv[1];",
+  'const text = fs.readFileSync("README.en.md", "utf8");',
+  'const head = text.indexOf("| Skill | What it does | You can say this |");',
+  'if (head < 0) { console.error("英文 README 里找不到技能表头"); process.exit(1); }',
+  'const end = text.indexOf("\\n\\n", head);',
+  'const row = "| `" + name + "` | End-to-end probe for the scaffold path | 「帮我跑一下端到端探针」 |";',
+  'fs.writeFileSync("README.en.md", text.slice(0, end) + "\\n" + row + text.slice(end));',
+].join("\n");
+
 // ── 干净副本 ──────────────────────────────────────────────────────────────
 
 const box = fs.mkdtempSync(path.join(os.tmpdir(), "ai-skills-e2e-"));
@@ -110,6 +132,10 @@ try {
   run(["node", "scripts/new-skill.js", "e2e-probe", "--tagline", "端到端探针",
        "--example", "帮我跑一下端到端探针"]);
   run(["node", "scripts/gen-catalogue.js", "--write"]);
+  // 英文 README 的技能表是**手写**的，脚手架与生成器都不碰它 —— 而 doc-counts 现在
+  // 断言「每个自建技能都得住进这张表」（漏一行 = 访客在英文入口上看不到这个技能）。
+  // 所以这里补上那一行，模拟贡献者该做的那一步。
+  run(["node", "-e", EN_TABLE_ROW_SNIPPET, "e2e-probe"]);
   // 新增技能会让文档里的技能数过期 —— 这正是脚手架第 4 步要做的。
   // 少了这一步，新贡献者会撞上一个跟自己技能毫无关系的失败（这条是本脚本抓出来的）。
   run(["node", "scripts/checks/doc-counts.js", "--fix"]);
