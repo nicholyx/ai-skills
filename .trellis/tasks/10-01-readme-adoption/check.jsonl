@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/testing/index.md", "reason": "验收标准"}
+{"file": ".trellis/spec/checks/index.md", "reason": "生成物必须与源头一致，检查器怎么接"}

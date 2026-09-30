@@ -29,7 +29,7 @@ Creates `.trellis/.developer` (gitignored) + `.trellis/workspace/<your-name>/`.
 `.trellis/spec/` holds coding guidelines organized by package and layer.
 
 - `.trellis/spec/<package>/<layer>/index.md` — entry point with **Pre-Development Checklist** + **Quality Check**. Actual guidelines live in the `.md` files it points to.
-- `.trellis/spec/<topic>/index.md` — 每个主题一份。本仓库现有：`skills`（写技能）、`checks`（写检查器）、`testing`（写测试/验收）、`maintenance`（发版与 PR）。
+- `.trellis/spec/guides/index.md` — cross-package thinking guides.
 
 ```bash
 python3 ./.trellis/scripts/get_context.py --mode packages   # list packages / layers
