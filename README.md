@@ -2,7 +2,7 @@
 
 # ai-skills
 
-个人 Claude Code Skills 仓库：14 个自建通用技能 + 1 个项目专用技能，
+个人 Claude Code Skills 仓库：15 个自建通用技能 + 1 个项目专用技能，
 另附 31 个由 `skills-lock.json` 追踪的上游技能。
 
 [![CI](https://github.com/nicholyx/ai-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/nicholyx/ai-skills/actions/workflows/ci.yml)
@@ -41,7 +41,7 @@
 
 ## 特性
 
-- **14 个自建通用技能**，覆盖 git 操作、代码审查、Bug 分析、仓库分析、日报、Obsidian 笔记等日常场景
+- **15 个自建通用技能**，覆盖 git 操作、代码审查、Bug 分析、仓库分析、日报、Obsidian 笔记等日常场景
 - **1 个项目专用技能**，按 `prj-` 前缀隔离，不污染通用安装
 - **上游区与自建区物理隔离**：`npx skills update` 只动 `.agents/`，不会碰到你的自建技能
 - **上游技能有 lock 可查**：`skills-lock.json` 记录每个技能来自哪个 GitHub 仓库，`npx skills update` 据此更新

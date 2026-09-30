@@ -15,12 +15,34 @@
  *   --timeout <秒>    单条用例的上限，默认 300
  *   --keep            保留沙箱目录，并把原始 transcript 写进 <沙箱>/transcript.jsonl
  *                     （排错用 —— 用法例通过与否去反推原因，等于猜）
+ *   --no-isolate-home 不隔离 HOME（默认隔离：用例不该依赖运行者的机器状态）
+ *   --ablate          同时跑「不装技能」的**消融基线**。见文件头「一个通过不等于有用」
  *   --json            机器可读输出
  *
  * ## 为什么它不进 CI
  *
  * 实测单条用例约 **$0.24 / 40 秒**。22 条用例一轮约 $5 —— 成本与时长都不适合每次 PR。
  * 它是**维护者工具**：改完技能之后手动跑一遍，确认它还是照说明干活。
+ *
+ * ## 一个通过不等于有用：消融基线（`--ablate`）
+ *
+ * **一个用例通过，不等于它在测这个技能。** 实测踩到过：给 `skills-doctor` 写的
+ * 「找出断链」用例，把技能里**整整一步「检查软链」删掉**之后**照样通过**；把技能
+ * **完全不装进沙箱**，模型自己 `ls` + `readlink` 也把断链找出来了 —— 那条用例测的是
+ * **模型本来就会做的事**。
+ *
+ * 所以 `--ablate` 会把每个用例**不装技能**再跑一遍，两者一比才说明问题：
+ *
+ * | 装了 | 不装 | 说明 |
+ * | --- | --- | --- |
+ * | ✓ | ✗ | **有区分度** —— 技能确实带来了东西 |
+ * | ✓ | ✓ | **无区分度** —— 用例在测模型，不在测技能 |
+ * | ✗ | ✗ | 用例本身有问题（或技能确实没用）|
+ *
+ * **它只报不判红**：无区分度是「用例写得不够具体」，是待改进项，不是技能坏了。
+ * 设成失败会让工具长期红着，而那正是「训练人忽略输出」。
+ *
+ * 代价是**跑一轮的钱翻倍**，所以默认不开。
  *
  * ## 安全边界：每个用例一个一次性沙箱
  *
@@ -70,7 +92,8 @@ const DEFAULT_ALLOWED = "Bash,Read,Write,Edit,Grep,Glob";
 
 function parseArgs(argv) {
   const out = { skill: "", evals: null, keep: false, json: false, dryRun: false,
-                timeout: 300, model: "", allowed: DEFAULT_ALLOWED };
+                timeout: 300, model: "", allowed: DEFAULT_ALLOWED, isolateHome: true,
+                ablate: false };
   const rest = argv.slice(2);
   for (let i = 0; i < rest.length; i += 1) {
     const a = rest[i];
@@ -87,6 +110,8 @@ function parseArgs(argv) {
       case "--allowed": out.allowed = next(); break;
       case "--timeout": out.timeout = Number(next()); break;
       case "--keep": out.keep = true; break;
+      case "--no-isolate-home": out.isolateHome = false; break;
+      case "--ablate": out.ablate = true; break;
       case "--json": out.json = true; break;
       case "--dry-run": out.dryRun = true; break;
       default: fatal(`不认识的参数：${a}`);
@@ -131,8 +156,8 @@ const picked = (suite.evals || []).filter(
 );
 if (picked.length === 0) fatal(`没有匹配的用例（--eval ${args.evals}）`);
 
-function runOne(item) {
-  const { box, baseHead } = makeSandbox({ skill, files: item.files });
+function runOne(item, withSkill = true) {
+  const { box, baseHead } = makeSandbox({ skill, files: item.files, withSkill });
 
   const argvArgs = ["-p", item.prompt, "--output-format", "stream-json", "--verbose",
                     "--allowedTools", args.allowed];
@@ -144,6 +169,12 @@ function runOne(item) {
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
     timeout: args.timeout * 1000,
+    // HOME 也指向沙箱：**用例不该依赖运行者的机器状态**。不隔离的话，`~/.claude/skills`
+    // 里你装的其他技能、`~/.claude/settings.json` 里的 hook、以及 `~/.claude.json` 都会
+    // 渗进被测场景 —— 而「诊断类技能」会被自己的机器状态污染得更明显。
+    // 认证不受影响（走环境变量）。顺带消掉一个真实副作用：CLI 本来会往你**真实的**
+    // `~/.claude.json` 里写东西。
+    env: args.isolateHome ? { ...process.env, HOME: box } : process.env,
   });
 
   // 结果面必须在删沙箱**之前**取
@@ -224,7 +255,13 @@ if (args.dryRun) {
       `        前置状态: ${(item.files || []).length === 0 ? "（无，基准仓库原样）" : ""}\n`
     );
     for (const f of item.files || []) {
-      process.stdout.write(`          - ${f.path}${f.stage ? "（已暂存）" : ""}${f.executable ? "（可执行）" : ""}\n`);
+      process.stdout.write(
+        `          - ${f.path}` +
+          (f.link !== undefined ? `（软链 → ${f.link}）` : "") +
+          (f.stage ? "（已暂存）" : "") +
+          (f.executable ? "（可执行）" : "") +
+          "\n"
+      );
     }
     for (const a of item.assertions || []) {
       process.stdout.write(`        断言: ${a.type} [${a.target || "transcript"}] ${a.value}\n`);
@@ -253,6 +290,15 @@ function printOutcome(o) {
     process.stdout.write(`      ✗ ${r2.type} [${r2.target}] ${r2.value}\n          ${why}\n`);
   }
   if (o.empty) process.stdout.write("      ⚠ 这条用例没有断言，跑完也判不了对错\n");
+
+  if (o.baselineOk !== undefined) {
+    process.stdout.write(
+      o.discriminating
+        ? "      ○ 有区分度：不装技能时这条会失败\n"
+        : "      ⚠ **无区分度**：不装技能时它**照样通过** —— " +
+            "这条测的是模型本来就会做，不是技能带来了什么\n"
+    );
+  }
 }
 
 const outcomes = [];
@@ -260,7 +306,18 @@ for (const item of picked) {
   process.stdout.write(`  ⏳ #${item.id} ${item.name} …\n`);
   let o;
   try {
-    o = runOne(item);
+    o = runOne(item, true);
+
+    // 消融基线：同一个用例，**不装技能**再跑一遍。
+    // 只有「装了过、不装挂」才说明这条用例真的在测技能。
+    if (args.ablate && o.results.length > 0) {
+      process.stdout.write("      ↳ 消融基线（不装技能）…\n");
+      const base = runOne(item, false);
+      o.baselineOk = base.ok;
+      o.baselineCostUsd = base.costUsd || 0;
+      o.discriminating = o.ok && !base.ok;
+      o.costUsd = (o.costUsd || 0) + o.baselineCostUsd;
+    }
   } catch (err) {
     report.fail(`${skill.dir}/evals/evals.json`, 0, `用例 #${item.id} 未能执行：${err.message}`);
     o = { id: item.id, name: item.name, ok: false, error: err.message, results: [] };
@@ -278,6 +335,17 @@ if (args.json) {
 }
 
 const passed = outcomes.filter((o) => o.ok).length;
+
+// 消融结果**只报不判红**：无区分度说明「这条用例写得不够具体」，是待改进项，
+// 而不是技能坏了。把它设成失败会让这个工具长期红着 —— 那正是「训练人忽略输出」。
+if (args.ablate && !args.json) {
+  const probed = outcomes.filter((o) => o.baselineOk !== undefined);
+  const good = probed.filter((o) => o.discriminating).length;
+  report.info(
+    `消融基线：${probed.length} 条里 **${good} 条有区分度**（装了过、不装挂）；` +
+      `另 ${probed.length - good} 条**不装技能也能过** —— 它们没在测技能。`
+  );
+}
 const spent = outcomes.reduce((a, o) => a + (o.costUsd || 0), 0);
 report.info(
   `通过 ${passed}/${outcomes.length} 条用例，实际花费 $${spent.toFixed(3)}` +

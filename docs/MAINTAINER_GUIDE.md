@@ -281,6 +281,7 @@ gh api repos/nicholyx/ai-skills/private-vulnerability-reporting
 node scripts/run-evals.js --skill git-commit --dry-run          # 先看会执行什么、前置状态铺成什么样
 node scripts/run-evals.js --skill git-commit                    # 真跑（约 $0.24 / 40 秒 一条）
 node scripts/run-evals.js --skill git-commit --eval 4 --keep    # 排错：留沙箱与 transcript
+node scripts/run-evals.js --skill git-commit --ablate           # 同时跑「不装技能」的基线（钱翻倍）
 ```
 
 它跑 `custom/**/evals/evals.json` 里的用例，也就是 `docs/SKILLS.md` 里 ✅ 指的那批。
@@ -300,6 +301,13 @@ node scripts/run-evals.js --skill git-commit --eval 4 --keep    # 排错：留�
 - **必须显式 `--skill`**，不做「一键全跑」—— 那等于一次几十次模型调用
 
 **什么时候跑**：改动 `custom/**` 的技能内容之后。它是发布前的最后一关。
+
+**`--ablate` 值得单独说。** 一个用例通过**不等于**它在测这个技能 —— 实测过：把技能里
+整整一步删掉，用例照样通过；把技能完全不装，模型自己也会做。`--ablate` 会把每个用例
+**不装技能**再跑一遍，只有「装了过、不装挂」才说明技能真的带来了东西。
+
+无区分度的用例**是待改进项，不是技能坏了** —— 所以它只报不判红。**但别忽略它**：
+一份全部无区分度的成绩单，和没有成绩单是一回事。
 
 写用例的约定（断言的 `target`、前置状态 `files`）见 `.trellis/spec/skills/index.md`。
 

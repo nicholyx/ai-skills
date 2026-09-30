@@ -41,13 +41,16 @@ function git(cwd, argvArgs) {
  *
  * @param {object} opts
  * @param {{name: string, dir: string}} opts.skill 要装进沙箱的技能
- * @param {Array<object>} [opts.files] 前置状态，见 `run-evals.js` 文件头
+ * @param {Array<object>} [opts.files] 前置状态，见 `run-evals.js` 文件头；
+ *        每一项还可以是 `{path, link}` —— 造一个软链，目标可以不存在（断链）
  * @param {boolean} [opts.withOrigin] 是否铺一个裸 origin（默认 true）
- *        触发测试不需要它 —— 它只关心「技能有没有被唤起」，模型不需要真的推东西。
+ * @param {boolean} [opts.withSkill] 是否把技能装进沙箱（默认 true）。
+ *        `false` 用于**消融基线**：不装技能跑同一个用例，看它是否照样通过。
  * @param {string} [opts.prefix] 临时目录前缀，便于在 /tmp 里认出是谁留下的
  * @returns {{box: string, baseHead: string}}
  */
-function makeSandbox({ skill, files = [], withOrigin = true, prefix = "skill-eval" }) {
+function makeSandbox({ skill, files = [], withOrigin = true, withSkill = true,
+                       prefix = "skill-eval" }) {
   const box = fs.mkdtempSync(path.join(os.tmpdir(), `${prefix}-${skill.name}-`));
 
   // 基准仓库
@@ -65,12 +68,16 @@ function makeSandbox({ skill, files = [], withOrigin = true, prefix = "skill-eva
     git(box, ["remote", "add", "origin", origin]);
   }
 
-  // 技能本体：放到项目级技能目录，正是 Claude Code 会发现的位置
-  fs.cpSync(path.join(REPO_ROOT, skill.dir), path.join(box, ".claude", "skills", skill.name), {
-    recursive: true,
-    // evals/ 不进沙箱：模型不需要看到判分标准
-    filter: (src) => path.basename(src) !== "evals",
-  });
+  // 技能本体：放到项目级技能目录，正是 Claude Code 会发现的位置。
+  // `withSkill: false` 就是**消融基线** —— 不装技能再跑一遍同一个用例，
+  // 用来回答「这个用例到底是在测技能，还是在测模型本来就会做」。
+  if (withSkill) {
+    fs.cpSync(path.join(REPO_ROOT, skill.dir), path.join(box, ".claude", "skills", skill.name), {
+      recursive: true,
+      // evals/ 不进沙箱：模型不需要看到判分标准
+      filter: (src) => path.basename(src) !== "evals",
+    });
+  }
 
   // 把跑手自己铺的东西挡在 `git status` 之外。
   // 否则「暂存区为空」这类用例会变成「有两个未跟踪目录该怎么办」—— 实测模型就被带偏了，
@@ -82,11 +89,21 @@ function makeSandbox({ skill, files = [], withOrigin = true, prefix = "skill-eva
 
   // 前置状态
   for (const f of files) {
-    if (!f || typeof f.path !== "string" || typeof f.content !== "string") {
-      throw new Error("files 里的每一项必须有 path 与 content");
+    if (!f || typeof f.path !== "string") {
+      throw new Error("files 里的每一项必须有 path");
     }
     const abs = path.join(box, f.path);
     fs.mkdirSync(path.dirname(abs), { recursive: true });
+
+    // `link`：造一个软链。它可以指向不存在的目标 —— 那是「断链」这一类故障的全部
+    // 意义所在，而普通的「写文件」表达不了它。
+    if (typeof f.link === "string") {
+      fs.symlinkSync(f.link, abs);
+      continue;
+    }
+    if (typeof f.content !== "string") {
+      throw new Error(`files 项 ${f.path} 既没有 content 也没有 link`);
+    }
     fs.writeFileSync(abs, f.content, "utf8");
     if (f.executable) fs.chmodSync(abs, 0o755);
     if (f.commit) {
