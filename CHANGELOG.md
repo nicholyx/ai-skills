@@ -9,6 +9,8 @@
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-09-30
+
 这一版把**开发流程搬进了 `AGENTS.md`**，并加上 `CLAUDE.md` 转发 —— 新会话不必先去读技能，就知道该怎么做。
 
 ### 新增
@@ -284,7 +286,8 @@
 - 破坏性变更在条目里用 **BREAKING** 标出。对这个仓库来说，「技能的行为变了」算破坏性变更 —— 使用者依赖的是技能的行为，不是它的文件名
 - 已发布的版本按 `[X.Y.Z] - 日期` 归档，`[Unreleased]` 恢复为空壳
 
-[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v2.1.1...HEAD
+[2.1.1]: https://github.com/nicholyx/ai-skills/releases/tag/v2.1.1
 [2.1.0]: https://github.com/nicholyx/ai-skills/releases/tag/v2.1.0
 [2.0.1]: https://github.com/nicholyx/ai-skills/releases/tag/v2.0.1
 [2.0.0]: https://github.com/nicholyx/ai-skills/releases/tag/v2.0.0
