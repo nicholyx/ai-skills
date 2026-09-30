@@ -64,7 +64,13 @@ Cross-Layer，共 647 行**英文通用软件工程建议**）。**本仓库把�
 「枚举只能有一处实现」、[testing/index.md](testing/index.md) 的跨平台差异与隔离环境，
 每一条都对应本仓库真实踩过的坑。**留着泛泛的通用建议，只会稀释真正要遵守的规范。**
 
-> 如果哪次 `trellis update` 又把它生成出来，**直接删掉**，并保留这一节说明原因。
+> **`trellis update` 会做两件事**：把 `.trellis/workflow.md` 里指向 `guides/index.md`
+> 的那一行**写回来**（该文件是 Trellis 受管的，手改无效、每次 update 都被覆盖），
+> 以及可能重新生成 `guides/` 目录。两件事都**不用管** —— 只要 `guides/` 目录不存在
+> 就行，workflow.md 里那行引用是 Trellis 自己的文档，悬着不影响任何人。
+>
+> **`trellis update` / `trellis init` 都动的文件不要手改**：`.trellis/workflow.md`、
+> `.trellis/scripts/**`、`.claude/**`。手改会在下次 update 时静默丢失。
 
 ## Pre-Development Checklist（任何任务动手前）
 
