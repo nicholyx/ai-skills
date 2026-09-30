@@ -2,8 +2,17 @@
 
 # ai-skills
 
-A personal Claude Code skills repository: 15 self-maintained general-purpose skills,
-1 project-specific skill, plus 31 upstream skills that are tracked here but **not** shipped.
+15 self-maintained general-purpose skills plus 1 project-specific one: git workflows, code
+review, bug root-cause analysis, repository analysis, daily reports, Obsidian notes. Install
+them into Claude Code, CodeBuddy, Codex or any other tool that reads `SKILL.md`, then trigger
+them in plain language.
+
+```bash
+npx skills add nicholyx/ai-skills
+```
+
+Another 31 third-party skills are vendored here but **not installed by that command** —
+see [Skills](#skills).
 
 [![skills.sh](https://skills.sh/b/nicholyx/ai-skills)](https://skills.sh/nicholyx/ai-skills)
 [![CI](https://github.com/nicholyx/ai-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/nicholyx/ai-skills/actions/workflows/ci.yml)
@@ -11,7 +20,7 @@ A personal Claude Code skills repository: 15 self-maintained general-purpose ski
 [![License](https://img.shields.io/github/license/nicholyx/ai-skills)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/nicholyx/ai-skills?style=social)](https://github.com/nicholyx/ai-skills/stargazers)
 
-[Quick Start](#quick-start) · [Usage Guide](docs/USAGE.en.md) · [Skills](#skills) · [Write a Skill](#writing-your-own-skill) · [中文文档](README.md)
+[Quick Start](#quick-start) · [Skills](#skills) · [Usage Guide](docs/USAGE.en.md) · [Write a Skill](#writing-your-own-skill) · [When it breaks](#when-something-breaks) · [Changelog](CHANGELOG.md)
 
 [中文文档](README.md) | **English**
 
@@ -41,10 +50,10 @@ A personal Claude Code skills repository: 15 self-maintained general-purpose ski
 
 ## What this is
 
-A repository of agent skills — the `SKILL.md` format that Claude Code, CodeBuddy, Codex,
-Cursor and a couple of dozen other tools understand. Install it with
-[`npx skills`](https://www.npmjs.com/package/skills) and the skills become part of your local
-AI environment.
+A **personal** repository of agent skills — the `SKILL.md` format that Claude Code,
+CodeBuddy, Codex, Cursor and a couple of dozen other tools understand. Install it with
+[`npx skills`](https://www.npmjs.com/package/skills) and the skills become part of your
+local AI environment.
 
 Two kinds of content live here, with **completely different provenance**:
 
@@ -165,6 +174,10 @@ and is symlinked into the detected agents' directories in the same project, e.g.
 `./.claude/skills/<name>`. Add `-g` / `--global` for a user-level install instead, which puts
 it under `~/.claude/skills/` (and the equivalents for other tools).
 
+So the agent directories are *views*, not storage: editing `./.claude/skills/<name>/SKILL.md`
+edits the copy under `.agents/skills/` — the very directory `npx skills update` replaces
+wholesale. Anything you want to keep belongs outside `.agents/`.
+
 ```bash
 # What did I install, and where did it go?
 npx skills list
@@ -212,9 +225,9 @@ three are taken from the skills' own `metadata.example` — the **original wordi
 
 | Say this | Skill | What you should see |
 | --- | --- | --- |
-| `生成今天的日报` | `daily-report` | It first shows the default report template and asks whether to change it; only after you confirm does it run `git log` and group the result by module |
-| `审查一下我暂存区的改动` | `code-reviewer-agent` | It reads `code-reviewer.md` from the skill directory and **opens a subagent with its own context** to review `git diff --cached`, then returns the result verbatim |
-| `技能装了但用不了，帮我看看` | `skills-doctor` | It starts a four-step diagnosis: which directory the skill is in, whether the symlink is broken, whether `SKILL.md` loads, and whether another directory is shadowing it |
+| `生成今天的日报` | `daily-report` | Asks about the report template first; only then runs `git log` and groups by module |
+| `审查一下我暂存区的改动` | `code-reviewer-agent` | **Opens a subagent with its own context** to review `git diff --cached`, returns it verbatim |
+| `技能装了但用不了，帮我看看` | `skills-doctor` | Four steps: install location, broken symlinks, whether `SKILL.md` loads, shadowing |
 
 **If the skill fires, you are done; no reaction means the install is wrong.** The skill
 descriptions in this repository are mostly written in Chinese. That is not a blocker — the
@@ -272,37 +285,48 @@ installs.
 
 The authoritative one-line description of each skill lives in its `SKILL.md` frontmatter
 (mostly Chinese — that is the canonical text; the boundary is described at the top of this
-page). **The "You can say this" column is not invented here** — each sentence is copied from
-that skill's own `metadata.example`, which is the field the generated Chinese catalogue is
-asserted against.
+page). Each skill declares **two** such fields, and this table uses the human one:
+
+| Field | Written for | Shape |
+| --- | --- | --- |
+| `description` | the model | stuffed with trigger words; the longest here runs to nearly 300 characters |
+| `metadata.tagline` | people | one sentence saying what it does |
+
+The "What it does" column below summarises each skill's `metadata.tagline` — **the same
+field the generated Chinese table is built from**. Dropping `description` in there is the
+difference between a scannable table and a paragraph per row.
+
+**The "You can say this" column is not invented here** — each sentence is copied verbatim
+from that skill's own `metadata.example`, the field the generated Chinese catalogue is
+asserted against. Those sentences are Chinese; say them as written, or name the skill in
+English.
 
 | Skill | What it does | You can say this |
 | --- | --- | --- |
-| `bug-analyzer-agent` | Bug root-cause analysis via a dedicated-context subagent that traces deep execution flow | 「这个接口偶尔返回 500，帮我查根因」 |
-| `code-reviewer-agent` | Code review via a dedicated-context subagent, covering security holes, performance and production reliability | 「审查一下我暂存区的改动」 |
-| `daily-report` | Generates a work daily report from git history, with date filtering and automatic categorisation | 「生成今天的日报」 |
-| `git-commit` | Runs `git commit` following the Conventional Commits specification | 「帮我提交」 |
-| `git-smart-update` | Smart git update: auto-stash, conflict resolution and local commit handling. Handles the stash-update-restore cycle, resolves conflicts (preferring remote improvements while keeping local debug code), and supports both rebase and merge modes | 「更新代码」 |
-| `git-sync-upstream` | Syncs a fork with upstream using rebase to keep history clean. Stashes uncommitted changes, fetches upstream, rebases and force-pushes the PR branch. Specifically for fork-syncing, not for ordinary `git pull` | 「同步 upstream」 |
-| `github-issue-autofix-workflow` | Fixes GitHub issues through the superpowers workflow (brainstorming, TDD, verification, code review), with an unattended mode | 「帮我修一下 issue 42」 |
-| `maintain-loop` | The maintenance loop for an open-source project — plan, implement, release, plan again — plus the hard-won rules that go with it. Use it to keep iterating on a project (features, fixes, docs), cut a release, or take stock of what is unfinished | 「继续走维护流程」 |
-| `obsidian-note-workflow` | Creates, queries and manages Obsidian notes with a preview-first workflow, automatic classification and vault initialisation | 「把这段内容记到我的 Obsidian 里」 |
-| `oss-bootstrap` | Turns a new project (or a bare repository with nothing but code) into a standards-compliant open-source project: CI, governance files, issue/PR templates, repository automation, docs, project board and release flow. Once the scaffolding is in place, use `maintain-loop` for day-to-day iteration | 「给这个项目加上开源规范」 |
-| `repo-analyzer` | Deep-dives into a codebase from a first-time contributor's angle — structure, startup flow, core business flows, module responsibilities — and writes a report. Accepts a local path or a GitHub URL | 「深入研究一下这个项目」 |
-| `skills-doctor` | Diagnoses "I installed it but the skill never fires": which directory it is in, broken symlinks, load failures, shadowing | 「技能装了但用不了，帮我看看」 |
-| `skills-sync` | Symlinks commands and skills from `~/.agents/` into AI tool directories such as Claude or CodeBuddy | 「把我的技能同步到 Claude」 |
-| `update-claude-code` | Updates Claude Code / checks its version | 「更新 claude」 |
-| `update-opencode` | Updates the OpenCode CLI or the oh-my-opencode plugin, checks versions, and troubleshoots version-related errors | 「更新 opencode」 |
+| `bug-analyzer-agent` | Digs for a bug's root cause in a dedicated-context subagent, down to the execution flow | 「这个接口偶尔返回 500，帮我查根因」 |
+| `code-reviewer-agent` | Code review in a dedicated-context subagent: security, performance, production reliability | 「审查一下我暂存区的改动」 |
+| `daily-report` | Builds a work daily report from git history, grouped by project | 「生成今天的日报」 |
+| `git-commit` | Writes the commit message to the Conventional Commits spec, then commits | 「帮我提交」 |
+| `git-smart-update` | Smart pull with a stash cycle: handles local edits and conflicts for you | 「更新代码」 |
+| `git-sync-upstream` | Syncs a fork with upstream by rebase, keeping the history linear | 「同步 upstream」 |
+| `github-issue-autofix-workflow` | Fixes a GitHub issue end to end: brainstorm → TDD → code review | 「帮我修一下 issue 42」 |
+| `maintain-loop` | The open-source maintenance loop: plan → implement → release → plan again | 「继续走维护流程」 |
+| `obsidian-note-workflow` | Preview-first Obsidian notes: create, classify, initialise a whole vault | 「把这段内容记到我的 Obsidian 里」 |
+| `oss-bootstrap` | Turns a bare repo into a standards-compliant project: CI, governance, templates, docs | 「给这个项目加上开源规范」 |
+| `repo-analyzer` | Parallel subagents read an unfamiliar repo; reports architecture and business flows | 「深入研究一下这个项目」 |
+| `skills-doctor` | Diagnoses "installed but never triggers": location, broken symlinks, load failures, shadowing | 「技能装了但用不了，帮我看看」 |
+| `skills-sync` | Symlinks skills and commands into Claude / CodeBuddy (and other tools) | 「把我的技能同步到 Claude」 |
+| `update-claude-code` | Checks for and installs the latest Claude Code | 「更新 claude」 |
+| `update-opencode` | Updates the OpenCode CLI and the oh-my-opencode plugin | 「更新 opencode」 |
 
-> 📖 The full trigger conditions and execution flow of each skill are in its own `SKILL.md`.
-> For `skills-sync`'s parameters see
+> ℹ️ The table above is hand-maintained and is **not** covered by the generator check, so it
+> can fall behind. The two tables in the [Chinese README](README.md) are **generated** from
+> each skill's `metadata`, between `<!-- SKILLS-TABLE:START … -->` markers, and CI asserts
+> they match — never hand-edit inside those markers. The generated
+> [skill catalogue](docs/SKILLS.md) (Chinese) is the canonical list; when the two disagree,
+> that one is right. Trigger conditions and execution flow for any skill are in its own
+> `SKILL.md`; for `skills-sync`'s parameters see
 > [the usage guide](docs/USAGE.en.md#skills-sync-sharing-one-local-copy-across-tools).
->
-> ℹ️ The two tables in the [Chinese README](README.md) are **generated** from the skills'
-> `metadata` (`<!-- SKILLS-TABLE:START … -->` markers, written by
-> `scripts/gen-catalogue.js`), and CI asserts they match. The copies here are hand-maintained
-> English equivalents and are **not** covered by that check — the generated
-> [skill catalogue](docs/SKILLS.md) (Chinese) is the canonical list.
 
 ### Project-specific (`custom/projects/`, 1)
 

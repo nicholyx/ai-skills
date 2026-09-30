@@ -7,7 +7,7 @@
 | 技能**没被触发**，或在不该触发的时候触发 | 先看该技能 `SKILL.md` 的 `description`；仍不清楚 → [提文档问题](https://github.com/nicholyx/ai-skills/issues/new?template=documentation.yml) |
 | 技能触发了，但做的不是文档里写的事 | [提 Bug](https://github.com/nicholyx/ai-skills/issues/new?template=bug_report.yml) |
 | 我不知道该用哪个技能 | 在 Claude Code 里问 `find-skills`；或到 [Discussions](https://github.com/nicholyx/ai-skills/discussions) 提问 |
-| 想知道某个技能怎么用、参数是什么意思 | [README](README.md#目录结构) 与对应技能的 `SKILL.md` |
+| 想知道某个技能怎么用、参数是什么意思 | [README 的技能清单](README.md#技能清单) 与对应技能的 `SKILL.md` |
 | `./scripts/lint.sh` 在我机器上失败 | 看它的报错与 [CONTRIBUTING.md](CONTRIBUTING.md#本地验证工作流) 的「覆盖/不覆盖」说明 |
 | 我想加一个新技能 / 改检查脚本 | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | 技能里有可疑或危险的内容 | **别开公开 Issue**，走 [SECURITY.md](SECURITY.md) 的私有渠道 |

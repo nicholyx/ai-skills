@@ -2,8 +2,15 @@
 
 # ai-skills
 
-个人 Claude Code Skills 仓库：15 个自建通用技能 + 1 个项目专用技能，
-另附 31 个由 `skills-lock.json` 追踪的上游技能。
+15 个自建通用技能 + 1 个项目专用技能，覆盖 git 操作、代码审查、Bug 根因分析、仓库分析、
+日报、Obsidian 笔记等日常场景。装进 Claude Code、CodeBuddy、Codex 等认识 `SKILL.md` 的
+AI 工具后，用一句自然语言唤起。
+
+```bash
+npx skills add nicholyx/ai-skills
+```
+
+仓库里另有 31 个上游第三方技能，**不随这条命令安装** —— 见[技能清单](#技能清单)。
 
 [![skills.sh](https://skills.sh/b/nicholyx/ai-skills)](https://skills.sh/nicholyx/ai-skills)
 [![CI](https://github.com/nicholyx/ai-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/nicholyx/ai-skills/actions/workflows/ci.yml)
@@ -11,7 +18,7 @@
 [![License](https://img.shields.io/github/license/nicholyx/ai-skills)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/nicholyx/ai-skills?style=social)](https://github.com/nicholyx/ai-skills/stargazers)
 
-[快速开始](#快速开始) · [技能目录](docs/SKILLS.md) · [使用指南](docs/USAGE.md) · [架构与原理](docs/ARCHITECTURE.md) · [排错手册](docs/TROUBLESHOOTING.md) · [维护者手册](docs/MAINTAINER_GUIDE.md) · [更新日志](CHANGELOG.md)
+[快速开始](#快速开始) · [技能目录](docs/SKILLS.md) · [使用指南](docs/USAGE.md) · [自己写技能](docs/USAGE.md#自己写一个技能) · [排错手册](docs/TROUBLESHOOTING.md) · [更新日志](CHANGELOG.md)
 
 **中文** | [English](README.en.md)
 
@@ -38,18 +45,8 @@
 也因为这个仓库的全部价值就是「这些技能能被 AI 工具正确加载」，
 仓库自带一套静态检查（`./scripts/lint.sh`）盯着技能文件的格式契约 ——
 `name` 与目录名不符、缺 `description`、编码写坏，都会在合并前被拦下。
-
----
-
-## 特性
-
-- **15 个自建通用技能**，覆盖 git 操作、代码审查、Bug 分析、仓库分析、日报、Obsidian 笔记等日常场景
-- **1 个项目专用技能**，按 `prj-` 前缀隔离，不污染通用安装
-- **上游区与自建区物理隔离**：`npx skills update` 只动 `.agents/`，不会碰到你的自建技能
-- **上游技能有 lock 可查**：`skills-lock.json` 记录每个技能来自哪个 GitHub 仓库，`npx skills update` 据此更新
-- **一套本地静态检查**：`./scripts/lint.sh` 一条命令跑完 18 项检查，其中 6 项是纯 Node、无需额外安装
-- **零第三方依赖**：检查器只用 Node 标准库；`skills-sync` 的 `pyproject.toml` 依赖列表为空
-- **技能自带评测用例**：部分技能附带 `evals/evals.json`，CI 校验其结构
+检查器只用 Node 标准库，`skills-sync` 的 `pyproject.toml` 依赖列表为空 —— **零第三方依赖**，
+你不需要 `npm install` 或 `pip install`；部分技能还附带 `evals/evals.json`，CI 会校验它的结构。
 
 ---
 
@@ -104,6 +101,10 @@ npx skills check
 
 # 更新全部上游技能
 npx skills update
+
+# 卸载技能：写技能名卸一个，--all 卸全部（两者别混用）
+npx skills remove <技能名>
+npx skills remove --all
 ```
 
 ### 另一条通道：Claude Code 插件市场
@@ -138,9 +139,9 @@ claude plugin install ai-skills@ai-skills
 
 | 说这句 | 技能 | 你应该看到 |
 | --- | --- | --- |
-| `生成今天的日报` | `daily-report` | 它先贴出默认日报模板（`## {今天日期}-工作日报&明日计划`）问你「是否需要修改」，你确认后才去跑 `git log`，再按模块归类 |
-| `审查一下我暂存区的改动` | `code-reviewer-agent` | 它读取技能目录里的 `code-reviewer.md`，**开一个独立上下文的 subagent** 去审查 `git diff --cached`，然后把结果原样返回 |
-| `技能装了但用不了，帮我看看` | `skills-doctor` | 它开始四步排查：技能装在哪个目录、软链有没有断、`SKILL.md` 能不能被加载、有没有被别的目录顶掉 |
+| `生成今天的日报` | `daily-report` | 先贴出默认日报模板问你「要不要改」，你确认后才跑 `git log`，再按模块归类 |
+| `审查一下我暂存区的改动` | `code-reviewer-agent` | **开一个独立上下文的 subagent** 审查 `git diff --cached`，结果原样返回 |
+| `技能装了但用不了，帮我看看` | `skills-doctor` | 四步排查：装在哪个目录、软链断没断、`SKILL.md` 能不能加载、有没有被别的目录顶掉 |
 
 **说这句话，技能会起来；没反应才说明装错了。** 如果 AI 完全没按上面那列的流程走
 （比如日报那句它干脆自己编一份、审查那句它不开 subagent 而是自己扫一眼），别先怀疑技能写得不好
@@ -150,7 +151,10 @@ claude plugin install ai-skills@ai-skills
 ### 兼容矩阵：技能装到哪、用户级还是项目级
 
 `npx skills` 默认装**项目级**（当前目录），加 `-g` / `--global` 才是**用户级**（任何项目都能用）。
-技能的本体只有一份，各个工具目录里放的是指向它的软链接，所以改一处、全都跟着变。
+
+**文件本体只有一份，落在项目根的 `.agents/skills/<技能名>/`**，下表那些工具目录里放的
+都是指向它的软链接 —— 所以你在 `./.claude/skills/<技能名>/` 里改的字，改的其实是
+`.agents/skills/` 里那一份，而那个目录会被 `npx skills update` 全量替换。
 
 | AI 工具 | 项目级（默认） | 用户级（`-g`） |
 | --- | --- | --- |
@@ -162,6 +166,9 @@ claude plugin install ai-skills@ai-skills
 
 - 「默认项目级、`-g` 才是用户级」：`npx skills add --help`（CLI 1.7.0）的原文
   `-g, --global  Install skill globally (user-level) instead of project-level` —— **实测**
+- 「本体在 `.agents/skills/`、工具目录里是软链」：在空目录里跑 `npx skills add` 实测 ——
+  真身是 `./.agents/skills/<技能名>/SKILL.md`，`./.claude/skills/<技能名>` 是指向它的软链
+  （`readlink` 得到 `../../.agents/skills/<技能名>`）
 - `./.claude/skills/`：`docs/USAGE.en.md` 的「Where the skills land」一节
 - `~/.claude/skills/` 与 `~/.codebuddy/skills/`：`docs/USAGE.md` 的 `skills-sync` 参数表
   —— 这两个是仓库里**被点名验证过**的目录
