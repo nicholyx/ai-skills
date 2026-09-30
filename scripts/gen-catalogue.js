@@ -2,14 +2,15 @@
 "use strict";
 
 /**
- * 从各技能的 `SKILL.md` 生成两处**给人看**的技能展示面：
+ * 从各技能的 `SKILL.md` 生成三处技能展示面：
  *
- * 1. `docs/SKILLS.md` —— 整份技能目录（全文生成）
+ * 1. `docs/SKILLS.md` —— 整份技能目录（全文生成，给人看）
  * 2. `README.md` 里被标记围起来的两张技能表（**只生成标记之间的部分**）
+ * 3. `.claude-plugin/marketplace.json` —— Claude Code 插件市场的清单（给 `claude plugin` 用）
  *
  * 用法：
  *   node scripts/gen-catalogue.js              # 打到 stdout，不落盘
- *   node scripts/gen-catalogue.js --write      # 两处都写回
+ *   node scripts/gen-catalogue.js --write      # 三处都写回
  *
  * ## 为什么需要它
  *
@@ -51,6 +52,16 @@ const { parseFrontmatter } = require("./lib/frontmatter");
 
 const OUT_REL = "docs/SKILLS.md";
 const README_REL = "README.md";
+const MARKETPLACE_REL = ".claude-plugin/marketplace.json";
+
+/**
+ * Claude Code 插件市场的标识。
+ *
+ * `owner` 取仓库拥有者，`REPO_URL` 同时用作 `homepage` 与 `repository` ——
+ * 它们是同一处事实，写死两份迟早不一致。
+ */
+const MARKETPLACE_NAME = "ai-skills";
+const REPO_URL = "https://github.com/nicholyx/ai-skills";
 
 /**
  * README 里交给本脚本的两块生成区。
@@ -276,6 +287,71 @@ function render(skills) {
   return out.join("\n");
 }
 
+// ── Claude Code 插件市场的清单 ─────────────────────────────────────────────
+
+/**
+ * 渲染 `.claude-plugin/marketplace.json`。
+ *
+ * ## 为什么它是生成物
+ *
+ * 这份文件里的技能清单与 `docs/SKILLS.md`、README 的技能表**同源** —— 都来自各技能
+ * 的 `SKILL.md`。手抄一份清单，改技能时必然漂移，而且漂移是静默的：JSON 仍然合法、
+ * 市场仍然能用，只是少列了一个技能、或者列着一个早就删掉的。所以它和目录一样由这里
+ * 生成，`scripts/checks/catalogue.js` 断言它与源头逐字节一致。
+ *
+ * ## 为什么是「一个插件 + 技能数组」，而不是「一个技能一个插件」
+ *
+ * `source` 只能指向**插件根内部**，所以「每个技能一个插件」在这里只能靠复制副本；
+ * 而 `source` 写 `"./"`（插件根 = 仓库根）时，技能用 `skills` 数组逐个列出即可 ——
+ * Claude Code 的规则是「列出具体子目录时，只加载这些子目录，不扫默认的 `skills/`」。
+ * 结果是零副本、零新增目录，技能仍然只有 `custom/` 下那一份。
+ *
+ * 拆成 16 个条目还会让每次安装都把整个仓库各复制一份进插件缓存，代价更大。
+ *
+ * ## 字段取舍
+ *
+ * `name`、`owner`、`plugins` 是市场文件的三项必填；每个插件条目必填 `name` 与
+ * `source`。其余（`description`、`homepage`、`license`、`keywords`）是可选的元数据，
+ * 补上它们是为了让 `claude plugin` 面板里不至于只有一行光秃秃的名字。
+ * 条目的 `name` 与插件名保持一致 —— 两者不一致时，按 manifest 名安装会报「找不到」。
+ */
+function renderMarketplace(skills) {
+  const dailyCount = skills.filter((s) => s.parent === "custom/daily").length;
+  const projectCount = skills.filter((s) => s.parent === "custom/projects").length;
+  const categories = [...new Set(skills.map((s) => s.category))].sort((a, b) =>
+    a.localeCompare(b)
+  );
+
+  const doc = {
+    name: MARKETPLACE_NAME,
+    description:
+      `${skills.length} 个自建 Claude Code 技能：git 操作、代码审查、Bug 分析、` +
+      "仓库分析、日报与 Obsidian 笔记等日常场景。",
+    owner: { name: "nicholyx", url: "https://github.com/nicholyx" },
+    plugins: [
+      {
+        name: MARKETPLACE_NAME,
+        // 插件根 = 市场根 = 仓库根。技能全靠下面的 skills 数组指名。
+        source: "./",
+        description:
+          `本仓库分发的全部 ${skills.length} 个自建技能` +
+          `（通用 ${dailyCount} 个、项目专用 ${projectCount} 个）。`,
+        homepage: REPO_URL,
+        repository: REPO_URL,
+        license: "Apache-2.0",
+        keywords: ["claude-code", "agent-skills", ...categories],
+        // 按目录排序，而不是按技能名 —— 这样 `custom/daily/` 全在前、
+        // `custom/projects/` 全在后，读者一眼能看出产品的两半。
+        skills: [...skills]
+          .sort((a, b) => (a.dir < b.dir ? -1 : a.dir > b.dir ? 1 : 0))
+          .map((s) => `./${s.dir}`),
+      },
+    ],
+  };
+
+  return `${JSON.stringify(doc, null, 2)}\n`;
+}
+
 // ── README 的生成区 ───────────────────────────────────────────────────────
 
 /**
@@ -340,7 +416,8 @@ function applyReadmeBlocks(readmeText, skills) {
 if (require.main === module && (process.argv.includes("--help") || process.argv.includes("-h"))) {
   process.stdout.write(
     "用法：node scripts/gen-catalogue.js [--write]\n" +
-      `  ${OUT_REL} 全文生成；${README_REL} 只生成标记之间的两块技能表。\n` +
+      `  ${OUT_REL} 全文生成；${README_REL} 只生成标记之间的两块技能表；\n` +
+      `  ${MARKETPLACE_REL} 全文生成（Claude Code 插件市场）。\n` +
       "  默认打到 stdout（只有目录），不落盘。\n"
   );
   process.exit(0);
@@ -350,6 +427,7 @@ if (require.main !== module) {
   module.exports = {
     collect,
     render,
+    renderMarketplace,
     renderReadmeBlock,
     applyReadmeBlocks,
     README_BLOCKS,
@@ -357,12 +435,14 @@ if (require.main !== module) {
     markerEnd,
     OUT_REL,
     README_REL,
+    MARKETPLACE_REL,
   };
   return;
 }
 
 const skills = collect();
 const md = `${render(skills)}\n`;
+const mdMarketplace = renderMarketplace(skills);
 
 // README 的期望内容：**以磁盘上那一份为底**，只换掉标记之间的部分。
 // 这样手写内容不需要在生成器里复刻一份，也就不会与文档脱节。
@@ -378,9 +458,13 @@ if (process.argv.includes("--write")) {
   for (const [rel, text] of [
     [OUT_REL, md],
     [README_REL, mdReadme],
+    [MARKETPLACE_REL, mdMarketplace],
   ]) {
     const abs = path.join(REPO_ROOT, rel);
     const before = fs.existsSync(abs) ? fs.readFileSync(abs, "utf8") : null;
+    // 生成物可能落在还不存在的目录里（.claude-plugin/ 就是这样）——
+    // 让「第一次生成」和「以后每次生成」是同一条路径，而不是先手工 mkdir。
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
     fs.writeFileSync(abs, text);
     process.stderr.write(
       before === text ? `= ${rel}（无变化）\n` : `✓ 已写入 ${rel}\n`
@@ -396,6 +480,15 @@ if (process.argv.includes("--write")) {
       ? `= ${README_REL} 的生成区已是最新\n`
       : `! ${README_REL} 的生成区落后于技能源头 —— 用 --write 重写\n`
   );
+  // 市场清单同理：它不在 stdout 里，但「落后了」必须让人看见。
+  const currentMarketplace = fs.existsSync(path.join(REPO_ROOT, MARKETPLACE_REL))
+    ? fs.readFileSync(path.join(REPO_ROOT, MARKETPLACE_REL), "utf8")
+    : null;
+  process.stderr.write(
+    currentMarketplace === mdMarketplace
+      ? `= ${MARKETPLACE_REL} 已是最新\n`
+      : `! ${MARKETPLACE_REL} 落后于技能源头 —— 用 --write 重写\n`
+  );
 }
 
 process.stderr.write(
@@ -405,6 +498,7 @@ process.stderr.write(
 module.exports = {
   collect,
   render,
+  renderMarketplace,
   renderReadmeBlock,
   applyReadmeBlocks,
   README_BLOCKS,
@@ -412,4 +506,5 @@ module.exports = {
   markerEnd,
   OUT_REL,
   README_REL,
+  MARKETPLACE_REL,
 };
