@@ -33,6 +33,7 @@ const { REPO_ROOT, trackedSet } = require("../lib/gitfiles");
 const report = new Report("规则导入链校验");
 
 const CLAUDE = "CLAUDE.md";
+const SPEC_PREFIX = ".trellis/spec/";
 const AGENTS = "AGENTS.md";
 const IMPORT = /^@AGENTS\.md\s*$/m;
 
@@ -73,6 +74,58 @@ if (tracked.has(CLAUDE) && !fs.existsSync(claudePath)) {
         "`@AGENTS.md` 必须**单独占一行**，前后不能有别的字符 —— 混在句子或列表里不会生效"
       );
     }
+  }
+}
+
+// ── 第二环：AGENTS.md 必须仍然指着 `.trellis/spec/` ────────────────────────
+//
+// 上面那条守的是「规则文件会不会被加载」。这条守的是**加载进来之后，里面还有没有
+// 通往规范的入口** —— 两者都会以同一种方式失败：新会话不知道这个仓库有规范。
+//
+// 缺口真实存在，而且是**验过的**：把 AGENTS.md 手写块里「动手前必读」那一段整块删掉
+// （五条指向 `.trellis/spec/**` 的链接全没了），**所有检查全绿**。`links.js` 管不到它：
+// 它只验「存在的链接有没有坏」，不验「该有的链接还在不在」—— 与
+// `checks/catalogue.js` 那条「覆盖」断言是同一类问题（只验一致、不验存在）。
+//
+// 判据故意**不钉死任何一句话或某一个文件名**（本仓库反对脆断言）：AGENTS.md 正文里
+// 至少要有一条指向 `.trellis/spec/` 下**真实存在**文件的链接。链接目标按 git 索引判
+// 存在（`links.js` 的同一判据，见 `.trellis/spec/checks/index.md`）——
+// `fs.existsSync` 在大小写不敏感的 APFS 上会给出与 Linux runner 不同的答案。
+//
+// 只要求「至少一条」：具体有哪几页、怎么组织，是维护者的事，机器不替它做决定。
+
+const agentsPath = path.join(REPO_ROOT, AGENTS);
+if (tracked.has(AGENTS) && !fs.existsSync(agentsPath)) {
+  report.fail(AGENTS, 0, "在 git 索引里，但不在工作区");
+} else if (fs.existsSync(agentsPath)) {
+  const text = fs.readFileSync(agentsPath, "utf8");
+  const specLinks = [];
+  for (const [idx, line] of text.split("\n").entries()) {
+    for (const m of line.matchAll(/\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
+      const resolved = path.posix.normalize(m[1].split("#")[0].split("?")[0]);
+      if (!resolved.startsWith(SPEC_PREFIX)) continue;
+      specLinks.push({ line: idx + 1, raw: m[1], resolved, exists: tracked.has(resolved) });
+    }
+  }
+  const live = specLinks.filter((l) => l.exists);
+  if (live.length === 0) {
+    report.fail(
+      AGENTS,
+      specLinks.length > 0 ? specLinks[0].line : 0,
+      `找不到任何指向 \`.trellis/spec/\` 下**存在文件**的链接 —— ` +
+        "**新会话会因此看不到本项目的开发规范**（AGENTS.md 是唯一被拉进上下文的规则文件，" +
+        "而规范在 `.trellis/spec/` 下；入口没了，之后就只按通用常识干活，没有报错）。" +
+        (specLinks.length > 0
+          ? ` 现在有 ${specLinks.length} 条指向该目录的链接，但目标都不在 git 索引里：` +
+            specLinks.map((l) => `${l.raw}（第 ${l.line} 行）`).join("、")
+          : " AGENTS.md 里连一条这样的链接都没有 —— 大概率是被整段删掉了。") +
+        " 修法：在「动手前必读」一类的小节里，把通往 `.trellis/spec/**` 的入口补回来。"
+    );
+  } else {
+    report.info(
+      `AGENTS.md 有 ${live.length} 条通往 ${SPEC_PREFIX} 的链接（目标都在索引里），` +
+        `规范的入口还在（第 ${live.map((l) => l.line).join("、")} 行）。`
+    );
   }
 }
 

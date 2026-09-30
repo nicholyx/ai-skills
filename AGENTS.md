@@ -34,7 +34,7 @@ Managed by Trellis. Edits outside this block are preserved; edits inside may be 
 | 位置 | 是什么 | 能不能改 |
 | --- | --- | --- |
 | `custom/daily/`、`custom/projects/` | **自建技能**，15 个（`npx skills add` 装到的就是它们） | ✅ 这是主要工作区 |
-| `.agents/skills/` | **上游技能**，31 个，占仓库 97% 体积。是 `npx skills` 的**安装目标目录**；`npx skills add` **默认不安装**它们（实测只报 16 个自建技能） | ❌ **一律不改**，改了会在 `npx skills update` 时丢失 |
+| `.agents/skills/` | **上游技能**，31 个，占仓库绝大部分体积。是 `npx skills` 的**安装目标目录**；`npx skills add` **默认不安装**它们（实测只报 16 个自建技能） | ❌ **一律不改**，改了会在 `npx skills update` 时丢失 |
 | `.claude/` | Trellis 的平台层，**已 gitignore、不在仓库里** | — 克隆后跑一次 `trellis init --claude -y` 生成，见 [CONTRIBUTING](CONTRIBUTING.md) |
 
 `custom/**` 的内容会被 `custom/daily/skills-sync/` 软链进 `~/.claude/skills`，

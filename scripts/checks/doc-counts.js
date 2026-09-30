@@ -39,6 +39,19 @@
  * | `N 个 job` | `ci.yml` 的 job 总数 |
  * | `N 个自建通用技能` | `custom/daily/` 下的技能数 |
  * | `N 个自建技能` | `custom/` 下的技能总数 |
+ * | 英文：`N checks` / `N self-maintained general-purpose skills` 等（见 `RULES`）| 同上 |
+ *
+ * ## 英文文档也要查（2026-10-01 补）
+ *
+ * `README.en.md` 原先**不在 `DOCS` 里**，而它是一样会被读的落地页。后果真实发生过一次：
+ * `skills-doctor` 那一行从来没进过它的技能表，表头的数字是旧的（14）—— 看着只像
+ * 「没同步」，实际是**整个技能在英文入口上不存在**，而没有任何检查会红。
+ *
+ * 纳入时不需要新写徽章规则：两处徽章**逐字节相同**（实测 `diff` 无输出、md5 一致），
+ * 那条 `%E9%9D%99…` 规则原样就能校验英文那枚。
+ *
+ * 但**计数规则管不了「少了一行」**：把一行删掉、表头的数字不改，所有计数仍然自洽。
+ * 所以另外加了一条**覆盖断言** —— 每个自建技能都必须在 `README.en.md` 的技能表里露面。
  */
 
 const fs = require("fs");
@@ -49,7 +62,7 @@ const { REPO_ROOT, skillDirs, trackedFiles } = require("../lib/gitfiles");
 
 const report = new Report("文档计数校验");
 
-/** 扫描范围：面向人的中文文档。英文文档的措辞不同，另行处理。 */
+/** 扫描范围：面向人的文档 —— 中文是主体，**英文入口也算**（见文件头「英文文档也要查」）。 */
 const DOCS = [
   "README.md",
   "CONTRIBUTING.md",
@@ -61,6 +74,10 @@ const DOCS = [
   // spec 也要查：它此前不在扫描范围内，于是「13 个技能」「10 项检查」烂了很久没人发现
   ".trellis/spec/index.md",
   ".trellis/spec/testing/index.md",
+  // 英文入口。措辞与中文完全不同，所以下面 RULES 里另有一套英文规则 ——
+  // 「两个文件都进了扫描范围、却只有一半的措辞被接住」等于没覆盖。
+  "README.en.md",
+  "docs/USAGE.en.md",
 ];
 
 // ── 事实来源 ──────────────────────────────────────────────────────────────
@@ -94,6 +111,7 @@ function jobCount() {
 
 const skills = skillDirs().filter((s) => s.tier === "self");
 const dailyCount = skills.filter((s) => s.dir.startsWith("custom/daily/")).length;
+const projectCount = skills.filter((s) => s.dir.startsWith("custom/projects/")).length;
 const selfCount = skills.length;
 
 // ── 措辞 → 事实 ───────────────────────────────────────────────────────────
@@ -115,6 +133,36 @@ const RULES = [
   { re: /%E9%9D%99%E6%80%81%E6%A3%80%E6%9F%A5-(\d+)%20%E9%A1%B9/g, want: checkCount, name: "徽章里的检查项数" },
   { re: /(\d+)\s*个自建通用技能/g, want: () => dailyCount, name: "自建通用技能数" },
   { re: /(\d+)\s*个自建技能/g, want: () => selfCount, name: "自建技能总数" },
+
+  // ── 英文文档（README.en.md 与 docs/USAGE.en.md）─────────────────────────
+  //
+  // 英文措辞与中文没有一处重合，所以要另立一套。**不收宽泛的 `N skills`**：
+  // README.en.md 里「31 skills under `.agents/skills/`」指的是上游技能数，
+  // 而这里的事实是自建技能数 —— 一条宽规则会立刻误报，而误报比漏报更糟（见文件头）。
+  // 每条都锚定英文文档里**实际出现**的写法，宁可漏掉几个由人工 review 兜底。
+  { re: /(\d+)\s*checks?\b/g, want: checkCount, name: "检查项数" },
+  // 首屏那句：「15 self-maintained general-purpose skills, 1 project-specific skill」
+  { re: /(\d+)\s*self-maintained general-purpose skills/g, want: () => dailyCount,
+    name: "自建通用技能数" },
+  { re: /(\d+)\s*project-specific skill\b/g, want: () => projectCount, name: "项目专用技能数" },
+  // 技能表的小标题：「### General-purpose (`custom/daily/`, 15)」—— 真实腐烂过的那一处
+  { re: /`custom\/daily\/`,\s*(\d+)/g, want: () => dailyCount, name: "自建通用技能数" },
+  { re: /`custom\/projects\/`,\s*(\d+)/g, want: () => projectCount, name: "项目专用技能数" },
+  { re: /Self-maintained general skills \((\d+)\)/g, want: () => dailyCount,
+    name: "自建通用技能数" },
+  { re: /Self-maintained project skills \((\d+)/g, want: () => projectCount,
+    name: "项目专用技能数" },
+  { re: /self-maintained general,\s*(\d+)/g, want: () => dailyCount, name: "自建通用技能数" },
+  { re: /self-maintained project-specific,\s*(\d+)/g, want: () => projectCount,
+    name: "项目专用技能数" },
+  { re: /general-purpose skills \((\d+)\)/g, want: () => dailyCount, name: "自建通用技能数" },
+  // 安装面那句「本仓库一共装几个」——三种写法都出现过
+  { re: /exactly the same (\d+) skills/g, want: () => selfCount, name: "自建技能总数" },
+  { re: /(\d+)\s*skills this repository ships/g, want: () => selfCount, name: "自建技能总数" },
+  { re: /Everything \((\d+) skills\)/g, want: () => selfCount, name: "自建技能总数" },
+  // 插件通道那句：`claude plugin details ai-skills` 列出 `Skills (16)`。
+  // **必须排在 `Self-maintained general skills (15)` 之后** —— 更具体的措辞先匹配。
+  { re: /Skills \((\d+)\)/g, want: () => selfCount, name: "自建技能总数" },
 ];
 
 const FIX = process.argv.includes("--fix");
@@ -202,6 +250,56 @@ if (FIX) {
   }
   process.stdout.write(`\n共修正 ${fixes.length} 处。请复查 diff 后再提交。\n`);
   process.exit(0);
+}
+
+// ── 覆盖：每个自建技能都得在英文技能表里有一行 ──────────────────────────────
+//
+// 上面那套规则查的是「写出来的数字对不对」。它有一个盲点：**把一整行删掉、表头的
+// 数字也不改，所有计数仍然自洽** —— 而那一行所代表的技能就从英文入口上消失了，
+// 与「数字写错」相比，这才是更难发现、后果更重的那一种。
+//
+// 真实发生过：`skills-doctor` 那一行从来没进过 `README.en.md` 的技能表（表头写着 14）。
+// 这不是假设 —— 是本次改动要堵的那个洞。
+//
+// `checks/catalogue.js` 的第三条断言（每个自建技能都得进 README.md 的生成区）管的是
+// **中文**那两块生成物；英文这版是**手写**的，不在它的比对范围内，所以缺口只在这里。
+//
+// 判据取 ⊇（每个自建技能都在表里露面），**不取相等**：`README.en.md` 里还有别的表格，
+// 首列同样写作 `` | `name` | ``（frontmatter 契约表就是），要求集合相等会立刻误报。
+// 「多出一行」不该由这里管，「少了一行」才是要防的那一种失效。
+
+/** `README.en.md` 技能表首列的技能名 —— 形如 `` | `daily-report` | … `` 的行。 */
+function enTableSkillNames() {
+  const abs = path.join(REPO_ROOT, "README.en.md");
+  if (!fs.existsSync(abs)) return null;
+  const names = new Set();
+  for (const line of fs.readFileSync(abs, "utf8").split("\n")) {
+    const m = /^\|\s*`([A-Za-z0-9][A-Za-z0-9-]*)`\s*\|/.exec(line);
+    if (m) names.add(m[1]);
+  }
+  return names;
+}
+
+const EN_README = "README.en.md";
+const enNames = enTableSkillNames();
+if (enNames === null) {
+  report.fail(EN_README, 0, `${EN_README} 不存在 —— 它是英文入口，删掉等于没有英文页`);
+} else {
+  const missingEn = skills.filter((s) => !enNames.has(s.name));
+  for (const s of missingEn) {
+    report.fail(
+      EN_README,
+      0,
+      `技能 \`${s.name}\`（${s.dir}）不在 ${EN_README} 的技能表里 —— ` +
+        "英文入口上访客看不到这个技能（中文 README 与 docs/SKILLS.md 里都有它）。" +
+        " 修法：在对应的小节（`### General-purpose …` / `### Project-specific …`）" +
+        "的技能表里补一行。**这张表是手写的，`--fix` 补不了**。"
+    );
+  }
+  report.info(
+    `覆盖要求：${skills.length} 个自建技能，逐个都必须在 ${EN_README} 的技能表里露面` +
+      `（表里共认出 ${enNames.size} 个技能名）。`
+  );
 }
 
 report.info(
