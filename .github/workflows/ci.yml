@@ -203,6 +203,21 @@ jobs:
       - name: 运行检查
         run: node scripts/checks/agent-rules.js
 
+  skill-commands:
+    name: 技能命令校验
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: 设置 Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 运行检查
+        run: node scripts/checks/skill-commands.js
+
   shellcheck:
     name: shellcheck（Shell 静态分析）
     runs-on: ubuntu-latest
@@ -493,7 +508,7 @@ jobs:
   ci-summary:
     name: CI 总览
     runs-on: ubuntu-latest
-    needs: [frontmatter, evals, vendor-lock, hygiene, links, scripts, distribution, catalogue, doc-counts, skill-integrity, agent-rules, shellcheck, actionlint, yamllint, zizmor, commit-messages, lint-selftest]
+    needs: [frontmatter, evals, vendor-lock, hygiene, links, scripts, distribution, catalogue, doc-counts, skill-integrity, agent-rules, skill-commands, shellcheck, actionlint, yamllint, zizmor, commit-messages, lint-selftest]
     if: always()
     steps:
       - name: 检出仓库
@@ -513,6 +528,7 @@ jobs:
           R_DOC_COUNTS: ${{ needs.doc-counts.result }}
           R_SKILL_INTEGRITY: ${{ needs.skill-integrity.result }}
           R_AGENT_RULES: ${{ needs.agent-rules.result }}
+          R_SKILL_COMMANDS: ${{ needs.skill-commands.result }}
           R_SHELLCHECK: ${{ needs.shellcheck.result }}
           R_ACTIONLINT: ${{ needs.actionlint.result }}
           R_YAMLLINT: ${{ needs.yamllint.result }}
@@ -535,6 +551,7 @@ jobs:
             "doc-counts:文档计数校验"
             "skill-integrity:技能自洽校验"
             "agent-rules:规则导入链校验"
+            "skill-commands:技能命令校验"
             "shellcheck:shellcheck（Shell 静态分析）"
             "actionlint:actionlint（工作流静态检查）"
             "yamllint:yamllint（YAML 风格）"
