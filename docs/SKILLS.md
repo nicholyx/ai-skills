@@ -18,7 +18,7 @@ npx skills use nicholyx/ai-skills@<技能名>
 觉得好用再装：
 
 ```bash
-npx skills add nicholyx/ai-skills          # 全部 15 个
+npx skills add nicholyx/ai-skills          # 全部 16 个
 npx skills add nicholyx/ai-skills/custom/daily   # 只装通用技能
 ```
 
