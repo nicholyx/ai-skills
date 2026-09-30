@@ -9,6 +9,23 @@
 
 ## [Unreleased]
 
+## [2.1.2] - 2026-09-30
+
+修掉上一版的核心失效：**`CLAUDE.md` 里的普通链接不加载 `AGENTS.md`**。
+
+### 修复
+
+- **`CLAUDE.md` 改用导入语法 `@AGENTS.md`**（[#48](https://github.com/nicholyx/ai-skills/pull/48)）。[2.1.1] 把它写成指向 `AGENTS.md` 的普通 markdown 链接，以为够了。**实测证明不够** —— 开一个全新会话、禁止它读文件、问「这个仓库的开发流程是什么」，它回答「**我没有读过 `AGENTS.md`**」，然后只能从 git 提交历史里去猜流程。也就是说：规则写在 `AGENTS.md` 里，却**根本没被加载**。
+  - 换成导入语法后，同一个问题再问，新会话完整答出了七步流程、发布步骤、三层验证的真实现状，以及「一个用例通过 ≠ 它在测这个技能」那条陷阱
+- **新增检查器 `checks/agent-rules.js`**（[#48](https://github.com/nicholyx/ai-skills/pull/48)）。那行掉了，规则就**静默不再加载** —— 没有报错、没有警告，只是之后每个会话都不知道规矩；而人不会立刻发现，因为会话照样能干活，**只是干得不对**。新检查器只查这一件事：`CLAUDE.md` 里有**单独成行**的 `@AGENTS.md`、它没有混在句子或列表里（那样不生效）、两个文件都在 git 索引里。变异验证 2/2。
+  - **`links.js` 管不到它**：那条断言只校验「链接目标存在」，而那行**整个删掉**之后，它没有任何东西可校验 —— 照样通过
+- **`docs/ARCHITECTURE.md` 的检查器枚举漏了 `skill-integrity.js`**（v1.3.0 加的，枚举没跟着更新）。`doc-counts` 只查**计数**、查不到**枚举** —— 又一处它覆盖不到的腐烂
+
+### 变更
+
+- `CONTRIBUTING.md` 的「提交代码」一节指回 `AGENTS.md`：冲突时以它为准，避免两处各讲一套流程
+- `AGENTS.md` 的 RED LINES 新增一条：**别删 `CLAUDE.md` 里的 `@AGENTS.md`**
+
 ## [2.1.1] - 2026-09-30
 
 这一版把**开发流程搬进了 `AGENTS.md`**，并加上 `CLAUDE.md` 转发 —— 新会话不必先去读技能，就知道该怎么做。
@@ -286,7 +303,8 @@
 - 破坏性变更在条目里用 **BREAKING** 标出。对这个仓库来说，「技能的行为变了」算破坏性变更 —— 使用者依赖的是技能的行为，不是它的文件名
 - 已发布的版本按 `[X.Y.Z] - 日期` 归档，`[Unreleased]` 恢复为空壳
 
-[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v2.1.1...HEAD
+[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v2.1.2...HEAD
+[2.1.2]: https://github.com/nicholyx/ai-skills/releases/tag/v2.1.2
 [2.1.1]: https://github.com/nicholyx/ai-skills/releases/tag/v2.1.1
 [2.1.0]: https://github.com/nicholyx/ai-skills/releases/tag/v2.1.0
 [2.0.1]: https://github.com/nicholyx/ai-skills/releases/tag/v2.0.1
