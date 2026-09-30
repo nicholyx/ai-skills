@@ -103,6 +103,7 @@ CHECKS=(
   "skill-integrity:技能自洽校验"
   "agent-rules:规则导入链校验"
   "skill-commands:技能命令校验"
+  "e2e:端到端验证"
   "shellcheck:shellcheck（Shell 静态分析）"
   "actionlint:actionlint（工作流静态检查）"
   "yamllint:yamllint（YAML 风格）"
@@ -366,6 +367,7 @@ dispatch() {
     skill-integrity) run_check "$name" node scripts/checks/skill-integrity.js ;;
     agent-rules) run_check "$name" node scripts/checks/agent-rules.js ;;
     skill-commands) run_check "$name" node scripts/checks/skill-commands.js ;;
+    e2e)         run_check "$name" node scripts/e2e.js --offline ;;
     shellcheck)  check_shellcheck "$name" ;;
     actionlint)  check_actionlint "$name" ;;
     yamllint)    check_yamllint "$name" ;;

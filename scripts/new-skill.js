@@ -157,10 +157,13 @@ process.stdout.write(
     "  1. 补 frontmatter 的 description（写清触发词 —— 它决定技能何时被唤起）",
     `     注意：里面要**原样包含**「${args.example}」，否则 skill-integrity 会拦`,
     "  2. 补 SKILL.md 正文：做什么、怎么做、边界在哪",
-    "  3. node scripts/gen-catalogue.js --write   # 让它进 docs/SKILLS.md",
-    "  4. ./scripts/lint.sh                        # 提交前自查",
+    "  3. node scripts/gen-catalogue.js --write      # 让它进 docs/SKILLS.md",
+    "  4. node scripts/checks/doc-counts.js --fix    # 新增技能会让文档里的技能数过期",
+    "  5. ./scripts/lint.sh                           # 提交前自查",
     "",
-    "（第 3 步忘了不会静默通过 —— CI 的「技能目录校验」会拦住。）",
+    "第 3、4 步忘了都不会静默通过：CI 的「技能目录校验」与「文档计数校验」会拦住。",
+    "**但它们是两个不同的检查** —— 补完目录别忘了计数，否则你会撞上一个跟",
+    "自己技能毫无关系的失败。（这条是端到端验证抓出来的：原先提示里没有第 4 步。）",
     "",
   ].join("\n")
 );

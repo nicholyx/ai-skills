@@ -45,7 +45,7 @@
 - **1 个项目专用技能**，按 `prj-` 前缀隔离，不污染通用安装
 - **上游区与自建区物理隔离**：`npx skills update` 只动 `.agents/`，不会碰到你的自建技能
 - **上游技能有 lock 可查**：`skills-lock.json` 记录每个技能来自哪个 GitHub 仓库，`npx skills update` 据此更新
-- **一套本地静态检查**：`./scripts/lint.sh` 一条命令跑完 16 项检查，其中 6 项是纯 Node、无需额外安装
+- **一套本地静态检查**：`./scripts/lint.sh` 一条命令跑完 17 项检查，其中 6 项是纯 Node、无需额外安装
 - **零第三方依赖**：检查器只用 Node 标准库；`skills-sync` 的 `pyproject.toml` 依赖列表为空
 - **技能自带评测用例**：部分技能附带 `evals/evals.json`，CI 校验其结构
 
@@ -207,7 +207,7 @@ ai-skills/
 和被否掉的方案，省得你重新踩一遍。
 
 ```bash
-# 提交前跑一次本地检查（16 项检查，其中 10 项纯 Node、零依赖）
+# 提交前跑一次本地检查（17 项检查，其中 10 项纯 Node、零依赖）
 ./scripts/lint.sh
 
 # 只跑某几项
