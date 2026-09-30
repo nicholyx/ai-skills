@@ -62,6 +62,63 @@ Managed by Trellis. Edits outside this block are preserved; edits inside may be 
 之前不存在。**本地全绿不等于 commit-messages 会绿**，标题仍需自己按 Conventional
 Commits 写。
 
+### 开发流程
+
+本仓库的日常是**改技能、改检查器、发版**。流程固定，照做即可：
+
+1. **先探测现状** —— 别在不知道当前状态的情况下动手：
+
+   ```bash
+   git log --oneline -5 && git status && gh pr list && gh issue list
+   ```
+
+2. **改之前读对应规范** —— 见上面「动手前必读」那张表。
+3. **改完跑静态检查**：`./scripts/lint.sh`，必须全绿。它查不出 PR 标题，标题自己按约定式写。
+4. **改了技能内容，再跑行为评测**：`node scripts/run-evals.js --skill <名字>` ——
+   但要先读下一节，**它通过不等于有效**。
+5. **提 PR**：`git checkout -b <类型>/<名字>` → 提交 → 推送 → `gh pr create`。
+   **PR 标题按 Conventional Commits 写**（squash 合并后，它就是那条提交信息）。
+6. **CI 全绿再合并**：`gh pr merge <N> --squash --delete-branch`。
+7. **发布**：把 `[Unreleased]` 归档成 `[X.Y.Z] - 日期` → 单独一个 PR → 合并 →
+   `git tag -a vX.Y.Z` → `git push origin vX.Y.Z`。
+   [`release.yml`](.github/workflows/release.yml) 据此生成发布说明。
+
+**下一步做什么，看[路线图 Issue](https://github.com/nicholyx/ai-skills/issues/7) —— 那是单一事实来源。**
+每一轮迭代后由维护者更新它，别在别处另起一份计划。
+
+更完整的方法论（含与具体项目无关的硬规则）见 [maintain-loop](custom/daily/maintain-loop/SKILL.md)；
+从零把一个裸仓库搭成规范开源项目的六阶段流程见 [oss-bootstrap](custom/daily/oss-bootstrap/SKILL.md)
+（本仓库已经搭完，日常用不上）。
+
+### 三层验证，以及「通过不等于有效」
+
+技能「能不能用」分三段，各有一层挡着 —— **但只有第一层是可靠的**：
+
+| 层 | 工具 | 现状 |
+| --- | --- | --- |
+| 静态 | `./scripts/lint.sh`（14 项检查）| 进 CI，每次 PR 都跑 |
+| 行为 | [`scripts/run-evals.js`](scripts/run-evals.js) | 只对 `git-commit` 可跑，且通过**不等于**有效 |
+| 触发 | 无 | 试过，**造不出来**（见下）|
+
+**「一个用例通过」不等于「它在测这个技能」。** 用 `--ablate` 复核：只有「装了过、
+不装挂」才算数。`skills-doctor` 的三条用例**全绿过**，消融一测 **0 条有区分度**，
+已撤掉。触发测试同理：它跑过 **15/15**，而那份成绩单不含任何信息。
+
+**任何新的断言、检查、测试，先证明它能失败** —— 用变异测试把被测对象改坏，看它是否
+报红。本仓库反复栽在这上面，例如最近三次：规则 B 的恒真断言、触发测试的 15/15、
+`skills-doctor` 的 3/3。完整记录在
+[`.trellis/spec/skills/index.md`](.trellis/spec/skills/index.md)。
+
+### 常见任务从哪开始
+
+| 要做什么 | 入口 |
+| --- | --- |
+| 加一个技能 | `node scripts/new-skill.js <名字> --tagline "…" --example "…"` |
+| 改技能内容 | [`.trellis/spec/skills/index.md`](.trellis/spec/skills/index.md) |
+| 加 / 改检查器 | [`.trellis/spec/checks/index.md`](.trellis/spec/checks/index.md) |
+| 发版 / PR / CHANGELOG | [`.trellis/spec/maintenance/index.md`](.trellis/spec/maintenance/index.md) |
+| 技能清单（**生成物，别手改**）| [`docs/SKILLS.md`](docs/SKILLS.md) |
+
 ### RED LINES
 
 - **不改 `.agents/**`** —— 会被 `npx skills update` 全量冲掉。上游有问题就记 Issue
