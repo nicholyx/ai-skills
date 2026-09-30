@@ -24,6 +24,15 @@
  * README 那份的「重新生成」是**以已提交的 README 本身为底**、只替换标记之间那两段
  * （见 `applyReadmeBlocks`）—— 所以手写正文永远不会被这个检查判为「过时」，
  * 它唯一能红的原因是标记之间的内容与技能源头对不上。
+ *
+ * ## 除了「一致」，还断言「覆盖」
+ *
+ * 「已提交的 == 重新生成的」只说明那几块生成区内部没问题。它管不了**该有几块** ——
+ * README 里收哪些技能目录由手写的 `README_BLOCKS` 决定，删掉一块、或把某块的
+ * `parent` 写错，剩下的比对照样全绿，而那一组技能就从 README 上消失了。
+ *
+ * 所以本文件还有第三条断言：**每个自建技能都必须在某一块生成区的渲染结果里露面**。
+ * 少了它，「新建一个技能层级 → 技能静默不进 README」是一条无人察觉的路径。
  */
 
 const { Report } = require("../lib/report");
@@ -33,6 +42,7 @@ const {
   render,
   renderMarketplace,
   applyReadmeBlocks,
+  renderReadmeBlock,
   README_BLOCKS,
   OUT_REL,
   README_REL,
@@ -93,6 +103,44 @@ if (readme === null) {
   }
 }
 
+// ── 覆盖性：每个自建技能都得进 README 的某一块生成区 ───────────────────────
+//
+// 上面那条比对的是「生成区的内容与源头是否一致」。它有一个盲点：只覆盖
+// `README_BLOCKS` 里列出的 parent，而那张表是**手写**的 —— 多一块、少一块、
+// 或者某个 `parent` 写错一个字，都不会让任何断言变红。
+//
+// 于是下面这件事会**静默发生**：谁新建了 `custom/foo` 这个层级（现在的层级只有
+// `custom/daily` 与 `custom/projects`），或者把某一块的 `parent` 改到了别处 ——
+// 那里的技能就不出现在 README 里了。`docs/SKILLS.md` 有它、插件市场清单有它、
+// 访客在 README 上却看不到它，而检查照常全绿。
+//
+// 这与 `.trellis/spec/checks/index.md` 里 `distribution.js` 那段是同一类问题：
+// 「仓库在别人眼里长什么样」不会进任何 diff。所以这里断言的是**覆盖**：
+// 每个自建技能都必须在生成区的**渲染结果**里露面。
+//
+// 为什么比对渲染结果而不是 `parent` 与 `README_BLOCKS` 的结构：渲染结果才是
+// 读者真正看到的东西。结构对得上、渲染器却漏掉了某个技能（改了过滤条件之类），
+// 同样是「技能没进 README」—— 那种失效不该被放行。
+
+const renderedBlocks = README_BLOCKS.map((b) => renderReadmeBlock(b, skills)).join("\n");
+const coveredParents = new Set(README_BLOCKS.map((b) => b.parent));
+const notInReadme = skills.filter((s) => !renderedBlocks.includes(`\`${s.name}\``));
+
+for (const s of notInReadme) {
+  report.fail(
+    README_REL,
+    0,
+    `技能 \`${s.name}\`（${s.dir}）没有进 ${README_REL} 的任何一块生成区。` +
+      (coveredParents.has(s.parent)
+        ? ` 它的父目录 \`${s.parent}\` 有对应的生成区，但这个技能没被渲染进去。`
+        : ` 原因：它的父目录 \`${s.parent}\` 不在 \`README_BLOCKS\` 的任何一块里。`) +
+      ` 结果是访客在 README 上看不到它 —— 而 ${OUT_REL} 与 ${MARKETPLACE_REL} 里都有它。\n` +
+      `      修法：在 scripts/gen-catalogue.js 的 \`README_BLOCKS\` 里给 \`${s.parent}\` 加一块` +
+      "（并在 README 里补上成对的 `SKILLS-TABLE:START/END` 标记），" +
+      "或者把这个技能挪进已经有生成区的一块。"
+  );
+}
+
 // ── Claude Code 插件市场的清单 ────────────────────────────────────────────
 //
 // 它和上面两处是同一种东西：**技能清单的生成物**。只是读的人不是访客而是
@@ -140,6 +188,9 @@ report.info(
 report.info(
   `比对范围：${OUT_REL} 全文 + ${README_REL} 里 ${README_BLOCKS.length} 块生成区` +
     `（${README_BLOCKS.map((b) => b.key).join("、")}）+ ${MARKETPLACE_REL} 全文。`
+);
+report.info(
+  `覆盖要求：${skills.length} 个自建技能，逐个都必须在 ${README_REL} 的生成区里露面。`
 );
 
 report.finish();

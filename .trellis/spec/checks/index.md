@@ -1,7 +1,11 @@
 # 检查器与 CI 规范
 
-自动化检查分两层：`scripts/checks/*.js`（六个零依赖 Node 检查器）、
+自动化检查分两层：`scripts/checks/*.js`（一组零依赖 Node 检查器）、
 `scripts/lint.sh`（本地统一入口）、`.github/workflows/ci.yml`（CI）。
+
+> 这里**不写检查器的个数**。原先写的是「六个」，而实际在长到十二个的过程中没人发现 ——
+> 计数散落在散文里就会这样。要知道有哪些，跑 `./scripts/lint.sh --list`；
+> 要防止别处的计数漂移，用 `scripts/checks/doc-counts.js`。
 
 ## 退出码语义（全仓统一，不可协商）
 
@@ -190,6 +194,68 @@ print(bad if bad else 'OK')
 
 > **`.gitignore` 不是断言。** 它挡住的是常规操作，挡不住 `git add -f`、
 > 也挡不住「另一个工具往别处写技能目录」。所以两层都要有。
+
+### `.claude-plugin/marketplace.json` 是承重件（2026-10-01 实测）
+
+它明面上是第二条安装通道（`claude plugin marketplace add`），但它同时**决定技能发现面**。
+
+同一个仓库、同一条命令 `npx skills add . --list`，换目录就换答案：
+
+| 场景 | 无 marketplace.json | 有 |
+| --- | --- | --- |
+| 本机工作区（含未追踪文件） | **47** | 16 |
+| `git clone` 出来的副本 | 16 | 16 |
+
+多出来的 31 个全是 vendored 技能的**游离副本**。本机的来源已定位到
+`.trellis/.backup-2026-09-30T17-53-28/` —— Trellis 留下的**全仓快照**（未被追踪，
+里面含一份 `.agents/skills/`）。逐项二分过程：移走 `.claude/` → 仍 47；移走
+`.agents/` → 仍 47；**移走 `.trellis/` → 16**。
+
+两条教训：
+
+- **「换个目录结论就变」不是玄学 —— 发现规则取决于工作区里有什么。** 报结论必须说清
+  在哪个上下文量的（见 [maintenance/index.md](../maintenance/index.md)
+  「报数字要说清口径」）。这次差一点就把「使用者会被装进 31 个上游技能」写进 README，
+  而**用户克隆下来两种情况下都是 16** —— 那是句错话，且是「没实测就印在落地页上」那种。
+- **有 marketplace.json 时发现面被钉死在声明的 16 个**，对工作区里的游离副本免疫
+  （Trellis 快照、`.claude/worktrees/**` 下的 git worktree 副本 —— 每个都是全仓拷贝）。
+
+`catalogue.js` 断言它存在且与生成器一致。**变异验证**：删掉该文件 → `catalogue.js` 报红
+（已实测）。E2E 环节 6 另外独立验一次分发面。
+
+## 技能目录校验：一致 **+ 覆盖**
+
+`catalogue.js` 管的是**每个技能在访客面前露没露面**。三条断言：
+
+1. `docs/SKILLS.md` 与技能源头一致
+2. `README.md` 的生成区与源头一致（逐字节；且只替换标记之间那两段，手写正文永不判过时）
+3. **覆盖** —— 每个自建技能都必须在某一块生成区的**渲染结果**里露面（2026-10-01 补）
+
+### 第 3 条为什么必须有
+
+前两条只覆盖 `README_BLOCKS` 里列出的那些 `parent`，而**那张表是手写的**。删掉一块、
+或把某个 `parent` 写错，比对照样全绿 —— 而那一组技能就从 README 上消失了，
+`docs/SKILLS.md` 与插件市场清单里却还有它。
+
+> 同一件事在别处**有**人守：新增一个技能层级要同时改 `gitfiles.js` 的 `SKILL_PARENTS`
+> 与 `distribution.js` 的 `ALLOWED_PREFIXES`，那两处漏改会红。**唯独 README 这一处
+> 原先无人守。**
+
+**变异验证**（维护者独立复跑，不是采信报告）：从 `README_BLOCKS` 删掉 `projects` 块 →
+
+```
+✗ README.md  技能 `prj-agent-platform-e2e-test`（custom/projects/…）没有进 README.md 的任何一块生成区。
+   原因：它的父目录 `custom/projects` 不在 `README_BLOCKS` 的任何一块里。
+✗ 未通过：1 处失败     exit=1
+```
+
+复原后 exit=0，且 `gen-catalogue.js` 逐字节还原。
+
+**为什么比对渲染结果**：渲染结果才是读者真正看到的东西。结构对得上、渲染器却漏掉了
+某个技能（改了过滤条件之类），同样是「技能没进 README」。比对磁盘上的 README 原文则
+是另一条断言（第 2 条）的职责，别混。
+
+**已知未管**：某块的 `parent` 底下一个技能都没有时会渲染出只有表头的空表，目前没有断言。
 
 ## 技能自洽校验：断言「技能自己说的和有的对得上」
 
