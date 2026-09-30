@@ -57,6 +57,9 @@ const DOCS = [
   "docs/ARCHITECTURE.md",
   "docs/MAINTAINER_GUIDE.md",
   "docs/TROUBLESHOOTING.md",
+  // spec 也要查：它此前不在扫描范围内，于是「13 个技能」「10 项检查」烂了很久没人发现
+  ".trellis/spec/index.md",
+  ".trellis/spec/testing/index.md",
 ];
 
 // ── 事实来源 ──────────────────────────────────────────────────────────────
