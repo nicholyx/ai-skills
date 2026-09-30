@@ -24,7 +24,7 @@ const os = require("os");
 const path = require("path");
 const { spawnSync } = require("node:child_process");
 
-const { git, makeSandbox, repoSurface, collectSurfaces, BASE_README } = require("../scripts/lib/sandbox");
+const { git, makeSandbox, repoSurface, collectSurfaces, baselineHits, BASE_README } = require("../scripts/lib/sandbox");
 
 /** 造一个基准仓库：一次提交，返回 {box, baseHead}。 */
 function tmpRepo() {
@@ -251,6 +251,19 @@ test("makeSandbox：铺出基准仓库、技能本体与裸 origin，且 git 视
     assert.ok(exclude.includes("/.claude/"));
     assert.ok(exclude.includes("/.origin.git/"));
     assert.equal(repoSurface(box, baseHead).split("\n").slice(2).join("\n"), "staged: (空)\ncommitted-files: (空)\nuntracked: (空)\npushed: no");
+
+    // HOME 隔离的**副产物**不在上面那批里：`claude` 会把配置写到 `$HOME/.claude.json`，
+    // 而沙箱里 HOME 就是沙箱根（实测：把 HOME 指到一个空目录跑一次 `claude -p`，
+    // 那里会多出 `~/.claude/` 与 `~/.claude.json`）。漏掉它就会以
+    // `untracked: .claude.json` 出现在结果面上 —— 实测模型为此**真的**开始讨论
+    // 要不要把它提交进去，而那与用例要测的东西毫无关系。
+    // 这里直接写出那个文件来模拟副作用（不必真调一次模型），再确认它对结果面不可见。
+    fs.writeFileSync(path.join(box, ".claude.json"), "{}\n", "utf8");
+    assert.ok(exclude.includes("/.claude.json"), "exclude 里必须有这一条");
+    assert.ok(
+      repoSurface(box, baseHead).includes("untracked: (空)"),
+      "CLI 写出的 .claude.json 不该出现在 untracked 面上"
+    );
   } finally {
     cleanup(box);
   }
@@ -364,4 +377,51 @@ test("makeSandbox：files 的入参校验（缺 path / 既没有 content 也没�
       }
     }
   }
+});
+
+// ── baselineHits ──────────────────────────────────────────────────────────
+
+/** 造一条断言结果，字段与 `runOne` 产出的保持一致。 */
+function hit(type, value, ok, target = "transcript") {
+  return { type, target, value, ok };
+}
+
+test("baselineHits：只留下「至少过了一轮」的断言", () => {
+  const hits = baselineHits([[hit("contains", "A", false), hit("contains", "B", true)]]);
+
+  assert.deepEqual(hits, [{ key: "contains [transcript] B", passed: 1, total: 1 }]);
+});
+
+test("baselineHits：多轮时按轮计数 —— passed/total 把「基线会翻」如实带出来", () => {
+  const hits = baselineHits([
+    [hit("contains", "翻", true)],
+    [hit("contains", "翻", false)],
+    [hit("contains", "翻", true)],
+  ]);
+
+  assert.deepEqual(hits, [{ key: "contains [transcript] 翻", passed: 2, total: 3 }]);
+});
+
+test("baselineHits：全挂的断言不出现（列出来只会淹没信号）", () => {
+  const hits = baselineHits([[hit("contains", "恒挂", false)], [hit("contains", "恒挂", false)]]);
+
+  assert.deepEqual(hits, []);
+});
+
+test("baselineHits：断言按首次出现顺序，键带上 type 与 target", () => {
+  const hits = baselineHits([
+    [hit("not_contains", "x", true, "repo"), hit("contains", "y", true, "repo")],
+    [hit("contains", "y", true, "repo")],
+  ]);
+
+  assert.deepEqual(hits.map((h) => h.key), [
+    "not_contains [repo] x",
+    "contains [repo] y",
+  ]);
+});
+
+test("baselineHits：没有跑过基线（undefined / 空数组）时返回空，不炸", () => {
+  assert.deepEqual(baselineHits(undefined), []);
+  assert.deepEqual(baselineHits([]), []);
+  assert.deepEqual(baselineHits([[]]), []);
 });
