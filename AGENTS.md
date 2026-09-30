@@ -54,7 +54,7 @@ Managed by Trellis. Edits outside this block are preserved; edits inside may be 
 ### 本地检查入口
 
 ```bash
-./scripts/lint.sh          # 14 项静态检查，目标是「本地绿 == CI 绿」
+./scripts/lint.sh          # 15 项静态检查，目标是「本地绿 == CI 绿」
 ./scripts/lint.sh --list   # 看有哪些检查项
 ```
 
@@ -96,7 +96,7 @@ Commits 写。
 
 | 层 | 工具 | 现状 |
 | --- | --- | --- |
-| 静态 | `./scripts/lint.sh`（14 项检查）| 进 CI，每次 PR 都跑 |
+| 静态 | `./scripts/lint.sh`（15 项检查）| 进 CI，每次 PR 都跑 |
 | 行为 | [`scripts/run-evals.js`](scripts/run-evals.js) | 只对 `git-commit` 可跑，且通过**不等于**有效 |
 | 触发 | 无 | 试过，**造不出来**（见下）|
 
@@ -121,6 +121,10 @@ Commits 写。
 
 ### RED LINES
 
+- **别删 `CLAUDE.md` 里的 `@AGENTS.md` 那一行。** 规则只有一份（在 `AGENTS.md`），而
+  Claude Code 不会自动读它 —— 靠那一行的**导入语法**把全文拉进每次会话的上下文。
+  删了或改成普通链接，规则就**静默不再加载**：没有报错，只是之后每个会话都不知道规矩。
+  `checks/agent-rules.js` 守着这条链
 - **不改 `.agents/**`** —— 会被 `npx skills update` 全量冲掉。上游有问题就记 Issue
   或给上游提 PR
 - **`.gitattributes` 的规则必须锚定到仓库根**。给 `.agents/**` 设 `-text` 会关掉

@@ -59,7 +59,7 @@ ai-skills/
 ├── scripts/
 │   ├── lint.sh              # 本地统一校验入口
 │   ├── check-commit-msg.sh  # 约定式提交校验
-│   ├── checks/*.js          # 10 个检查器
+│   ├── checks/*.js          # 11 个检查器
 │   ├── lib/*.js             # 检查器共用层
 │   ├── gen-local-skills.js  # local-skills.json 生成器
 │   ├── gen-catalogue.js     # docs/SKILLS.md 生成器
@@ -87,7 +87,7 @@ ai-skills/
 改技能 / 改脚本
       │
       ▼
-./scripts/lint.sh            ← 本地 14 项静态检查
+./scripts/lint.sh            ← 本地 15 项静态检查
       │                        exit 0 才继续
       ▼
 git commit                   ← 提交信息走约定式提交
@@ -96,7 +96,7 @@ git commit                   ← 提交信息走约定式提交
 git push + 开 PR
       │
       ▼
-CI：14 个静态检查 job
+CI：15 个静态检查 job
     + 提交信息规范（含 PR 标题）
     + lint.sh 自测
       │
@@ -107,7 +107,7 @@ CI 总览（唯一挂了分支保护的那个 check）
 合并
 ```
 
-关键点：CI 里的 14 个静态 job 与 `./scripts/lint.sh` 的 14 个检查项**逐字对应**，
+关键点：CI 里的 15 个静态 job 与 `./scripts/lint.sh` 的 15 个检查项**逐字对应**，
 `lint-selftest` job 会断言这一点。所以「本地过 = CI 过」不是口号，是有断言守着的性质。
 
 ---
@@ -399,7 +399,7 @@ CI 的 `commit-messages` job 校验两件事：PR 里的每个提交信息，**�
 
 ```text
 scripts/
-├── lint.sh                   # 本地统一入口：调度 14 项检查、汇总、给安装提示
+├── lint.sh                   # 本地统一入口：调度 15 项检查、汇总、给安装提示
 ├── check-commit-msg.sh       # 约定式提交校验（CI 与本地 hook 共用）
 ├── gen-local-skills.js       # 生成 local-skills.json
 ├── gen-catalogue.js          # 生成 docs/SKILLS.md（技能目录）
@@ -414,7 +414,9 @@ scripts/
 │   ├── scripts.js            # JS / Shell / Python 语法 + 入口脚本可执行位
 │   ├── distribution.js       # 分发面：只允许预期目录出现 SKILL.md
 │   ├── catalogue.js          # docs/SKILLS.md 与技能源头一致
-│   └── doc-counts.js         # 文档里的计数与事实一致（支持 --fix）
+│   ├── doc-counts.js         # 文档里的计数与事实一致（支持 --fix）
+│   ├── skill-integrity.js    # 技能自洽：本地引用存在 + 目录承诺那句话在 description 里
+│   └── agent-rules.js        # CLAUDE.md → AGENTS.md 的导入链（规则靠它加载）
 └── lib/
     ├── gitfiles.js           # 目标集枚举的唯一入口（git 索引）+ tier 判定
     ├── frontmatter.js        # 受限 frontmatter 解析与校验规则
@@ -432,8 +434,8 @@ scripts/
 ./scripts/lint.sh --commits origin/main..HEAD   # 追加提交信息校验
 ```
 
-它管的 14 项检查：`frontmatter` `evals` `vendor-lock` `hygiene` `links` `scripts`
-`distribution` `catalogue` `doc-counts` `skill-integrity`（以上 10 项纯 Node）
+它管的 15 项检查：`frontmatter` `evals` `vendor-lock` `hygiene` `links` `scripts`
+`distribution` `catalogue` `doc-counts` `skill-integrity` `agent-rules`（以上 11 项纯 Node）
 + `shellcheck` `actionlint` `yamllint` `zizmor`（4 项外部工具）。
 
 几条刻意的设计：
@@ -472,7 +474,7 @@ scripts/
 
 退出码：0 = 全部合规（区间内没有提交也算 0），1 = 存在不合规的提交信息或区间无法解析。
 
-### `checks/*.js` —— 10 个检查器
+### `checks/*.js` —— 11 个检查器
 
 每个都是独立的可执行入口（CI 里就是直接 `node scripts/checks/<name>.js`），
 共用 `lib/report.js` 的输出与退出码语义。
@@ -522,7 +524,7 @@ node scripts/gen-local-skills.js --out /tmp/x.json
 
 ## CI 结构
 
-`.github/workflows/ci.yml` 共 17 个 job：
+`.github/workflows/ci.yml` 共 18 个 job：
 
 | Job | 名称 | 内容 |
 | --- | --- | --- |
