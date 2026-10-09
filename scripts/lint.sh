@@ -14,7 +14,8 @@
 #
 # 覆盖范围（别把它当成 CI 的替代品）：
 #   - 覆盖：技能 frontmatter、evals.json 结构、上游 lock 一致性、编码与 JSON、
-#     相对链接、脚本语法、shellcheck、actionlint、yamllint、zizmor
+#     相对链接、锚点（自建 Markdown 的 #fragment）、脚本语法、shellcheck、
+#     actionlint、yamllint、zizmor
 #   - **不覆盖：PR 标题**。CI 的 commit-messages job 校验 PR 里的提交**与 PR 标题**，
 #     而标题在 PR 建立之前根本不存在。加了 --commits 也只补齐前半段，
 #     **标题仍然验不了** —— 本地全绿不等于 commit-messages 会绿
@@ -97,6 +98,7 @@ CHECKS=(
   "vendor-lock:上游技能 lock 一致性"
   "hygiene:编码与 JSON 校验"
   "links:相对链接校验"
+  "anchors:锚点校验"
   "scripts:脚本语法检查"
   "distribution:分布面校验"
   "catalogue:技能目录校验"
@@ -362,6 +364,7 @@ dispatch() {
     vendor-lock) run_check "$name" node scripts/checks/vendor-lock.js ;;
     hygiene)     run_check "$name" node scripts/checks/hygiene.js ;;
     links)       run_check "$name" node scripts/checks/links.js ;;
+    anchors)     run_check "$name" node scripts/checks/anchors.js ;;
     scripts)     run_check "$name" node scripts/checks/scripts.js ;;
     distribution) run_check "$name" node scripts/checks/distribution.js ;;
     catalogue)   run_check "$name" node scripts/checks/catalogue.js ;;

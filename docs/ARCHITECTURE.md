@@ -59,7 +59,7 @@ ai-skills/
 ├── scripts/
 │   ├── lint.sh              # 本地统一校验入口
 │   ├── check-commit-msg.sh  # 约定式提交校验
-│   ├── checks/*.js          # 12 个检查器
+│   ├── checks/*.js          # 13 个检查器
 │   ├── lib/*.js             # 检查器共用层
 │   ├── gen-local-skills.js  # local-skills.json 生成器
 │   ├── gen-catalogue.js     # docs/SKILLS.md 生成器
@@ -87,7 +87,7 @@ ai-skills/
 改技能 / 改脚本
       │
       ▼
-./scripts/lint.sh            ← 本地 18 项静态检查
+./scripts/lint.sh            ← 本地 19 项静态检查
       │                        exit 0 才继续
       ▼
 git commit                   ← 提交信息走约定式提交
@@ -96,7 +96,7 @@ git commit                   ← 提交信息走约定式提交
 git push + 开 PR
       │
       ▼
-CI：18 个静态检查 job
+CI：19 个静态检查 job
     + 提交信息规范（含 PR 标题）
     + lint.sh 自测
       │
@@ -107,7 +107,7 @@ CI 总览（唯一挂了分支保护的那个 check）
 合并
 ```
 
-关键点：CI 里的 18 个静态 job 与 `./scripts/lint.sh` 的 18 个检查项**逐字对应**，
+关键点：CI 里的 19 个静态 job 与 `./scripts/lint.sh` 的 19 个检查项**逐字对应**，
 `lint-selftest` job 会断言这一点。所以「本地过 = CI 过」不是口号，是有断言守着的性质。
 
 ---
@@ -399,7 +399,7 @@ CI 的 `commit-messages` job 校验两件事：PR 里的每个提交信息，**�
 
 ```text
 scripts/
-├── lint.sh                   # 本地统一入口：调度 18 项检查、汇总、给安装提示
+├── lint.sh                   # 本地统一入口：调度 19 项检查、汇总、给安装提示
 ├── check-commit-msg.sh       # 约定式提交校验（CI 与本地 hook 共用）
 ├── gen-local-skills.js       # 生成 local-skills.json
 ├── gen-catalogue.js          # 生成 docs/SKILLS.md（技能目录）
@@ -411,6 +411,7 @@ scripts/
 │   ├── vendor-lock.js        # 上游 lock 一致性 + 清单可复现性
 │   ├── hygiene.js            # 编码（UTF-8 / U+FFFD / BOM）+ 末尾换行 + JSON 语法
 │   ├── links.js              # 自建 Markdown 的相对链接有效性
+│   ├── anchors.js            # 自建 Markdown 的锚点（#fragment）有效性
 │   ├── scripts.js            # JS / Shell / Python 语法 + 入口脚本可执行位
 │   ├── distribution.js       # 分发面：只允许预期目录出现 SKILL.md
 │   ├── catalogue.js          # docs/SKILLS.md 与技能源头一致
@@ -421,6 +422,7 @@ scripts/
     ├── gitfiles.js           # 目标集枚举的唯一入口（git 索引）+ tier 判定
     ├── frontmatter.js        # 受限 frontmatter 解析与校验规则
     ├── manifest.js           # local-skills.json 的构建与序列化
+    ├── slug.js               # GitHub 风格 heading slug（vendor 自 github-slugger）
     └── report.js             # 结果收集、分级、输出格式、退出码
 ```
 
@@ -434,8 +436,9 @@ scripts/
 ./scripts/lint.sh --commits origin/main..HEAD   # 追加提交信息校验
 ```
 
-它管的 18 项检查：`frontmatter` `evals` `vendor-lock` `hygiene` `links` `scripts`
-`distribution` `catalogue` `doc-counts` `skill-integrity` `agent-rules`（以上 11 项纯 Node）
+它管的 19 项检查：`unit` `frontmatter` `evals` `vendor-lock` `hygiene` `links`
+`anchors` `scripts` `distribution` `catalogue` `doc-counts` `skill-integrity`
+`agent-rules` `skill-commands` `e2e`（以上 15 项纯 Node）
 + `shellcheck` `actionlint` `yamllint` `zizmor`（4 项外部工具）。
 
 几条刻意的设计：
@@ -474,7 +477,7 @@ scripts/
 
 退出码：0 = 全部合规（区间内没有提交也算 0），1 = 存在不合规的提交信息或区间无法解析。
 
-### `checks/*.js` —— 12 个检查器
+### `checks/*.js` —— 13 个检查器
 
 每个都是独立的可执行入口（CI 里就是直接 `node scripts/checks/<name>.js`），
 共用 `lib/report.js` 的输出与退出码语义。
@@ -486,6 +489,7 @@ scripts/
 | `gitfiles.js` | 目标集枚举的**唯一入口**。`trackedFiles()` / `trackedSet()` / `skillDirs()` / `tierOf()` / `requireRepo()` |
 | `frontmatter.js` | 受限解析器 + 按官方规则集校验（外加本仓库自有的 name/目录名一致性） |
 | `manifest.js` | `local-skills.json` 的构建与序列化。生成器与校验器共用这一份 —— 两处各写一遍迟早会漂移，而「生成物与生成器一致」正是校验要验的东西 |
+| `slug.js` | GitHub 风格 heading slug（vendor 自 github-slugger v2.0.0，MIT）。锚点校验的算法底座，regex 逐字节照搬、不许手改 |
 | `report.js` | 结果收集、分级（tier → level）、输出格式、退出码 |
 
 ### `gen-catalogue.js` —— 技能目录生成器
@@ -524,7 +528,7 @@ node scripts/gen-local-skills.js --out /tmp/x.json
 
 ## CI 结构
 
-`.github/workflows/ci.yml` 共 21 个 job：
+`.github/workflows/ci.yml` 共 22 个 job：
 
 | Job | 名称 | 内容 |
 | --- | --- | --- |
@@ -533,6 +537,7 @@ node scripts/gen-local-skills.js --out /tmp/x.json
 | `vendor-lock` | 上游技能 lock 一致性 | `node scripts/checks/vendor-lock.js` |
 | `hygiene` | 编码与 JSON 校验 | `node scripts/checks/hygiene.js` |
 | `links` | 相对链接校验 | `node scripts/checks/links.js` |
+| `anchors` | 锚点校验 | `node scripts/checks/anchors.js` |
 | `scripts` | 脚本语法检查 | `node scripts/checks/scripts.js` |
 | `shellcheck` | shellcheck（Shell 静态分析） | 按 pin 的版本下载并校验 sha256 |
 | `actionlint` | actionlint（工作流静态检查） | 显式传工作流文件列表 |
@@ -542,7 +547,7 @@ node scripts/gen-local-skills.js --out /tmp/x.json
 | `lint-selftest` | lint.sh 自测 | 五条断言，见下 |
 | `ci-summary` | CI 总览 | 汇总，唯一挂了分支保护的 check |
 
-十条静态检查互相独立（没有 `needs`）：它们都是亚秒级的，串行只会让反馈变慢；
+十九条静态检查互相独立（没有 `needs`）：它们都是亚秒级的，串行只会让反馈变慢；
 独立 job 意味着一个检查器崩溃不影响其他结果的可见性。
 
 几条安全约定：

@@ -16,7 +16,7 @@ see [Skills](#skills).
 
 [![skills.sh](https://skills.sh/b/nicholyx/ai-skills)](https://skills.sh/nicholyx/ai-skills)
 [![CI](https://github.com/nicholyx/ai-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/nicholyx/ai-skills/actions/workflows/ci.yml)
-[![静态检查](https://img.shields.io/badge/%E9%9D%99%E6%80%81%E6%A3%80%E6%9F%A5-18%20%E9%A1%B9-brightgreen)](https://github.com/nicholyx/ai-skills/blob/main/scripts/lint.sh)
+[![静态检查](https://img.shields.io/badge/%E9%9D%99%E6%80%81%E6%A3%80%E6%9F%A5-19%20%E9%A1%B9-brightgreen)](https://github.com/nicholyx/ai-skills/blob/main/scripts/lint.sh)
 [![License](https://img.shields.io/github/license/nicholyx/ai-skills)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/nicholyx/ai-skills?style=social)](https://github.com/nicholyx/ai-skills/stargazers)
 
@@ -518,7 +518,7 @@ records the reasoning behind every rule and the alternatives that were rejected,
 have to rediscover them. [CONTRIBUTING.md](CONTRIBUTING.md) (Chinese) covers the process.
 
 ```bash
-# Run the local checks before committing (18 checks)
+# Run the local checks before committing (19 checks)
 ./scripts/lint.sh
 
 # Run only some of them
