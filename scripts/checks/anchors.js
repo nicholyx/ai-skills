@@ -22,8 +22,10 @@
  *
  * ## 口径
  *
- * - 只认 ATX 标题（行首 1-6 个 # 跟空格），剥掉行尾关闭序列（## foo ## 取
- *   foo）。setext 标题与缩进代码块不认 —— 本仓库两者皆无
+ * - 只认 ATX 标题（1-6 个 # 跟空格）。GFM 允许行首**至多 3 个空格**的缩进，
+ *   GitHub 会为缩进标题照常生成锚点，所以缩进的也认；4 个及以上空格是
+ *   缩进代码块，不认（与 fence 正则的 0-3 空格口径一致）。剥掉行尾关闭序列
+ *   （## foo ## 取 foo）。setext 标题不认 —— 本仓库没有
  * - frontmatter（首行 --- 到下一个 ---）与 fenced code block（``` 与 ~~~，
  *   按同种字符配对开闭）里的 # 行不算标题，否则会给重复计数掺水
  * - heading 先剥行内 markdown 再算 slug：GitHub 是对**渲染后**的文本算的。
@@ -114,7 +116,7 @@ function headingSlugs(text) {
     }
     if (fenceChar !== null) continue;
 
-    const heading = /^(#{1,6})[ \t]+(.*)$/.exec(line);
+    const heading = /^ {0,3}(#{1,6})[ \t]+(.*)$/.exec(line);
     if (!heading) continue;
 
     let title = heading[2].trim();

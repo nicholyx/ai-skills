@@ -331,8 +331,11 @@ BananaSlug 类，仅做 CommonJS 化。**regex 一个字符都不要改**——�
 
 - 范围与 `links.js` 完全一致：自建 md，不含上游。`links.js` 管目标文件的
   存在性，这里管 heading 的存在性，不重复报
-- 只认 ATX 标题（本仓库无 setext 标题、无缩进代码块的 `#` 行）；frontmatter
-  与 fenced code block（三个反引号或三个波浪线的围栏，按同种字符配对）跳过
+- 只认 ATX 标题；GFM 允许行首**至多 3 个空格**的缩进、GitHub 为缩进标题照常
+  生成锚点，所以缩进的也认（验收 V2 抓到过这个缺口：不支持会把合法缩进
+  标题的链接误报成死锚点）。4 个及以上空格是缩进代码块，不认。setext 标题
+  不认（本仓库没有）；frontmatter 与 fenced code block（三个反引号或三个
+  波浪线的围栏，按同种字符配对）跳过
 - heading 剥行内 markdown 后再算 slug（GitHub 对**渲染后**的文本算）：图片
   **整个剥掉、alt 不进 slug**（img 对 textContent 无贡献）；链接留文本且先于
   强调剥；`_` 强调带词边界（词内下划线不是强调，`skills_sync_mode` 原样保留）
@@ -352,6 +355,8 @@ BananaSlug 类，仅做 CommonJS 化。**regex 一个字符都不要改**——�
 | 新 heading `## [虚拟标题](https://example.com)` + 链接 `#虚拟标题` | 判活（行内链接语法剥离正确） |
 | heading 含 `![替代文本](x.png)`，链接指向剥离后文本 | 判活（alt 不进 slug） |
 | echo 序列（上游 fixtures）：echo / echo / echo 1 / echo-1 / echo | 生成 echo、echo-1、echo-1-1、echo-1-2、echo-2，逐一对上 |
+| heading 缩进 3 空格（GFM 合法），链接不动 | 修复前误报死锚点（验收 V2 抓到的缺口）；支持缩进后判活，标题数恢复 |
+| heading 缩进 4 空格（缩进代码块），链接不动 | 报死锚点——GitHub 不为它生成锚点，这是正确方向，不是误报 |
 
 基线：44 个自建 md、97 条带锚点链接、0 死锚点；`./scripts/lint.sh` 19 项全绿。
 
