@@ -12,7 +12,7 @@
 ### 新增
 
 - **新技能 `next-feature`**（[#72](https://github.com/nicholyx/ai-skills/pull/72)）：以维护者身份继续开发项目的下一个新功能——先同步最新 `main`、看近期 PR 与 commit 避免重复造轮子，再选题、实现并补齐测试。从 cc-analyzer 项目的 `/next-feature` 命令**通用化移植**而来：原先写死的 Vitest、Playwright、GUI 测试脚本与 UI/UX 设计师，改成「探测项目自身的测试栈与检查入口，测试落进既有体系」与「用户可感知的成品（界面、命令输出、文档）可派遣设计视角 subagent 打磨」；理念原样保留——成品质量第一、敢于创新、测试补齐、真实验证。另在本地 `.claude/commands/next-feature.md` 放了本仓库适配的命令版（`.claude/` 不进仓库，纯本地）。
-- **新检查器 `anchors`（锚点校验）**：自建 Markdown 里所有带 `#fragment` 的链接（纯锚点 + 相对链接带锚点）必须在目标文件里有对应 heading——此前锚点没有任何检查，SUPPORT.md 的死锚点是手工发现的。slug 算法 vendor 自 github-slugger v2.0.0（`scripts/lib/slug.js`，regex 逐字节照搬）：手写简化版曾把 `code--codebuddy` 双横线锚点误判 DEAD（合并连续横线所致），**会误报的检查比没有更糟**。检查项由 18 → 19（lint.sh、ci.yml 同名 job、文档与徽章计数已联动）。基线 44 个自建 md、97 条带锚点链接、0 死锚点；八项变异/探针验证全过，记录见 [`.trellis/spec/checks/index.md`](.trellis/spec/checks/index.md)。
+- **新检查器 `anchors`（锚点校验）**：自建 Markdown 里所有带 `#fragment` 的链接（纯锚点 + 相对链接带锚点）必须在目标文件里有对应 heading——此前锚点没有任何检查，SUPPORT.md 的死锚点是手工发现的。slug 算法 vendor 自 github-slugger v2.0.0（`scripts/lib/slug.js`，regex 逐字节照搬）：手写简化版曾把 `code--codebuddy` 双横线锚点误判 DEAD（合并连续横线所致），**会误报的检查比没有更糟**。检查项由 18 → 19（lint.sh、ci.yml 同名 job、文档与徽章计数已联动）。基线 44 个自建 md、97 条带锚点链接、0 死锚点；十项变异/探针验证全过（关键项由维护者独立复跑），记录见 [`.trellis/spec/checks/index.md`](.trellis/spec/checks/index.md)。
 
 ## [2.3.0] - 2026-10-01
 
