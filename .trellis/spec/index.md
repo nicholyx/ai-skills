@@ -7,7 +7,7 @@
 
 一句话：**一个 Claude Code Skills 仓库 —— 自建技能在这里维护，上游技能在这里分发。**
 
-- `custom/`（16 个自建技能）是**自建内容**，我们维护
+- `custom/`（17 个自建技能）是**自建内容**，我们维护
 - `.agents/`（31 个技能，占仓库 97% 体积）是 `npx skills add` 装来的**上游 vendored 内容**，只读
 - `custom/daily/skills-sync/` 用软链接把技能同步到 `~/.claude/skills` 与 `~/.codebuddy/skills`，
   **在使用者的全局 AI 环境里生效** —— 这是本仓库最重要的一条性质，也是多数红线的由来

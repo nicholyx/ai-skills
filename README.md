@@ -2,7 +2,7 @@
 
 # ai-skills
 
-15 个自建通用技能 + 1 个项目专用技能，覆盖 git 操作、代码审查、Bug 根因分析、仓库分析、
+16 个自建通用技能 + 1 个项目专用技能，覆盖 git 操作、代码审查、Bug 根因分析、仓库分析、
 日报、Obsidian 笔记等日常场景。装进 Claude Code、CodeBuddy、Codex 等认识 `SKILL.md` 的
 AI 工具后，用一句自然语言唤起。
 
@@ -111,7 +111,7 @@ npx skills remove --all
 
 只用 Claude Code 的话，还可以走它自己的插件通道。仓库根目录的
 [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) 就是给它读的，
-列的正是本仓库那 16 个自建技能：
+列的正是本仓库那 17 个自建技能：
 
 ```bash
 claude plugin marketplace add nicholyx/ai-skills
@@ -125,7 +125,7 @@ claude plugin install ai-skills@ai-skills
 | 什么时候用 | 还想同步给 Claude Code 之外的其它工具 | 只用 Claude Code，且想让 `/plugin` 面板统一管 |
 
 > **实测**（Claude Code 2.1.283）：`claude plugin validate .` 通过；
-> 装上之后 `claude plugin details ai-skills` 列出 `Skills (16)`。
+> 装上之后 `claude plugin details ai-skills` 列出 `Skills (17)`。
 > 这份 `marketplace.json` 是**生成物** —— 技能增删后重跑
 > `node scripts/gen-catalogue.js --write`，CI 会断言它与技能源头一致。
 
@@ -187,7 +187,7 @@ claude plugin install ai-skills@ai-skills
 > 📖 带**触发示例**与**试用命令**的版本在[技能目录](docs/SKILLS.md) —— 下面这张表是给搜索引擎和快速扫读用的简表。
 
 <!-- SKILLS-TABLE:START daily -->
-这 15 个技能跨项目可用，是 `npx skills add nicholyx/ai-skills` 装到的主要内容。
+这 16 个技能跨项目可用，是 `npx skills add nicholyx/ai-skills` 装到的主要内容。
 
 | 技能 | 它能做什么 | 你可以这样说 |
 | --- | --- | --- |
@@ -199,6 +199,7 @@ claude plugin install ai-skills@ai-skills
 | `git-sync-upstream` | fork 仓库用 rebase 同步上游，保持提交历史线性 | 「同步 upstream」 |
 | `github-issue-autofix-workflow` | 从 GitHub Issue 出发，走 brainstorm → TDD → 代码审查的完整修复流程 | 「帮我修一下 issue 42」 |
 | `maintain-loop` | 开源项目的维护闭环：规划 → 实现 → 发布 → 继续规划 | 「继续走维护流程」 |
+| `next-feature` | 以维护者身份继续开发：选题 → 实现 → 测试补齐 | 「继续开发下一个功能」 |
 | `obsidian-note-workflow` | 预览优先的 Obsidian 笔记创建、分类与整库初始化 | 「把这段内容记到我的 Obsidian 里」 |
 | `oss-bootstrap` | 把裸仓库搭成合规开源项目：CI、治理、模板、自动化、文档 | 「给这个项目加上开源规范」 |
 | `repo-analyzer` | 并行 subagent 深读陌生仓库，产出架构与业务流分析报告 | 「深入研究一下这个项目」 |
