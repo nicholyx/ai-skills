@@ -3,7 +3,7 @@
 > 🤖 **本文件由 [`scripts/gen-catalogue.js`](../scripts/gen-catalogue.js) 生成，不要手改。**
 > 它从每个技能的 `SKILL.md` 里读 `metadata`，改技能后重跑生成器即可 ——CI 会断言这里与源头一致。
 
-共 **16** 个自建技能，分布在 6 个场景。其中 **5** 个附带可验证的评测用例（`evals/evals.json`）。
+共 **17** 个自建技能，分布在 6 个场景。其中 **5** 个附带可验证的评测用例（`evals/evals.json`）。
 
 ## 先试再装
 
@@ -18,7 +18,7 @@ npx skills use nicholyx/ai-skills@<技能名>
 觉得好用再装：
 
 ```bash
-npx skills add nicholyx/ai-skills          # 全部 16 个
+npx skills add nicholyx/ai-skills          # 全部 17 个
 npx skills add nicholyx/ai-skills/custom/daily   # 只装通用技能
 ```
 
@@ -28,7 +28,7 @@ npx skills add nicholyx/ai-skills/custom/daily   # 只装通用技能
 | --- | --- |
 | **代码质量** | `bug-analyzer-agent` · `code-reviewer-agent` |
 | **Git 与协作** | `git-commit` · `git-smart-update` · `git-sync-upstream` · `github-issue-autofix-workflow` |
-| **仓库与开源** | `maintain-loop` · `oss-bootstrap` · `repo-analyzer` |
+| **仓库与开源** | `maintain-loop` · `next-feature` · `oss-bootstrap` · `repo-analyzer` |
 | **知识与记录** | `daily-report` · `obsidian-note-workflow` |
 | **环境与工具** | `skills-doctor` · `skills-sync` · `update-claude-code` · `update-opencode` |
 | **项目专用** | `prj-agent-platform-e2e-test` |
@@ -51,11 +51,12 @@ npx skills add nicholyx/ai-skills/custom/daily   # 只装通用技能
 | [`git-sync-upstream`](../custom/daily/git-sync-upstream/SKILL.md) | fork 仓库用 rebase 同步上游，保持提交历史线性 | 「同步 upstream」 |
 | [`github-issue-autofix-workflow`](../custom/daily/github-issue-autofix-workflow/SKILL.md) ✅ | 从 GitHub Issue 出发，走 brainstorm → TDD → 代码审查的完整修复流程 | 「帮我修一下 issue 42」 |
 
-## 仓库与开源（3）
+## 仓库与开源（4）
 
 | 技能 | 它能做什么 | 你可以这样说 |
 | --- | --- | --- |
 | [`maintain-loop`](../custom/daily/maintain-loop/SKILL.md) | 开源项目的维护闭环：规划 → 实现 → 发布 → 继续规划 | 「继续走维护流程」 |
+| [`next-feature`](../custom/daily/next-feature/SKILL.md) | 以维护者身份继续开发：选题 → 实现 → 测试补齐 | 「继续开发下一个功能」 |
 | [`oss-bootstrap`](../custom/daily/oss-bootstrap/SKILL.md) | 把裸仓库搭成合规开源项目：CI、治理、模板、自动化、文档 | 「给这个项目加上开源规范」 |
 | [`repo-analyzer`](../custom/daily/repo-analyzer/SKILL.md) ✅ | 并行 subagent 深读陌生仓库，产出架构与业务流分析报告 | 「深入研究一下这个项目」 |
 

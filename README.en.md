@@ -2,7 +2,7 @@
 
 # ai-skills
 
-15 self-maintained general-purpose skills plus 1 project-specific one: git workflows, code
+16 self-maintained general-purpose skills plus 1 project-specific one: git workflows, code
 review, bug root-cause analysis, repository analysis, daily reports, Obsidian notes. Install
 them into Claude Code, CodeBuddy, Codex or any other tool that reads `SKILL.md`, then trigger
 them in plain language.
@@ -136,7 +136,7 @@ one block listing which agents receive a copy and which receive a symlink.)
 > specific project — specific pages, specific endpoints, specific startup steps — so anywhere
 > else it is just noise. Use the second command to skip it.
 
-> 💡 `--full-depth` installs **exactly the same 16 skills**. It only changes how deep the CLI
+> 💡 `--full-depth` installs **exactly the same 17 skills**. It only changes how deep the CLI
 > searches for `SKILL.md` files, which makes no difference to this repository's layout.
 > There is no reason to reach for it.
 
@@ -144,7 +144,7 @@ one block listing which agents receive a copy and which receive a symlink.)
 
 If Claude Code is the only tool you use, you can also go through its own plugin channel. The
 repository's [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) is what it
-reads, and it lists exactly the 16 skills this repository ships:
+reads, and it lists exactly the 17 skills this repository ships:
 
 ```bash
 claude plugin marketplace add nicholyx/ai-skills
@@ -158,7 +158,7 @@ claude plugin install ai-skills@ai-skills
 | When to use it | You also want to sync to tools other than Claude Code | Claude Code only, managed from the `/plugin` panel |
 
 > **Measured** (Claude Code 2.1.283): `claude plugin validate .` passes; once installed,
-> `claude plugin details ai-skills` lists `Skills (16)`. The manifest is a **generated file** —
+> `claude plugin details ai-skills` lists `Skills (17)`. The manifest is a **generated file** —
 > re-run `node scripts/gen-catalogue.js --write` after adding or removing a skill, and CI
 > asserts it matches the skills themselves.
 
@@ -278,7 +278,7 @@ fix them, and any edit we made would be wiped by `npx skills update`. Shipping a
 
 ## Skills
 
-### General-purpose (`custom/daily/`, 15)
+### General-purpose (`custom/daily/`, 16)
 
 These 15 are project-agnostic and are the bulk of what `npx skills add nicholyx/ai-skills`
 installs.
@@ -311,6 +311,7 @@ English.
 | `git-sync-upstream` | Syncs a fork with upstream by rebase, keeping the history linear | 「同步 upstream」 |
 | `github-issue-autofix-workflow` | Fixes a GitHub issue end to end: brainstorm → TDD → code review | 「帮我修一下 issue 42」 |
 | `maintain-loop` | The open-source maintenance loop: plan → implement → release → plan again | 「继续走维护流程」 |
+| `next-feature` | Continue as the maintainer: sync main, pick the next feature, implement, add tests | 「继续开发下一个功能」 |
 | `obsidian-note-workflow` | Preview-first Obsidian notes: create, classify, initialise a whole vault | 「把这段内容记到我的 Obsidian 里」 |
 | `oss-bootstrap` | Turns a bare repo into a standards-compliant project: CI, governance, templates, docs | 「给这个项目加上开源规范」 |
 | `repo-analyzer` | Parallel subagents read an unfamiliar repo; reports architecture and business flows | 「深入研究一下这个项目」 |
@@ -354,7 +355,7 @@ ai-skills/
 ├── .agents/skills/         # Upstream vendored skills (31, read-only, the bulk of the repo size)
 ├── .claude-plugin/         # Claude Code plugin marketplace manifest (generated, see "The third channel")
 ├── custom/
-│   ├── daily/              # Self-maintained general skills (15)
+│   ├── daily/              # Self-maintained general skills (16)
 │   └── projects/           # Self-maintained project skills (1, prj- prefix)
 ├── docs/                   # Repository documentation (Chinese, plus USAGE.en.md)
 ├── scripts/                # Static checks and generators
@@ -390,7 +391,7 @@ A skill is a **depth-1** subdirectory of one of the three parent directories abo
 
 ```text
 .agents/skills/<name>/SKILL.md     # upstream vendored, 31
-custom/daily/<name>/SKILL.md       # self-maintained general, 15
+custom/daily/<name>/SKILL.md       # self-maintained general, 16
 custom/projects/<name>/SKILL.md    # self-maintained project-specific, 1
 ```
 

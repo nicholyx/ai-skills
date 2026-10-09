@@ -64,7 +64,7 @@ If you like it, carry on below.
 ## Step 1: Install the skills
 
 ```bash
-# Everything (16 skills)
+# Everything (17 skills)
 npx skills add nicholyx/ai-skills
 
 # Only the general-purpose ones, skipping the single project-specific skill (15)
@@ -76,7 +76,7 @@ npx skills add nicholyx/ai-skills/custom/daily
 | Command | What you get | When to use it |
 | --- | --- | --- |
 | `npx skills add nicholyx/ai-skills` | Everything under `custom/` (15 general-purpose + 1 project-specific) | **The usual choice** |
-| `npx skills add nicholyx/ai-skills/custom/daily` | Only the general-purpose skills (15) | You don't want the project-specific one |
+| `npx skills add nicholyx/ai-skills/custom/daily` | Only the general-purpose skills (16) | You don't want the project-specific one |
 
 **The install surface is `custom/`** — the skills this repository maintains and ships. The CLI
 tells you the count up front: the first command prints `Found 16 skills`, the second
@@ -86,7 +86,7 @@ tells you the count up front: the first command prints `Found 16 skills`, the se
 > It assumes you are working inside that specific project (specific pages, specific endpoints,
 > specific startup steps), so anywhere else it is just noise — use the second command to skip it.
 
-> `--full-depth` installs **exactly the same 16 skills** as the default command. It only
+> `--full-depth` installs **exactly the same 17 skills** as the default command. It only
 > controls how deeply the CLI searches for `SKILL.md` files ("search all subdirectories even
 > when a root SKILL.md exists"), which makes no difference to this repository's layout. There
 > is no reason to use it.
@@ -162,7 +162,7 @@ One skill = a **depth-1** subdirectory of one of the three parent directories be
 
 ```text
 .agents/skills/<name>/SKILL.md     # upstream vendored, 31
-custom/daily/<name>/SKILL.md       # self-maintained general, 15
+custom/daily/<name>/SKILL.md       # self-maintained general, 16
 custom/projects/<name>/SKILL.md    # self-maintained project-specific, 1
 ```
 
@@ -444,7 +444,7 @@ That is not data loss, it is how a vendor area behaves. See
 npx skills add nicholyx/ai-skills
 ```
 
-That installs all 16 skills this repository ships — no `--full-depth` needed, it installs
+That installs all 17 skills this repository ships — no `--full-depth` needed, it installs
 exactly the same set. The 31 upstream skills under
 `.agents/skills/` are **not** included — install those from their own source repositories, as
 described in [Step 1](#what-about-the-31-upstream-skills-under-agentsskills).
