@@ -14,7 +14,7 @@ npx skills add nicholyx/ai-skills
 
 [![skills.sh](https://skills.sh/b/nicholyx/ai-skills)](https://skills.sh/nicholyx/ai-skills)
 [![CI](https://github.com/nicholyx/ai-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/nicholyx/ai-skills/actions/workflows/ci.yml)
-[![静态检查](https://img.shields.io/badge/%E9%9D%99%E6%80%81%E6%A3%80%E6%9F%A5-18%20%E9%A1%B9-brightgreen)](https://github.com/nicholyx/ai-skills/blob/main/scripts/lint.sh)
+[![静态检查](https://img.shields.io/badge/%E9%9D%99%E6%80%81%E6%A3%80%E6%9F%A5-19%20%E9%A1%B9-brightgreen)](https://github.com/nicholyx/ai-skills/blob/main/scripts/lint.sh)
 [![License](https://img.shields.io/github/license/nicholyx/ai-skills)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/nicholyx/ai-skills?style=social)](https://github.com/nicholyx/ai-skills/stargazers)
 
@@ -288,7 +288,7 @@ ai-skills/
 和被否掉的方案，省得你重新踩一遍。
 
 ```bash
-# 提交前跑一次本地检查（18 项检查，其中 10 项纯 Node、零依赖）
+# 提交前跑一次本地检查（19 项检查，其中 13 项纯 Node 检查器、零依赖）
 ./scripts/lint.sh
 
 # 只跑某几项

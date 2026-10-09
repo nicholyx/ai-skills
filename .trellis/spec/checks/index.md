@@ -302,6 +302,64 @@ print(bad if bad else 'OK')
 | 从 `description` 里删掉触发说法 | 抓到 |
 | 隔离副本里跑 `new-skill.js` 后不补描述 | 抓到（规则 C）|
 
+## 锚点校验：vendor 而不是手写
+
+`anchors.js` 查的是**自建 Markdown 里带 #fragment 的链接**（纯锚点与相对链接
+带锚点）在目标文件里有没有对应的 heading。在此之前锚点没有任何检查——
+SUPPORT.md 的死锚点是手工发现的。
+
+### 为什么必须 vendor github-slugger
+
+GitHub 生成锚点的算法不在 Markdown 规范里，行为是一堆实测事实：`：`、`「」`、
+`（）`等中文标点与反引号、句点、斜杠都被删；`-` 与 `_` 保留；**连续横线不
+合并**；重复 heading 按已生成过的 slug 计数加 -1/-2 后缀。
+
+手写简化版**已被证明会误报**：曾把 docs/USAGE.md 里
+`skills-sync同步到-claude-code--codebuddy` 这个真实锚点判成 DEAD——简化版合并
+了连续横线，而标题「…Claude Code / CodeBuddy」里斜杠被删、两侧空格各成一条
+横线，**双横线才是正确结果**。会误报的检查比没有检查更糟，所以
+`scripts/lib/slug.js` 逐字节照搬了 github-slugger v2.0.0（MIT）的 regex 与
+BananaSlug 类，仅做 CommonJS 化。**regex 一个字符都不要改**——变异验证表里的
+「退化版」一行守着这一点。
+
+去重按「已生成过的 slug 集合」计数，不是按 heading 文本排（上游 fixtures 的
+实例：`echo` → `echo`；再一个 `echo` → `echo-1`；`echo 1` → `echo-1-1`；
+`echo-1` → `echo-1-2`；第三个 `echo` → `echo-2`）。vendored 的 while 循环天然
+就是这个行为，别简化成按文本计数。
+
+### 口径
+
+- 范围与 `links.js` 完全一致：自建 md，不含上游。`links.js` 管目标文件的
+  存在性，这里管 heading 的存在性，不重复报
+- 只认 ATX 标题；GFM 允许行首**至多 3 个空格**的缩进、GitHub 为缩进标题照常
+  生成锚点，所以缩进的也认（验收 V2 抓到过这个缺口：不支持会把合法缩进
+  标题的链接误报成死锚点）。4 个及以上空格是缩进代码块，不认。setext 标题
+  不认（本仓库没有）；frontmatter 与 fenced code block（三个反引号或三个
+  波浪线的围栏，按同种字符配对）跳过
+- heading 剥行内 markdown 后再算 slug（GitHub 对**渲染后**的文本算）：图片
+  **整个剥掉、alt 不进 slug**（img 对 textContent 无贡献）；链接留文本且先于
+  强调剥；`_` 强调带词边界（词内下划线不是强调，`skills_sync_mode` 原样保留）
+- 每个文件独立的 BananaSlug 实例，重复计数不跨文件
+- fragment 先按字面、再按 `decodeURIComponent` 解码后匹配（链接里写的可能是
+  百分号编码）；坏编码（如 `%zz`）判死锚点，不让检查器崩
+
+### 变异验证（每条都实际跑过，2026-10-10）
+
+| 变异 / 探针 | 结果 |
+| --- | --- |
+| README.md 活锚点改坏一个字（技能清单 → 技能清单X） | 抓到（README.md:13，exit 1） |
+| 改名 CONTRIBUTING.md 的 `## 本地验证工作流`，链接不动 | 抓到（同文件 TOC 与 SUPPORT.md 跨文件各一处） |
+| 加指向 `-1` 后缀的链接，后缀尚不存在 | 抓到；复制同名 heading 后转绿（重复计数生效） |
+| fenced 块里放与真 heading 同名的 `#` 行，且置于真 heading 之前 | 不误报，标题数不变（787）——若围栏失效，真 heading 会被挤成 `-1` 而报死 |
+| slug 换成「合并连续横线」的退化版 | 抓到：两条指向 `code--codebuddy` 的链接双双报红（正是历史误报的形状） |
+| 新 heading `## [虚拟标题](https://example.com)` + 链接 `#虚拟标题` | 判活（行内链接语法剥离正确） |
+| heading 含 `![替代文本](x.png)`，链接指向剥离后文本 | 判活（alt 不进 slug） |
+| echo 序列（上游 fixtures）：echo / echo / echo 1 / echo-1 / echo | 生成 echo、echo-1、echo-1-1、echo-1-2、echo-2，逐一对上 |
+| heading 缩进 3 空格（GFM 合法），链接不动 | 修复前误报死锚点（验收 V2 抓到的缺口）；支持缩进后判活，标题数恢复 |
+| heading 缩进 4 空格（缩进代码块），链接不动 | 报死锚点——GitHub 不为它生成锚点，这是正确方向，不是误报 |
+
+基线：44 个自建 md、97 条带锚点链接、0 死锚点；`./scripts/lint.sh` 19 项全绿。
+
 ## 供应链基线
 
 `zizmor` 基线 0 findings，豁免集中在 `.github/zizmor.yml`，**每条豁免必须写明可
