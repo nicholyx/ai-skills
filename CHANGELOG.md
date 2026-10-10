@@ -9,6 +9,13 @@
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-10-10
+
+这一版两条新增，各补一端：**给维护者一个「继续开发」的入口**（`next-feature` 技能，
+把以维护者身份选题、实现、补测试的闭环流程通用化），**给文档质量一道新防线**
+（`anchors` 检查器——Markdown 死锚点此前完全无检查，只能手工发现；slug 算法
+vendor 自 github-slugger v2.0.0，手写简化版曾被证明会误报）。检查项由 18 → 19。
+
 ### 新增
 
 - **新技能 `next-feature`**（[#72](https://github.com/nicholyx/ai-skills/pull/72)）：以维护者身份继续开发项目的下一个新功能——先同步最新 `main`、看近期 PR 与 commit 避免重复造轮子，再选题、实现并补齐测试。从 cc-analyzer 项目的 `/next-feature` 命令**通用化移植**而来：原先写死的 Vitest、Playwright、GUI 测试脚本与 UI/UX 设计师，改成「探测项目自身的测试栈与检查入口，测试落进既有体系」与「用户可感知的成品（界面、命令输出、文档）可派遣设计视角 subagent 打磨」；理念原样保留——成品质量第一、敢于创新、测试补齐、真实验证。另在本地 `.claude/commands/next-feature.md` 放了本仓库适配的命令版（`.claude/` 不进仓库，纯本地）。
@@ -403,7 +410,9 @@
 - 破坏性变更在条目里用 **BREAKING** 标出。对这个仓库来说，「技能的行为变了」算破坏性变更 —— 使用者依赖的是技能的行为，不是它的文件名
 - 已发布的版本按 `[X.Y.Z] - 日期` 归档，`[Unreleased]` 恢复为空壳
 
-[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/nicholyx/ai-skills/compare/v2.4.0...HEAD
+[2.4.0]: https://github.com/nicholyx/ai-skills/releases/tag/v2.4.0
+[2.3.0]: https://github.com/nicholyx/ai-skills/releases/tag/v2.3.0
 [2.2.0]: https://github.com/nicholyx/ai-skills/releases/tag/v2.2.0
 [2.1.2]: https://github.com/nicholyx/ai-skills/releases/tag/v2.1.2
 [2.1.1]: https://github.com/nicholyx/ai-skills/releases/tag/v2.1.1
