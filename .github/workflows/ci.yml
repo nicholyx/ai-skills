@@ -47,7 +47,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 运行单元测试
@@ -62,7 +62,7 @@ jobs:
         with:
           persist-credentials: false # GITHUB_TOKEN 不残留在 runner 上
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 运行检查
@@ -77,7 +77,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 运行检查
@@ -92,7 +92,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 运行检查
@@ -107,7 +107,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 运行检查
@@ -122,7 +122,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 运行检查
@@ -137,7 +137,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 运行检查
@@ -152,7 +152,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 运行检查
@@ -167,7 +167,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 运行检查
@@ -182,7 +182,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 运行检查
@@ -197,7 +197,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 运行检查
@@ -212,7 +212,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 运行检查
@@ -227,7 +227,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 运行检查
@@ -242,7 +242,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 运行检查
@@ -257,7 +257,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 运行验证
@@ -415,7 +415,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - name: 设置 Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 断言 lint.sh 的检查项与 ci.yml 的 needs 一致
